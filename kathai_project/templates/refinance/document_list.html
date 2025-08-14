@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}เอกสารของฉัน - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-earmark-text"></i> เอกสารของฉัน</h2>
+        <a href="{% url 'refinance:document_upload' %}" class="btn btn-kathai">
+            <i class="bi bi-cloud-upload"></i> อัปโหลดเอกสาร
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">รายการเอกสาร</h5>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th><i class="bi bi-file-earmark"></i> ชื่อเอกสาร</th>
+                                        <th><i class="bi bi-tag"></i> ประเภท</th>
+                                        <th><i class="bi bi-calendar"></i> วันที่อัปโหลด</th>
+                                        <th><i class="bi bi-file-earmark-binary"></i> ขนาดไฟล์</th>
+                                        <th><i class="bi bi-gear"></i> จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for document in documents %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if document.file_type == 'pdf' %}
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2 fs-4"></i>
+                                                {% elif document.file_type == 'image' %}
+                                                    <i class="bi bi-file-earmark-image text-primary me-2 fs-4"></i>
+                                                {% else %}
+                                                    <i class="bi bi-file-earmark text-secondary me-2 fs-4"></i>
+                                                {% endif %}
+                                                <div>
+                                                    <strong>{{ document.name }}</strong>
+                                                    {% if document.description %}
+                                                        <br><small class="text-muted">{{ document.description|truncatechars:50 }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                {{ document.get_document_type_display|default:"ไม่ระบุ" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>{{ document.uploaded_at|date:"d/m/Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            <small>{{ document.file_size|filesizeformat|default:"-" }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                {% if document.file %}
+                                                <a href="{{ document.file.url }}" target="_blank" class="btn btn-outline-primary" title="ดูเอกสาร">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ document.file.url }}" download class="btn btn-outline-secondary" title="ดาวน์โหลด">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                                {% endif %}
+                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ document.id }}" title="ลบเอกสาร">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Delete Confirmation Modal -->
+                                    <div class="modal fade" id="deleteModal{{ document.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">ยืนยันการลบเอกสาร</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>คุณแน่ใจหรือไม่ที่จะลบเอกสาร <strong>"{{ document.name }}"</strong>?</p>
+                                                    <p class="text-muted">การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                                                    <form method="post" action="{% url 'refinance:document_delete' document.pk %}" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">ลบเอกสาร</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <nav aria-label="Document pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">หน้าแรก</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">ก่อนหน้า</a>
+                                </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        หน้า {{ page_obj.number }} จาก {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">ถัดไป</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">หน้าสุดท้าย</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-file-earmark-x text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="text-muted mt-3">ยังไม่มีเอกสาร</h4>
+                            <p class="text-muted">เริ่มต้นด้วยการอัปโหลดเอกสารแรกของคุณ</p>
+                            <a href="{% url 'refinance:document_upload' %}" class="btn btn-kathai mt-3">
+                                <i class="bi bi-cloud-upload"></i> อัปโหลดเอกสาร
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6><i class="bi bi-lightbulb"></i> เคล็ดลับ</h6>
+                    <ul class="mb-0 small">
+                        <li>อัปโหลดเอกสารในรูปแบบ PDF หรือ JPG/PNG</li>
+                        <li>ขนาดไฟล์ไม่เกิน 10MB ต่อไฟล์</li>
+                        <li>ใส่ชื่อเอกสารให้ชัดเจนเพื่อง่ายต่อการค้นหา</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6><i class="bi bi-question-circle"></i> ต้องการความช่วยเหลือ?</h6>
+                    <p class="mb-2 small">หากมีปัญหาในการอัปโหลดเอกสาร</p>
+                    <a href="{% url 'refinance:contact_us' %}" class="btn btn-outline-primary btn-sm">ติดต่อเรา</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    background-color: var(--kathai-off-white);
+    border-bottom: 2px solid var(--kathai-border-light);
+    font-weight: 600;
+    color: var(--kathai-dark-blue);
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.card-header h5 {
+    color: var(--kathai-dark-blue);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 71, 19, 0.02);
+}
+</style>
+{% endblock %}

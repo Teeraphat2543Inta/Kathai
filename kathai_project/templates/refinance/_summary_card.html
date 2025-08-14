@@ -1,0 +1,94 @@
+{% load humanize %}
+
+<div class="summary-card card shadow-sm border-0 h-100">
+  <header class="summary-card__head">
+    <div class="summary-card__left">
+      <span class="icon-circle"><i class="bi bi-bank"></i></span>
+      <div>
+        <div class="bank">{{ item.bank_name }}</div>
+        <div class="product">{{ item.product_name }}</div>
+      </div>
+    </div>
+    {% if best %}
+    <span class="badge badge-best">
+      <span class="badge-best__icon"><i class="bi bi-award-fill"></i></span>
+      แนะนำ
+    </span>
+    {% endif %}
+  </header>
+
+  <dl class="kv">
+    <div class="box">
+      <dt>ผ่อน/เดือน</dt>
+      <dd class="{% if best %}text-best{% else %}text-success{% endif %}">
+        {{ item.monthly_payment|intcomma }} <span class="text-muted">บาท</span>
+      </dd>
+    </div>
+    <div class="box">
+      <dt>อัตราเฉลี่ย 3 ปีแรก</dt>
+      <dd>{{ item.avg_3_year_rate }}%</dd>
+    </div>
+    <div class="box">
+      <dt>ค่าธรรมเนียมรวม</dt>
+      <dd>{{ item.total_fees|intcomma }} <span class="text-muted">บาท</span></dd>
+    </div>
+    <div class="box">
+      <dt>ดอกเบี้ยรวม</dt>
+      <dd>{{ item.total_interest|intcomma }} <span class="text-muted">บาท</span></dd>
+    </div>
+    <div class="box">
+      <dt>โปรโมชั่น</dt>
+      <dd class="text-muted small">{{ item.promotion_title|default:"ไม่มี" }}</dd>
+    </div>
+  </dl>
+
+  <div class="p-3">
+    <a href="{% url 'refinance:apply_loan' item.product_id %}" class="btn btn-best w-100">
+      <span class="btn-best__icon"><i class="bi bi-send-fill"></i></span>
+      สมัครเลย
+    </a>
+  </div>
+</div>
+
+<style>
+  .summary-card__head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; background:#fff; border-bottom:1px solid #eceff4; border-radius:12px 12px 0 0;
+  }
+  .summary-card__left{ display:flex; align-items:center; gap:12px; }
+  .summary-card__left .bank{ font-weight:800; color:#0b1220; line-height:1.1; }
+  .summary-card__left .product{ color:#667085; font-size:.95rem; }
+
+  .kv{ padding:12px 16px; }
+  .kv .box{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #eef2f7; }
+  .kv .box:last-child{ border-bottom:0; }
+  .kv dt{ color:#6b7280; margin:0; }
+  .kv dd{ margin:0; font-weight:700; color:#0b1220; }
+  .text-best{ color:#0ea5e9 !important; }
+
+  /* ไอคอนวงกลม + ป้ายแนะนำเหมือนหน้าใหญ่ */
+  .icon-circle{
+    width:40px; height:40px; border-radius:50%; background:#eef2ff; color:#3b82f6;
+    display:inline-flex; align-items:center; justify-content:center; flex:0 0 40px;
+  }
+  .badge-best{
+    display:inline-flex; align-items:center; gap:8px; padding:6px 12px 6px 6px;
+    border-radius:999px; background:#fff; color:#b45309; border:1px solid rgba(0,0,0,.05);
+    box-shadow: 0 6px 18px rgba(0,0,0,.06); font-weight:700; font-size:.85rem;
+  }
+  .badge-best__icon{
+    width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    background:#ffe8c2; color:#b45309; font-size:12px;
+  }
+
+  .btn-best{
+    display:inline-flex; align-items:center; gap:10px; padding:12px 16px;
+    border-radius:999px; background:#fbbf24; color:#3a2e04; border:0; font-weight:800;
+    box-shadow:0 10px 24px rgba(0,0,0,.12); text-decoration:none;
+    transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+  }
+  .btn-best:hover{ transform: translateY(-1px); box-shadow:0 14px 28px rgba(0,0,0,.16); background:#f59e0b; color:#241b03; }
+  .btn-best__icon{
+    width:36px; height:36px; border-radius:50%; background:rgba(0,0,0,.08); display:inline-flex; align-items:center; justify-content:center;
+  }
+</style>

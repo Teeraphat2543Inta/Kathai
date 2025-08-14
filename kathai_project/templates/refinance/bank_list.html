@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %} {# ตรวจสอบให้แน่ใจว่ามีบรรทัดนี้อยู่แล้ว #}
+
+{% block title %}รายการธนาคาร - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-bank"></i> รายการธนาคารพาร์ทเนอร์</h2>
+        <div class="text-muted">
+            <small>{{ banks.count }} ธนาคาร</small>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" class="d-flex gap-2">
+                <select name="bank_type" class="form-select">
+                    <option value="">ประเภทธนาคารทั้งหมด</option>
+                    <option value="government" {% if request.GET.bank_type == 'government' %}selected{% endif %}>ธนาคารรัฐ</option>
+                    <option value="private" {% if request.GET.bank_type == 'private' %}selected{% endif %}>ธนาคารเอกชน</option>
+                    <option value="foreign" {% if request.GET.bank_type == 'foreign' %}selected{% endif %}>ธนาคารต่างประเทศ</option>
+                </select>
+                <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อธนาคาร..." value="{{ request.GET.search }}">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+                {% if request.GET.bank_type or request.GET.search %}
+                <a href="{% url 'refinance:bank_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x"></i> ล้าง
+                </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        {% if banks %}
+            {% for bank in banks %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="card h-100 bank-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="badge bg-{{ bank.bank_type|lower }} bank-type-badge">
+                            {{ bank.get_bank_type_display }}
+                        </span>
+                        {% if bank.is_featured %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-star-fill"></i> แนะนำ
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body text-center">
+                        {% if bank.logo %}
+                        <div class="bank-logo mb-3">
+                            <img src="{{ bank.logo.url }}" alt="{{ bank.name }}" class="img-fluid">
+                        </div>
+                        {% else %}
+                        {# แก้ไขตรงนี้: ใช้รูปภาพ logo.png แทนไอคอน #}
+                        <div class="bank-logo-placeholder mb-3">
+                            <img src="{% static 'images/logo.png' %}" alt="{{ bank.name }} Logo" class="img-fluid" style="max-height: 60px;">
+                        </div>
+                        {% endif %}
+
+                        <h5 class="card-title">{{ bank.name }}</h5>
+                        <p class="text-muted small">{{ bank.code }}</p>
+
+                        {% if bank.marketing_message %}
+                        <div class="alert alert-info small mb-3">
+                            <i class="bi bi-info-circle"></i> {{ bank.marketing_message }}
+                        </div>
+                        {% endif %}
+
+                        {% if bank.description %}
+                        <p class="card-text small text-muted">
+                            {{ bank.description|truncatechars:100 }}
+                        </p>
+                        {% endif %}
+
+                        <div class="row text-center mb-3">
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h6 class="mb-0">{{ bank.loan_products.count }}</h6>
+                                    <small class="text-muted">ผลิตภัณฑ์</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h6 class="mb-0">{{ bank.promotions.count }}</h6>
+                                    <small class="text-muted">โปรโมชั่น</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if bank.get_active_promotions %}
+                        <div class="promotions-summary mb-3">
+                            <small class="text-success">
+                                <i class="bi bi-gift"></i>
+                                มีโปรโมชั่นพิเศษ {{ bank.get_active_promotions.count }} รายการ
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'refinance:bank_detail' bank.pk %}"
+                               class="btn btn-outline-primary btn-sm flex-fill">
+                                <i class="bi bi-eye"></i> ดูรายละเอียด
+                            </a>
+                            {% if bank.website %}
+                            <a href="{{ bank.website }}" target="_blank"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-globe"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-2">
+                            <a href="{% url 'refinance:loan_product_list' %}?bank={{ bank.id }}"
+                               class="btn btn-kathai btn-sm w-100">
+                                <i class="bi bi-search"></i> ดูผลิตภัณฑ์สินเชื่อ
+                            </a>
+                        </div>
+
+                        {% if bank.contact_phone %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="bi bi-telephone"></i> {{ bank.contact_phone }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-bank-x text-muted" style="font-size: 5rem;"></i>
+                    <h3 class="text-muted mt-3">
+                        {% if request.GET.bank_type or request.GET.search %}
+                            ไม่พบธนาคารที่ตรงกับเงื่อนไข
+                        {% else %}
+                            ยังไม่มีธนาคารในระบบ
+                        {% endif %}
+                    </h3>
+                    <p class="text-muted">
+                        {% if request.GET.bank_type or request.GET.search %}
+                            ลองเปลี่ยนเงื่อนไขการค้นหาหรือดูธนาคารทั้งหมด
+                        {% else %}
+                            เรากำลังเพิ่มธนาคารพาร์ทเนอร์ใหม่อยู่เสมอ
+                        {% endif %}
+                    </p>
+                    {% if request.GET.bank_type or request.GET.search %}
+                    <a href="{% url 'refinance:bank_list' %}" class="btn btn-outline-primary mt-3">
+                        <i class="bi bi-arrow-left"></i> ดูธนาคารทั้งหมด
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if banks and not request.GET.bank_type and not request.GET.search %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-4">
+                <i class="bi bi-star-fill text-warning"></i> ธนาคารแนะนำพิเศษ
+            </h4>
+        </div>
+        {% for bank in banks %}
+            {% if bank.is_featured %}
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card featured-bank-card">
+                    <div class="card-body text-center">
+                        {% if bank.logo %}
+                        <img src="{{ bank.logo.url }}" alt="{{ bank.name }}" class="img-fluid mb-2" style="max-height: 40px;">
+                        {% else %} {# <--- เพิ่ม else block ตรงนี้ #}
+                        <img src="{% static 'images/logo.png' %}" alt="{{ bank.name }} Logo Placeholder" class="img-fluid mb-2" style="max-height: 40px;">
+                        {% endif %}
+                        <h6 class="card-title mb-1">{{ bank.name }}</h6>
+                        <small class="text-muted">{{ bank.marketing_message|default:"ธนาคารพาร์ทเนอร์" }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% empty %}
+        <div class="col-12">
+            <p class="text-muted text-center">ยังไม่มีธนาคารแนะนำพิเศษ</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6><i class="bi bi-lightbulb"></i> เคล็ดลับการเลือกธนาคาร</h6>
+                    <ul class="mb-0 small">
+                        <li>เปรียบเทียบอัตราดอกเบี้ยและค่าธรรมเนียม</li>
+                        <li>ตรวจสอบเงื่อนไขและโปรโมชั่นพิเศษ</li>
+                        <li>พิจารณาสาขาและช่องทางบริการ</li>
+                        <li>อ่านรีวิวและประสบการณ์ลูกค้า</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6><i class="bi bi-question-circle"></i> ต้องการคำแนะนำ?</h6>
+                    <p class="mb-2 small">ปรึกษาผู้เชี่ยวชาญเพื่อเลือกธนาคารที่เหมาะสม</p>
+                    <a href="{% url 'refinance:contact_us' %}" class="btn btn-outline-primary btn-sm">ติดต่อเรา</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bank-card {
+    transition: var(--kathai-transition);
+    border: 1px solid var(--kathai-border-light);
+}
+
+.bank-card:hover {
+    box-shadow: var(--kathai-shadow-md);
+    transform: translateY(-4px);
+    border-color: var(--kathai-border-gold);
+}
+
+.bank-logo img {
+    max-height: 60px;
+    object-fit: contain;
+    filter: grayscale(20%);
+    transition: filter 0.3s ease;
+}
+
+.bank-card:hover .bank-logo img {
+    filter: grayscale(0%);
+}
+
+.bank-type-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.bg-government {
+    background-color: #198754 !important;
+}
+
+.bg-private {
+    background-color: #0d6efd !important;
+}
+
+.bg-foreign {
+    background-color: #6f42c1 !important;
+}
+
+.stat-item h6 {
+    color: var(--kathai-gold-primary);
+    font-weight: 600;
+}
+
+.promotions-summary {
+    padding: 0.5rem;
+    background-color: rgba(25, 135, 84, 0.1);
+    border-radius: 4px;
+}
+
+.featured-bank-card {
+    border: 2px solid var(--kathai-gold-primary);
+    background: linear-gradient(135deg, rgba(255, 71, 19, 0.05) 0%, rgba(245, 179, 53, 0.05) 100%);
+    transition: var(--kathai-transition);
+}
+
+.featured-bank-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--kathai-shadow-md);
+}
+
+.bank-logo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px; /* รักษาความสูงเพื่อให้จัดกึ่งกลางได้ */
+}
+</style>
+{% endblock %}

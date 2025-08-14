@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}รายละเอียดคำขอ #{{ application.id }} - KATHAI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-file-earmark-text"></i> คำขอ #{{ application.id }}</h1>
+                <span class="badge badge-lg bg-secondary">{{ application.get_status_display }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> ข้อมูลคำขอ</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>ทรัพย์สิน:</strong><br>
+                            {{ application.property.get_property_type_display }}<br>
+                            <small class="text-muted">{{ application.property.address|truncatechars:50 }}</small>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>จำนวนเงินกู้:</strong><br>
+                            {{ application.loan_amount|floatformat:0 }} บาท {# เปลี่ยนจาก desired_loan_amount เป็น loan_amount #}
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <strong>ระยะเวลา:</strong><br>
+                            {{ application.loan_term }} ปี
+                        </div>
+                        <div class="col-md-6">
+                            <strong>วันที่ยื่นคำขอ:</strong><br>
+                            {{ application.submitted_at|date:"d/m/Y H:i" }} {# เปลี่ยนจาก application_date เป็น submitted_at หรือ created_at #}
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <strong>วัตถุประสงค์:</strong><br>
+                            {{ application.purpose }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bank"></i> ธนาคารที่ยื่นคำขอ</h5>
+                </div>
+                <div class="card-body">
+                    {# เปลี่ยน loan_products เป็น application_banks ที่ส่งมาจาก views.py #}
+                    {% if application_banks %} 
+                    <div class="row">
+                        {# เปลี่ยน loan_product เป็น app_bank #}
+                        {% for app_bank in application_banks %} 
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>{{ app_bank.bank.name }}</h6> {# ใช้ app_bank.bank.name #}
+                                    {# หาก app_bank มี loan_product ผูกอยู่ #}
+                                    {% if app_bank.loan_product %}
+                                    <p class="mb-1">{{ app_bank.loan_product.name }}</p>
+                                    {% else %}
+                                    <p class="mb-1 text-muted">ยังไม่มีผลิตภัณฑ์สินเชื่อที่เลือก</p>
+                                    {% endif %}
+                                    <span class="badge bg-info">{{ app_bank.get_status_display }}</span> {# ใช้ app_bank.get_status_display #}
+                                    {% if app_bank.offered_rate %} {# เปลี่ยนจาก offered_interest_rate เป็น offered_rate #}
+                                    <br><small class="text-success">อัตราดอกเบี้ยที่เสนอ: {{ app_bank.offered_rate }}%</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">ไม่มีข้อมูลธนาคาร</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-gear"></i> การดำเนินการ</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'refinance:document_upload' application.pk %}" class="btn btn-outline-primary">
+                            <i class="bi bi-upload"></i> อัปโหลดเอกสาร
+                        </a>
+                        <a href="{% url 'refinance:application_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> กลับรายการคำขอ
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-files"></i> เอกสาร</h6>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                    {% for document in documents %}
+                    <div class="mb-2">
+                        <i class="bi bi-file-earmark"></i>
+                        {{ document.get_document_type_display }}
+                        <br><small class="text-muted">{{ document.uploaded_at|date:"d/m/Y" }}</small>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">ยังไม่มีเอกสาร</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

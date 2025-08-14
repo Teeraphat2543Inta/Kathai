@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}ยื่นคำขอรีไฟแนนซ์ - KATHAI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-file-earmark-plus"></i> ยื่นคำขอรีไฟแนนซ์</h4>
+                </div>
+                <div class="card-body">
+                    {% if user_properties %} {# Check if user has any properties #}
+                    <form method="post" id="loanApplicationForm">
+                        {% csrf_token %}
+                        
+                        {# Hidden input to potentially store pre-selected loan product ID #}
+                        <input type="hidden" id="preSelectedLoanProductId" name="preSelectedLoanProductId" value="{{ pre_selected_loan_product_id|default:'' }}">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.property.id_for_label }}" class="form-label">{{ form.property.label }} <span class="text-danger">*</span></label>
+                                    {{ form.property|add_class:"form-control" }}
+                                    {% if form.property.errors %}
+                                        <div class="text-danger small mt-1">{{ form.property.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.loan_amount.id_for_label }}" class="form-label">{{ form.loan_amount.label }} <span class="text-danger">*</span></label>
+                                    {{ form.loan_amount|add_class:"form-control"|attr:"placeholder:เช่น 3000000" }}
+                                    {% if form.loan_amount.errors %}
+                                        <div class="text-danger small mt-1">{{ form.loan_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.loan_term.id_for_label }}" class="form-label">{{ form.loan_term.label }} <span class="text-danger">*</span></label>
+                                    {{ form.loan_term|add_class:"form-control"|attr:"placeholder:เช่น 30" }}
+                                    {% if form.loan_term.errors %}
+                                        <div class="text-danger small mt-1">{{ form.loan_term.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.purpose.id_for_label }}" class="form-label">{{ form.purpose.label }} <span class="text-danger">*</span></label>
+                                    {{ form.purpose|add_class:"form-control" }}
+                                    {% if form.purpose.errors %}
+                                        <div class="text-danger small mt-1">{{ form.purpose.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.monthly_income.id_for_label }}" class="form-label">{{ form.monthly_income.label }} <span class="text-danger">*</span></label>
+                                    {{ form.monthly_income|add_class:"form-control" }}
+                                    {% if form.monthly_income.errors %}
+                                        <div class="text-danger small mt-1">{{ form.monthly_income.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.monthly_expense.id_for_label }}" class="form-label">{{ form.monthly_expense.label }}</label>
+                                    {{ form.monthly_expense|add_class:"form-control" }}
+                                    {% if form.monthly_expense.errors %}
+                                        <div class="text-danger small mt-1">{{ form.monthly_expense.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.other_debts.id_for_label }}" class="form-label">{{ form.other_debts.label }}</label>
+                                    {{ form.other_debts|add_class:"form-control" }}
+                                    {% if form.other_debts.errors %}
+                                        <div class="text-danger small mt-1">{{ form.other_debts.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                    {{ form.notes|add_class:"form-control" }}
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {# Custom UI for selecting multiple banks #}
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.selected_banks.label }} <span class="text-danger">*</span></label>
+                            <div class="row">
+                                <div class="col-md-6 mb-3 mb-md-0"> {# Stack on mobile, side-by-side on md+ #}
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0 text-dark-blue">ธนาคารที่เลือกได้</h6>
+                                        </div>
+                                        <div class="card-body p-2" style="max-height: 300px; overflow-y: auto;">
+                                            <div id="available-banks-list" class="list-group list-group-flush">
+                                                {% for bank in all_active_banks %}
+                                                    <div class="list-group-item d-flex justify-content-between align-items-center p-2" data-bank-id="{{ bank.id }}">
+                                                        <div>
+                                                            <strong>{{ bank.name }}</strong>
+                                                            <small class="text-muted d-block">{{ bank.bank_type|capfirst }}</small>
+                                                        </div>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary add-bank-btn">
+                                                            <i class="bi bi-plus"></i> เพิ่ม
+                                                        </button>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% if not all_active_banks %}
+                                            <div class="alert alert-info text-center m-2">ไม่พบธนาคารที่ใช้งานอยู่</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0 text-dark-blue">ธนาคารที่เลือกแล้ว</h6>
+                                        </div>
+                                        <div class="card-body p-2" style="max-height: 300px; overflow-y: auto;">
+                                            <div id="selected-banks-list" class="list-group list-group-flush">
+                                                {# Selected banks will be dynamically added/removed here by JS #}
+                                            </div>
+                                            <div id="no-selected-banks-message" class="alert alert-info text-center m-2">
+                                                ยังไม่ได้เลือกธนาคาร
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {# Hidden select element that Django will actually read #}
+                            {# This element will be populated by JavaScript #}
+                            <select name="{{ form.selected_banks.html_name }}" id="{{ form.selected_banks.id_for_label }}" multiple style="display: none;">
+                                {# Options will be added/removed by JS #}
+                            </select>
+                            {% if form.selected_banks.errors %}
+                                <div class="text-danger small mt-1">{{ form.selected_banks.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'refinance:loan_application_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                            </a>
+                            <button type="submit" class="btn btn-kathai">
+                                <i class="bi bi-send"></i> ยื่นคำขอ
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-warning text-center">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">คุณต้องเพิ่มข้อมูลทรัพย์สินก่อน</h4>
+                        <p>เพื่อที่จะยื่นคำขอรีไฟแนนซ์ คุณต้องมีข้อมูลทรัพย์สินในระบบก่อน</p>
+                        <a href="{% url 'refinance:property_add' %}" class="btn btn-kathai">
+                            <i class="bi bi-plus"></i> เพิ่มทรัพย์สิน
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const availableBanksList = document.getElementById('available-banks-list');
+        const selectedBanksList = document.getElementById('selected-banks-list');
+        const hiddenSelectElement = document.getElementById('{{ form.selected_banks.id_for_label }}');
+        const noSelectedBanksMessage = document.getElementById('no-selected-banks-message');
+        const propertySelect = document.getElementById('{{ form.property.id_for_label }}');
+        const loanAmountInput = document.getElementById('{{ form.loan_amount.id_for_label }}');
+        const loanTermInput = document.getElementById('{{ form.loan_term.id_for_label }}');
+        const preSelectedLoanProductIdInput = document.getElementById('preSelectedLoanProductId');
+
+        // Function to update the hidden <select multiple> element
+        function updateHiddenSelect() {
+            hiddenSelectElement.innerHTML = ''; // Clear existing options
+            selectedBanksList.querySelectorAll('.selected-bank-item').forEach(item => {
+                const bankId = item.dataset.bankId;
+                const option = document.createElement('option');
+                option.value = bankId;
+                option.selected = true;
+                hiddenSelectElement.appendChild(option);
+            });
+            // Show/hide "No selected banks" message based on selected items
+            if (selectedBanksList.children.length === 0) {
+                noSelectedBanksMessage.style.display = 'block';
+            } else {
+                noSelectedBanksMessage.style.display = 'none';
+            }
+        }
+
+        // Function to create a bank item (for both available and selected lists)
+        function createBankItem(bankId, bankName, bankType, isSelected) {
+            const item = document.createElement('div');
+            item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'p-2');
+            item.dataset.bankId = bankId;
+            item.innerHTML = `
+                <div>
+                    <strong>${bankName}</strong>
+                    <small class="text-muted d-block">${bankType}</small>
+                </div>
+                <button type="button" class="btn btn-sm ${isSelected ? 'btn-outline-danger remove-bank-btn' : 'btn-outline-primary add-bank-btn'}">
+                    <i class="bi ${isSelected ? 'bi-dash' : 'bi-plus'}"></i> ${isSelected ? 'ลบ' : 'เพิ่ม'}
+                </button>
+            `;
+            return item;
+        }
+
+        // Initialize selected banks from form's initial data (e.g., after validation error)
+        // This relies on Django's form.selected_banks.value containing the IDs of previously selected banks
+        const initialSelectedBankIds = Array.from(hiddenSelectElement.options).map(option => option.value);
+
+        // Map of bank IDs to their original elements in availableBanksList
+        const allAvailableBankItems = {};
+        availableBanksList.querySelectorAll('.list-group-item').forEach(item => {
+            allAvailableBankItems[item.dataset.bankId] = item;
+        });
+
+        initialSelectedBankIds.forEach(bankId => {
+            const bankItem = allAvailableBankItems[bankId];
+            if (bankItem) {
+                // Remove from available list
+                bankItem.remove();
+                // Add to selected list
+                const bankName = bankItem.querySelector('strong').textContent;
+                const bankType = bankItem.querySelector('small').textContent;
+                const selectedItem = createBankItem(bankId, bankName, bankType, true);
+                selectedItem.classList.add('selected-bank-item'); // Add specific class for selected items
+                selectedBanksList.appendChild(selectedItem);
+            }
+        });
+        updateHiddenSelect(); // Initial update of the hidden select
+
+        // Add Bank functionality
+        availableBanksList.addEventListener('click', function(event) {
+            if (event.target.classList.contains('add-bank-btn')) {
+                const button = event.target;
+                const bankItem = button.closest('.list-group-item');
+                const bankId = bankItem.dataset.bankId;
+                const bankName = bankItem.querySelector('strong').textContent;
+                const bankType = bankItem.querySelector('small').textContent;
+
+                // Remove from available list
+                bankItem.remove();
+
+                // Add to selected list
+                const selectedItem = createBankItem(bankId, bankName, bankType, true);
+                selectedItem.classList.add('selected-bank-item'); // Add specific class for selected items
+                selectedBanksList.appendChild(selectedItem);
+
+                updateHiddenSelect();
+            }
+        });
+
+        // Remove Bank functionality
+        selectedBanksList.addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-bank-btn')) {
+                const button = event.target;
+                const selectedBankItem = button.closest('.list-group-item');
+                const bankId = selectedBankItem.dataset.bankId;
+                const bankName = selectedBankItem.querySelector('strong').textContent;
+                const bankType = selectedBankItem.querySelector('small').textContent;
+                
+                // Remove from selected list
+                selectedBankItem.remove();
+
+                // Add back to available list (recreate if needed, or get from map)
+                const availableItem = createBankItem(bankId, bankName, bankType, false);
+                availableBanksList.appendChild(availableItem); // Append to the end, could sort later if needed
+
+                updateHiddenSelect();
+            }
+        });
+
+        // Handle pre-selected loan product ID from URL/localStorage
+        const preSelectedLoanProductId = preSelectedLoanProductIdInput.value;
+        if (preSelectedLoanProductId) {
+            // In a real application, you would fetch product details via AJAX
+            // or pass them in the context to populate loan_amount and loan_term.
+            // For this example, we'll simulate it or assume the data is available.
+            // Example:
+            // fetch(`/api/loan_product_details/${preSelectedLoanProductId}/`)
+            //     .then(response => response.json())
+            //     .then(product => {
+            //         loanAmountInput.value = product.suggested_loan_amount;
+            //         loanTermInput.value = product.suggested_loan_term;
+            //     })
+            //     .catch(error => console.error('Error fetching pre-selected loan product details:', error));
+        }
+
+        // Event listener for property selection (from previous code)
+        if (propertySelect) {
+            propertySelect.addEventListener('change', function() {
+                const selectedPropertyId = this.value;
+                // You might want to clear selected banks here or re-evaluate them based on property
+                // For now, we'll just clear the pre-selected product ID
+                preSelectedLoanProductIdInput.value = '';
+                // The original fetchLoanProducts function was commented out.
+                // If you re-enable it, consider how it interacts with this new bank selection UI.
+            });
+        }
+    });
+</script>
+
+<style>
+/* Custom styles for better aesthetics */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-radius: 0.75rem; /* Rounded corners for cards */
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1); /* Enhanced shadow on hover */
+}
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+}
+.list-group-item {
+    border-color: #eee; /* Lighter border for list items */
+    border-radius: 0.5rem; /* Slightly rounded list items */
+    margin-bottom: 0.25rem; /* Small margin between items */
+    background-color: #fff;
+    transition: background-color 0.2s ease;
+}
+.list-group-item:hover {
+    background-color: #f8f9fa; /* Light hover effect */
+}
+.list-group-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.add-bank-btn, .remove-bank-btn {
+    border-radius: 0.5rem; /* Rounded buttons */
+    font-size: 0.85rem;
+    padding: 0.3rem 0.7rem;
+}
+.text-dark-blue {
+    color: #212529; /* Define a dark blue if not already in base.html */
+}
+</style>
+{% endblock %}

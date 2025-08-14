@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}หน้าแรก - คัดให้ (KATHAI){% endblock %}
+
+{% block content %}
+{# Hero Section - The Grand Entrance #}
+<section class="hero-section py-5 d-flex align-items-center bg-light-bg">
+    <div class="container">
+        <div class="row align-items-center justify-content-center g-4">
+            <div class="col-lg-10 text-center animate__fade-in-up" style="animation-delay: 0.1s;">
+                <h1 class="fw-bold display-4 mt-5 mb-2 d-none d-md-block">หมดยุคต้องง้อ<span class="text-dark">ธนาคาร</span></h1>
+                <p class="lead mb-4 text-highlight-gold-underline bg-white rounded-pill p-2 mx-auto d-none d-md-block" style="display: inline-block;">
+                    เปรียบเทียบดอกเบี้ยรีไฟแนนซ์ เราเจรจาต่อรองมาให้คุณแล้ว "ถูกและดีที่สุด"
+                </p>
+
+                <div class="row g-5 mb-5 justify-content-center d-none d-md-flex animate__fade-in-up" style="animation-delay: 0.3s;">
+                    <div class="col-12 col-md-4">
+                        <div class="d-flex flex-column align-items-center text-center bg-white p-4 rounded-4 shadow-sm h-100">
+                            <div class="icon-box-large mb-3">
+                                <img src="{% static 'img/1.png' %}" alt="ลดดอกเบี้ย" style="max-width: 100%; max-height: 100%;">
+                            </div>
+                            <h5 class="fw-normal">ลดดอกเบี้ย และผ่อนสบายขึ้น</h5>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="d-flex flex-column align-items-center text-center bg-white p-4 rounded-4 shadow-sm h-100">
+                            <div class="icon-box-large mb-3">
+                                <img src="{% static 'img/2.png' %}" alt="สะดวก" style="max-width: 100%; max-height: 100%;">
+                            </div>
+                            <h5 class="fw-normal">สะดวก ไม่ต้องเสียเวลาไปธนาคาร</h5>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="d-flex flex-column align-items-center text-center bg-white p-4 rounded-4 shadow-sm h-100">
+                            <div class="icon-box-large mb-3">
+                                <img src="{% static 'img/3.png' %}" alt="ค้นหา" style="max-width: 100%; max-height: 100%;">
+                            </div>
+                            <h5 class="fw-normal">ค้นหาโปรโมชันง่าย เพียงแค่ปลายนิ้ว</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 justify-content-center flex-wrap animate__fade-in-up" style="animation-delay: 0.5s;">
+                    <a href="{% url 'refinance:loan_comparison_wizard' %}" class="btn btn-kathai btn-lg px-5 animate__animated animate__heartBeat animate__delay-1s">
+                        <i class="bi bi-search me-2"></i> ค้นหาโปรโมชั่น
+                    </a>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary btn-lg px-5">
+                        <i class="bi bi-person-plus me-2"></i> สมัครสมาชิก
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# Why KATHAI? Section - Features & Benefits #}
+<section class="py-5 section-gap animate__fade-in-up">
+    <div class="container">
+        <div class="row section-heading">
+            <div class="col-12">
+                <h2 class="fw-bold">ทำไมต้องรีไฟแนนซ์กับ <span class="text-gold">คัดให้ </span>?</h2>
+                <p class="lead">เราคือแพลตฟอร์มที่เข้าใจความต้องการของคุณ ช่วยให้คุณประหยัดเงินและเวลาได้อย่างแท้จริง</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.1s;">
+                <div class="card h-100 text-center card-feature shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <i class="bi bi-cash-coin text-gold" style="font-size: 3.5rem; "></i>
+                        </div>
+                        <h5 class="card-title fw-bold">ประหยัดได้</h5>
+                        <h3 class="display-4 fw-bold text-dark-blue">200K+</h3>
+                        <p class="card-text text-muted">บาทต่อปี จากการลดดอกเบี้ย</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.2s;">
+                <div class="card h-100 text-center card-feature shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <i class="bi bi-lightning-charge text-gold" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">รวดเร็ว</h5>
+                        <h3 class="display-4 fw-bold text-dark-blue">5</h3>
+                        <p class="card-text text-muted">นาที รู้ผลเบื้องต้น</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.3s;">
+                <div class="card h-100 text-center card-feature shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <i class="bi bi-bank2 text-gold" style="font-size: 3.8rem; "></i>
+                        </div>
+                        <h5 class="card-title fw-bold">หลายธนาคาร</h5>
+                        <h3 class="display-4 fw-bold text-dark-blue">15+</h3>
+                        <p class="card-text text-muted">ธนาคารพาร์ทเนอร์</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.4s;">
+                <div class="card h-100 text-center card-feature shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <i class="bi bi-lock-fill text-gold" style="font-size: 3.5rem; "></i>
+                        </div>
+                        <h5 class="card-title fw-bold">ปลอดภัย</h5>
+                        <h3 class="display-4 fw-bold text-dark-blue">100%</h3>
+                        <p class="card-text text-muted">ข้อมูลของคุณปลอดภัย</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# How It Works Section - 4 Easy Steps #}
+<section class="py-5 bg-light-bg section-gap animate__fade-in-up">
+    <div class="container">
+        <div class="row section-heading">
+            <div class="col-12">
+                <h2 class="fw-bold">รีไฟแนนซ์ง่ายๆ ใน <span class="text-warning">4 ขั้นตอน</span></h2>
+                <p class="lead">แพลตฟอร์มของเราออกแบบมาให้ใช้งานง่าย สะดวก และรวดเร็ว</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.1s;">
+                <div class="process-step text-center">
+                    <div class="step-number-circle rounded-circle bg-warning text-white mx-auto mb-3">1</div>
+                    <h5 class="fw-bold">กรอกข้อมูล</h5>
+                    <p class="text-muted small">ใช้เวลาเพียงไม่กี่นาที เพื่อให้เราได้รู้จักคุณและทรัพย์ของคุณ</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.2s;">
+                <div class="process-step text-center">
+                    <div class="step-number-circle rounded-circle bg-warning text-white mx-auto mb-3">2</div>
+                    <h5 class="fw-bold">เปรียบเทียบ</h5>
+                    <p class="text-muted small">ระบบจะแสดงข้อเสนอที่ดีที่สุดจากหลากหลายธนาคาร</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.3s;">
+                <div class="process-step text-center">
+                    <div class="step-number-circle rounded-circle bg-warning text-white mx-auto mb-3">3</div>
+                    <h5 class="fw-bold">ยื่นคำขอ</h5>
+                    <p class="text-muted small">เลือกข้อเสนอที่ถูกใจ และยื่นคำขอผ่านแพลตฟอร์มของเราได้ทันที</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.4s;">
+                <div class="process-step text-center">
+                    <div class="step-number-circle rounded-circle bg-warning text-white mx-auto mb-3">4</div>
+                    <h5 class="fw-bold">ติดตามสถานะ</h5>
+                    <p class="text-muted small">รับการอัปเดตสถานะคำขอของคุณได้ตลอดเวลาผ่านแอปพลิเคชัน</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# Partner Banks Section - Building Trust #}
+<section class="py-5 section-gap d-none d-md-block animate__fade-in-up">
+    <div class="container">
+        <div class="row section-heading">
+            <div class="col-12">
+                <h2 class="fw-bold">ธนาคารพาร์ทเนอร์ของเรา</h2>
+                <p class="lead">เชื่อมต่อกับธนาคารชั้นนำ ทั้งภาครัฐและเอกชน มั่นใจได้ในข้อเสนอที่ดีที่สุด</p>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div id="bankLogoCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000" data-bs-pause="hover">
+                    <div class="carousel-inner">
+                        {% if featured_banks %}
+                            {% for chunk in featured_banks_chunks %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <div class="row g-4 align-items-center justify-content-center">
+                                    {% for bank in chunk %}
+                                    <div class="col-6 col-md-4 col-lg-2 text-center">
+                                        <div class="bank-logo-card">
+                                            {% if bank.logo %}
+                                            <img src="{{ bank.logo.url }}" alt="{{ bank.name }} Logo" class="img-fluid mb-2">
+                                            {% else %}
+                                            <img src="{% static 'images/logo.png' %}" alt="{{ bank.name }} Logo Placeholder" class="img-fluid mb-2">
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="carousel-item active">
+                            <div class="col-12 text-center">
+                                <p class="text-muted">ยังไม่มีธนาคารพาร์ทเนอร์ที่แนะนำในระบบ หรือไม่มีธนาคารที่ใช้งานอยู่</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if featured_banks|length > 6 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#bankLogoCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon text-dark" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#bankLogoCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon text-dark" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# Advertisements/Promotions Section - Dynamic Content #}
+<section class="py-5 bg-light-bg section-gap animate__fade-in-up">
+    <div class="container">
+        <div class="row section-heading">
+            <div class="col-12">
+                <h2 class="fw-bold">โปรโมชั่นพิเศษและข่าวสาร</h2>
+                <p class="lead">อัปเดตข้อเสนอและข่าวสารล่าสุดเพื่อประโยชน์สูงสุดของคุณ</p>
+            </div>
+        </div>
+
+        {% if advertisements %}
+        <div class="row g-4 justify-content-center">
+            {% for ad in advertisements|slice:":3" %}
+            <div class="col-md-6 col-lg-4 animate__fade-in-up" style="animation-delay: 0.1s;">
+                <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+                    {% if ad.image %}
+                    <img src="{{ ad.image.url }}" class="card-img-top" alt="{{ ad.title }}">
+                    {% else %}
+                    <img src="{% static 'img/placeholder_ad.png' %}" class="card-img-top" alt="Placeholder Ad Image">
+                    {% endif %}
+                    <div class="card-body d-flex flex-column p-4">
+                        <h5 class="card-title text-dark-blue fw-bold">{{ ad.title }}</h5>
+                        <p class="card-text text-muted flex-grow-1">{{ ad.description|truncatechars:150 }}</p>
+                        <a href="{{ ad.link }}" class="btn btn-outline-primary btn-sm mt-3 stretched-link">ดูรายละเอียดเพิ่มเติม <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if advertisements|length > 3 %}
+        <div class="text-center mt-4">
+            {% if user.is_authenticated %}
+            <a href="{% url 'refinance:advertisement_list' %}" class="btn btn-outline-secondary">ดูโปรโมชั่นและข่าวสารทั้งหมด <i class="bi bi-arrow-right"></i></a>
+            {% else %}
+            <p class="text-muted">โปรด <a href="{% url 'accounts:login' %}">เข้าสู่ระบบ</a> เพื่อดูโปรโมชั่นและข่าวสารทั้งหมด</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="row">
+            <div class="col-12 text-center">
+                <p class="text-muted">ยังไม่มีโปรโมชั่นหรือข่าวสารในขณะนี้ โปรดกลับมาตรวจสอบภายหลัง</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+
+{# Call to Action Section - Final Push #}
+<section class="py-5 section-gap animate__fade-in-up">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center section-heading">
+                <h2 class="fw-bold">พร้อมเริ่มประหยัดแล้วใช่ไหม?</h2>
+                <p class="lead mb-5">เริ่มต้นง่าย ๆ ด้วยการกรอกข้อมูล ใช้เวลาไม่เกิน 5 นาที ไม่ต้องยุ่งยากอีกต่อไป</p>
+                <a href="{% url 'refinance:loan_comparison_wizard' %}" class="btn btn-kathai btn-lg px-5">
+                    <i class="bi bi-search me-2"></i> ค้นหาโปรโมชั่นที่ดีที่สุด!
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{# Cookie Consent Banner #}
+<div id="cookie-banner" class="fixed-bottom bg-dark text-white text-center p-3" style="display: none; z-index: 1050;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-9 text-start">
+                <p class="mb-0">เว็บไซต์นี้ใช้คุกกี้เพื่อปรับปรุงประสบการณ์การใช้งานของคุณ <a href="#" class="text-primary text-decoration-underline" data-bs-toggle="modal" data-bs-target="#cookieModal">อ่านรายละเอียดเพิ่มเติม</a></p>
+            </div>
+            <div class="col-md-3 text-end mt-2 mt-md-0">
+                <button id="accept-cookies" class="btn btn-sm btn-primary">ยอมรับ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Cookie Consent Modal (Optional) #}
+<div class="modal fade" id="cookieModal" tabindex="-1" aria-labelledby="cookieModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cookieModalLabel">นโยบายคุกกี้</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>เราใช้คุกกี้เพื่อปรับปรุงประสิทธิภาพและประสบการณ์ที่ดีในการใช้เว็บไซต์ของคุณ เพื่อให้คุณได้รับข้อมูลและข้อเสนอพิเศษจากเรา รวมถึงการวิเคราะห์การใช้งานเว็บไซต์และนำไปปรับปรุงให้มีประสิทธิภาพมากยิ่งขึ้น หากคุณใช้งานเว็บไซต์นี้ต่อไป ถือว่าคุณยอมรับการใช้งานคุกกี้</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# JavaScript for Cookie Handling #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cookieBanner = document.getElementById('cookie-banner');
+        const acceptCookiesBtn = document.getElementById('accept-cookies');
+
+        // Function to check for cookie
+        function getCookie(name) {
+            const cookies = document.cookie.split(';');
+            for(let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    return cookie.substring(name.length + 1);
+                }
+            }
+            return '';
+        }
+
+        // Function to set cookie
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + value + ";" + expires + ";path=/";
+        }
+
+        // Check if the user has already accepted cookies
+        if (getCookie('cookie_consent') !== 'true') {
+            cookieBanner.style.display = 'block';
+        }
+
+        // Event listener for the accept button
+        acceptCookiesBtn.addEventListener('click', function() {
+            setCookie('cookie_consent', 'true', 365); // Set cookie for 1 year
+            cookieBanner.style.display = 'none';
+        });
+    });
+</script>

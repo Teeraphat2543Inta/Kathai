@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}เพิ่มทรัพย์สิน - KATHAI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-house-add"></i> เพิ่มทรัพย์สินใหม่</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        <div class="mb-3">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {# Property Name and Type #}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }} <span class="text-danger">*</span></label>
+                                    {{ form.name|add_class:"form-control" }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.property_type.id_for_label }}" class="form-label">{{ form.property_type.label }} <span class="text-danger">*</span></label>
+                                    {{ form.property_type|add_class:"form-select" }}
+                                    {% if form.property_type.errors %}
+                                        <div class="text-danger small mt-1">{{ form.property_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Address and Province #}
+                        <div class="mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">{{ form.address.label }} <span class="text-danger">*</span></label>
+                            {{ form.address|add_class:"form-control"|attr:"rows:3" }}
+                            {% if form.address.errors %}
+                                <div class="text-danger small mt-1">{{ form.address.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.province.id_for_label }}" class="form-label">{{ form.province.label }} <span class="text-danger">*</span></label>
+                                    {{ form.province|add_class:"form-select" }}
+                                    {% if form.province.errors %}
+                                        <div class="text-danger small mt-1">{{ form.province.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.postal_code.id_for_label }}" class="form-label">{{ form.postal_code.label }} <span class="text-danger">*</span></label>
+                                    {{ form.postal_code|add_class:"form-control" }}
+                                    {% if form.postal_code.errors %}
+                                        <div class="text-danger small mt-1">{{ form.postal_code.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Estimated Value and Purchase Price #}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.estimated_value.id_for_label }}" class="form-label">{{ form.estimated_value.label }}</label>
+                                    {{ form.estimated_value|add_class:"form-control" }}
+                                    {% if form.estimated_value.errors %}
+                                        <div class="text-danger small mt-1">{{ form.estimated_value.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.purchase_price.id_for_label }}" class="form-label">{{ form.purchase_price.label }} <span class="text-danger">*</span></label>
+                                    {{ form.purchase_price|add_class:"form-control" }}
+                                    {% if form.purchase_price.errors %}
+                                        <div class="text-danger small mt-1">{{ form.purchase_price.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Purchase Date and Sizes #}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.purchase_date.id_for_label }}" class="form-label">{{ form.purchase_date.label }} <span class="text-danger">*</span></label>
+                                    {{ form.purchase_date|add_class:"form-control" }}
+                                    {% if form.purchase_date.errors %}
+                                        <div class="text-danger small mt-1">{{ form.purchase_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.land_size.id_for_label }}" class="form-label">{{ form.land_size.label }}</label>
+                                    {{ form.land_size|add_class:"form-control" }}
+                                    {% if form.land_size.errors %}
+                                        <div class="text-danger small mt-1">{{ form.land_size.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.building_size.id_for_label }}" class="form-label">{{ form.building_size.label }}</label>
+                                    {{ form.building_size|add_class:"form-control" }}
+                                    {% if form.building_size.errors %}
+                                        <div class="text-danger small mt-1">{{ form.building_size.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Existing Loan Info #}
+                        <div class="mb-3 form-check">
+                            {{ form.has_existing_loan|add_class:"form-check-input" }}
+                            <label class="form-check-label" for="{{ form.has_existing_loan.id_for_label }}">
+                                {{ form.has_existing_loan.label }}
+                            </label>
+                            {% if form.has_existing_loan.errors %}
+                                <div class="text-danger small mt-1">{{ form.has_existing_loan.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div id="existingLoanDetails" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.existing_loan_balance.id_for_label }}" class="form-label">{{ form.existing_loan_balance.label }} <span class="text-danger">*</span></label>
+                                        {{ form.existing_loan_balance|add_class:"form-control" }}
+                                        {% if form.existing_loan_balance.errors %}
+                                            <div class="text-danger small mt-1">{{ form.existing_loan_balance.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.existing_bank.id_for_label }}" class="form-label">{{ form.existing_bank.label }} <span class="text-danger">*</span></label>
+                                        {{ form.existing_bank|add_class:"form-select" }}
+                                        {% if form.existing_bank.errors %}
+                                            <div class="text-danger small mt-1">{{ form.existing_bank.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'refinance:application_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                            </a>
+                            <button type="submit" class="btn btn-kathai">
+                                <i class="bi bi-save"></i> บันทึกทรัพย์สิน
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const hasExistingLoanCheckbox = document.getElementById('{{ form.has_existing_loan.id_for_label }}');
+        const existingLoanDetailsDiv = document.getElementById('existingLoanDetails');
+        const existingLoanBalanceInput = document.getElementById('{{ form.existing_loan_balance.id_for_label }}');
+        const existingBankSelect = document.getElementById('{{ form.existing_bank.id_for_label }}');
+
+        function toggleExistingLoanFields() {
+            if (hasExistingLoanCheckbox.checked) {
+                existingLoanDetailsDiv.style.display = 'block';
+                // Make fields required when visible
+                existingLoanBalanceInput.setAttribute('required', 'required');
+                existingBankSelect.setAttribute('required', 'required');
+            } else {
+                existingLoanDetailsDiv.style.display = 'none';
+                // Make fields not required when hidden
+                existingLoanBalanceInput.removeAttribute('required');
+                existingBankSelect.removeAttribute('required');
+                // Optionally clear values when hidden
+                existingLoanBalanceInput.value = '';
+                existingBankSelect.value = '';
+            }
+        }
+
+        // Initial state on page load
+        toggleExistingLoanFields();
+
+        // Add event listener for checkbox change
+        hasExistingLoanCheckbox.addEventListener('change', toggleExistingLoanFields);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,67 @@
+{# refinance/_best_pick_inline.html #}
+<section class="best-pick card border-0 shadow-sm mt-4">
+    <div class="best-pick__wrap">
+      <div class="icon-circle icon-circle--xl"><i class="bi bi-trophy-fill"></i></div>
+  
+      <div class="best-pick__text">
+        <div class="best-pick__label">ตัวเลือกที่ดีที่สุดจากการเปรียบเทียบ</div>
+        <div class="best-pick__bank">{{ item.bank_name }}</div>
+        <div class="best-pick__product">{{ item.product_name }}</div>
+      </div>
+  
+      <div class="best-pick__meta">
+        <div class="best-pick__price">
+          {{ item.monthly_payment|intcomma }} <small class="opacity-75">บาท/เดือน</small>
+        </div>
+        <div class="best-pick__sub">
+          อัตราเฉลี่ย 3 ปีแรก {{ item.avg_3_year_rate }}%
+          <span class="dot"></span>
+          ค่าธรรมเนียมประมาณ {{ item.total_fees|intcomma }} บาท
+        </div>
+      </div>
+  
+      <div class="best-pick__cta">
+        <a href="{% url 'refinance:apply_loan' item.product_id %}" class="btn btn-best">
+          <span class="btn-best__icon"><i class="bi bi-send-fill"></i></span>
+          สมัครเลย
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <style>
+    .best-pick{
+      border-radius:16px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      color:#fff;
+    }
+    .best-pick__wrap{
+      display:grid; grid-template-columns:auto 1fr auto auto;
+      gap:20px; align-items:center; padding:20px 24px;
+    }
+    .best-pick__label{ font-size:.9rem; opacity:.95; margin-bottom:4px; }
+    .best-pick__bank{ font-size:1.25rem; font-weight:800; line-height:1.1; }
+    .best-pick__product{ font-size:1rem; opacity:.95; line-height:1.15; }
+    .best-pick__meta{ text-align:right; }
+    .best-pick__price{ font-size:1.6rem; font-weight:800; letter-spacing:.2px; }
+    .best-pick__sub{ opacity:.95; font-size:.9rem; display:inline-flex; align-items:center; gap:10px; }
+    .best-pick__sub .dot{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.7); display:inline-block; }
+  
+    @media (max-width: 992px){
+      .best-pick__wrap{
+        grid-template-columns:auto 1fr;
+        grid-template-areas:
+          "icon text"
+          "meta meta"
+          "cta cta";
+      }
+      .best-pick__meta{ text-align:left; }
+    }
+    @media (max-width: 576px){
+      .best-pick__wrap{ gap:16px; padding:16px; }
+      .best-pick__bank{ font-size:1.1rem; }
+      .best-pick__price{ font-size:1.3rem; }
+      .btn-best{ width:100%; justify-content:center; }
+    }
+  </style>
+  

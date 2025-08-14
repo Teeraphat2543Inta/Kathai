@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load humanize %}
+
+{% block title %}แดชบอร์ด - KATHAI{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-3"> {# ลด mb-4 เป็น mb-3 #}
+                <i class="bi bi-speedometer2"></i> แดชบอร์ด
+                <small class="text-muted fs-5">ยินดีต้อนรับ, {{ user.first_name|default:user.username }}</small> {# ลด font size ของชื่อผู้ใช้ #}
+            </h1>
+        </div>
+    </div>
+
+    {# ส่วนนี้ขนาดกำลังดีแล้ว ไม่ต้องปรับมาก #}
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3"> {# เพิ่ม col-sm-6 และ mb-3 เพื่อรองรับจอเล็กและระยะห่าง #}
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body py-3"> {# ลด padding #}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ user_properties|length }}</h4> {# ลด mb-0 #}
+                            <small class="mb-0">ทรัพย์สิน</small> {# ลด font size #}
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-house-door fs-3"></i> {# ลด icon size #}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ user_applications|length }}</h4>
+                            <small class="mb-0">คำขอสินเชื่อ</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-file-text fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ user_documents|length }}</h4>
+                            <small class="mb-0">เอกสาร</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-file-earmark fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ activity_logs|length }}</h4>
+                            <small class="mb-0">กิจกรรมล่าสุด</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-activity fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header py-2"> {# ลด padding #}
+                    <h5 class="mb-0 fs-6"><i class="bi bi-lightning-charge"></i> การดำเนินการด่วน</h5> {# ลด font size #}
+                </div>
+                <div class="card-body py-3"> {# ลด padding #}
+                    <div class="row text-center g-2"> {# ลดระยะห่างระหว่าง col ด้วย g-2 #}
+                        <div class="col-6 col-md-3">
+                            <a href="{% url 'refinance:loan_comparison_wizard' %}" class="btn btn-primary btn-sm w-100 h-100 d-flex flex-column justify-content-center align-items-center py-2"> {# ใช้ btn-sm, ลด py-3 เป็น py-2 #}
+                                <i class="bi bi-calculator fs-4 mb-1"></i> {# ลด icon size, ลด mt-2 เป็น mb-1 #}
+                                <span class="d-block small">เปรียบเทียบดอกเบี้ย</span> {# ใช้ small #}
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="{% url 'refinance:property_create' %}" class="btn btn-success btn-sm w-100 h-100 d-flex flex-column justify-content-center align-items-center py-2">
+                                <i class="bi bi-plus-circle fs-4 mb-1"></i>
+                                <span class="d-block small">เพิ่มทรัพย์สิน</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="{% url 'refinance:loan_application_create' %}" class="btn btn-info btn-sm w-100 h-100 d-flex flex-column justify-content-center align-items-center py-2">
+                                <i class="bi bi-file-plus fs-4 mb-1"></i>
+                                <span class="d-block small">ยื่นคำขอสินเชื่อ</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="{% url 'refinance:document_upload' %}" class="btn btn-warning btn-sm w-100 h-100 d-flex flex-column justify-content-center align-items-center py-2">
+                                <i class="bi bi-cloud-upload fs-4 mb-1"></i>
+                                <span class="d-block small">อัปโหลดเอกสาร</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center py-2"> {# ลด padding #}
+                    <h5 class="mb-0 fs-6"><i class="bi bi-house"></i> ทรัพย์สินล่าสุด</h5> {# ลด font size #}
+                    <a href="{% url 'refinance:property_list' %}" class="btn btn-sm btn-outline-primary py-1 px-2">ดูทั้งหมด</a> {# ใช้ btn-sm, ลด padding #}
+                </div>
+                <div class="card-body p-0"> {# ลด padding เป็น p-0 #}
+                    {% if user_properties %}
+                        <div class="list-group list-group-flush">
+                        {% for property in user_properties %}
+                            <a href="{% url 'refinance:property_detail' property.pk %}" class="list-group-item list-group-item-action py-2"> {# ลด padding #}
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <span class="mb-0 text-primary fw-medium">{{ property.name }}</span> {# ใช้ span แทน h6, ใช้ fw-medium #}
+                                    <small class="text-muted text-end">{{ property.created_at|date:"d/m/Y" }}</small>
+                                </div>
+                                <small class="text-muted d-block mt-0">{{ property.get_property_type_display }} - {{ property.province }}</small> {# ใช้ small, d-block, mt-0 #}
+                            </a>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3 small">ยังไม่มีทรัพย์สิน</p> {# ใช้ small #}
+                        <div class="text-center pb-3"> {# เพิ่ม pb-3 #}
+                            <a href="{% url 'refinance:property_create' %}" class="btn btn-primary btn-sm">เพิ่มทรัพย์สินแรก</a> {# ใช้ btn-sm #}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center py-2">
+                    <h5 class="mb-0 fs-6"><i class="bi bi-file-text"></i> คำขอล่าสุด</h5>
+                    <a href="{% url 'refinance:loan_application_list' %}" class="btn btn-sm btn-outline-primary py-1 px-2">ดูทั้งหมด</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if user_applications %}
+                        <div class="list-group list-group-flush">
+                        {% for application in user_applications %}
+                            <a href="{% url 'refinance:loan_application_detail' application.pk %}" class="list-group-item list-group-item-action py-2">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <span class="mb-0 text-primary fw-medium">คำขอ #{{ application.id }}</span>
+                                    {% if application.status == 'draft' %}
+                                        <span class="badge bg-secondary text-white-50">ร่าง</span> {# ปรับสี text สำหรับ badge #}
+                                    {% elif application.status == 'submitted' %}
+                                        <span class="badge bg-primary">ส่งแล้ว</span>
+                                    {% elif application.status == 'approved' %}
+                                        <span class="badge bg-success">อนุมัติ</span>
+                                    {% elif application.status == 'rejected' %}
+                                        <span class="badge bg-danger">ปฏิเสธ</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ application.get_status_display }}</span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted d-block mt-0">
+                                    ทรัพย์สิน: {{ application.property.name|default:application.property.get_property_type_display }}<br>
+                                    ยื่นเมื่อ: {{ application.submitted_at|date:"d/m/Y" }}
+                                </small>
+                            </a>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3 small">ยังไม่มีคำขอสินเชื่อ</p>
+                        <div class="text-center pb-3">
+                            <a href="{% url 'refinance:loan_application_create' %}" class="btn btn-primary btn-sm">ยื่นคำขอแรก</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if activity_logs %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header py-2">
+                    <h5 class="mb-0 fs-6"><i class="bi bi-clock-history"></i> กิจกรรมล่าสุด</h5>
+                </div>
+                <div class="card-body p-0"> {# ลด padding #}
+                    <div class="list-group list-group-flush">
+                    {% for log in activity_logs %}
+                        <div class="list-group-item py-2"> {# ลด padding #}
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    {% if log.activity_type == 'login' %}
+                                        <i class="bi bi-box-arrow-in-right text-success fs-6"></i> {# ลด icon size #}
+                                    {% elif log.activity_type == 'property_add' %}
+                                        <i class="bi bi-house-add text-primary fs-6"></i>
+                                    {% elif log.activity_type == 'loan_application' %}
+                                        <i class="bi bi-file-plus text-info fs-6"></i>
+                                    {% elif log.activity_type == 'document_upload' %}
+                                        <i class="bi bi-cloud-upload text-warning fs-6"></i>
+                                    {% else %}
+                                        <i class="bi bi-activity text-muted fs-6"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <p class="mb-0 small">{{ log.description }}</p> {# ใช้ small #}
+                                    <small class="text-muted text-end">{{ log.created_at|timesince }} ที่แล้ว</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

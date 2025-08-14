@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}คำขอของฉัน - KATHAI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-file-earmark-text"></i> คำขอของฉัน</h1>
+                <a href="{% url 'refinance:application_create' %}" class="btn btn-kathai">
+                    <i class="bi bi-plus"></i> ยื่นคำขอใหม่
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if applications %}
+    <div class="row">
+        {% for application in applications %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong>คำขอ #{{ application.id }}</strong>
+                    <span class="badge bg-secondary">{{ application.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <h6>{{ application.property.get_property_type_display }}</h6>
+                    <p class="text-muted small">{{ application.property.address|truncatechars:50 }}</p>
+                    <div class="row">
+                        <div class="col-12">
+                            <small class="text-muted">จำนวนเงินกู้:</small><br>
+                            <strong>{{ application.loan_amount|floatformat:0 }} บาท</strong> {# เปลี่ยนจาก desired_loan_amount เป็น loan_amount #}
+                        </div>
+                    </div>
+                    <small class="text-muted">ยื่นเมื่อ: {{ application.submitted_at|date:"d/m/Y" }}</small> {# เปลี่ยนจาก application_date เป็น submitted_at หรือ created_at #}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'refinance:application_detail' application.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="bi bi-eye"></i> ดูรายละเอียด
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-file-earmark-text text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="text-muted mt-3">ยังไม่มีคำขอ</h4>
+                    <p class="text-muted">เริ่มต้นยื่นคำขอรีไฟแนนซ์เพื่อประหยัดดอกเบี้ย</p>
+                    <a href="{% url 'refinance:application_create' %}" class="btn btn-kathai">
+                        <i class="bi bi-plus"></i> ยื่นคำขอแรก
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

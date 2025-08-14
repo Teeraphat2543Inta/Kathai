@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ติดต่อเรา - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h2><i class="bi bi-chat-dots"></i> ติดต่อเรา</h2>
+            <p class="lead text-muted">เรายินดีให้คำปรึกษาและช่วยเหลือคุณ</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Contact Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-envelope"></i> ส่งข้อความถึงเรา</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="name" name="name" placeholder="ชื่อ-นามสกุล" required>
+                                    <label for="name">ชื่อ-นามสกุล *</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="อีเมล" required>
+                                    <label for="email">อีเมล *</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="เบอร์โทรศัพท์">
+                                    <label for="phone">เบอร์โทรศัพท์</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="subject" name="subject" required>
+                                        <option value="">เลือกหัวข้อ</option>
+                                        <option value="loan_inquiry">สอบถามเรื่องสินเชื่อ</option>
+                                        <option value="refinance_inquiry">สอบถามเรื่องรีไฟแนนซ์</option>
+                                        <option value="technical_support">ปัญหาการใช้งานเว็บไซต์</option>
+                                        <option value="complaint">ร้องเรียน</option>
+                                        <option value="suggestion">ข้อเสนอแนะ</option>
+                                        <option value="partnership">ความร่วมมือทางธุรกิจ</option>
+                                        <option value="other">อื่นๆ</option>
+                                    </select>
+                                    <label for="subject">หัวข้อ *</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" id="message" name="message" style="height: 150px" placeholder="ข้อความ" required></textarea>
+                            <label for="message">ข้อความ *</label>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="privacy_agree" required>
+                            <label class="form-check-label" for="privacy_agree">
+                                ฉันยอมรับ <a href="{% url 'accounts:privacy_policy' %}" target="_blank">นโยบายความเป็นส่วนตัว</a> และ <a href="{% url 'accounts:terms_and_conditions' %}" target="_blank">เงื่อนไขการใช้บริการ</a>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-kathai">
+                            <i class="bi bi-send"></i> ส่งข้อความ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="col-lg-4">
+            <!-- Company Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-building"></i> ข้อมูลบริษัท</h6>
+                </div>
+                <div class="card-body">
+                    <div class="contact-info-item">
+                        <i class="bi bi-geo-alt-fill text-primary"></i>
+                        <div>
+                            <strong>ที่อยู่</strong>
+                            <p class="mb-0">
+                                บริษัท คัดสรร อินโนเวชั่น จำกัด<br>
+                                170/57 อาคารโอเชี่ยนทาวเวอร์ 1 ชั้น 18<br>
+                                ซอยสุขุมวิท 16 (สามมิตร)<br>
+                                ถ.รัชดาภิเษกตัดใหม่<br>
+                                แขวงคลองเตย เขตคลองเตย<br>
+                                กรุงเทพฯ 10110
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-info-item">
+                        <i class="bi bi-telephone-fill text-success"></i>
+                        <div>
+                            <strong>โทรศัพท์</strong>
+                            <p class="mb-0">02-XXX-XXXX</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-info-item">
+                        <i class="bi bi-envelope-fill text-info"></i>
+                        <div>
+                            <strong>อีเมล</strong>
+                            <p class="mb-0">info@kathai.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-info-item">
+                        <i class="bi bi-clock-fill text-warning"></i>
+                        <div>
+                            <strong>เวลาทำการ</strong>
+                            <p class="mb-0">
+                                จันทร์ - ศุกร์: 9:00 - 18:00<br>
+                                เสาร์: 9:00 - 16:00<br>
+                                อาทิตย์: ปิด
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Social Media -->
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-share"></i> ตามเราได้ที่</h6>
+                </div>
+                <div class="card-body">
+                    <div class="social-links">
+                        <a href="#" class="social-link facebook">
+                            <i class="bi bi-facebook"></i>
+                            <span>Facebook</span>
+                        </a>
+                        <a href="#" class="social-link line">
+                            <i class="bi bi-line"></i>
+                            <span>Line Official</span>
+                        </a>
+                        {% comment %}<a href="#" class="social-link twitter">
+                            <i class="bi bi-twitter-x"></i>
+                            <span>Twitter</span>
+                        </a>
+                        <a href="#" class="social-link linkedin">
+                            <i class="bi bi-linkedin"></i>
+                            <span>LinkedIn</span>
+                        </a>{% endcomment %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-4"><i class="bi bi-question-circle"></i> คำถามที่พบบ่อย</h4>
+        </div>
+        <div class="col-md-6">
+            <div class="accordion" id="faqAccordion1">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            การรีไฟแนนซ์คืออะไร?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion1">
+                        <div class="accordion-body">
+                            การรีไฟแนนซ์คือการกู้เงินจากธนาคารใหม่เพื่อไปชำระหนี้ธนาคารเดิม โดยมีวัตถุประสงค์เพื่อลดอัตราดอกเบี้ยหรือปรับเงื่อนไขการกู้ให้ดีขึ้น
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            ใช้บริการฟรีหรือไม่?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion1">
+                        <div class="accordion-body">
+                            การใช้บริการเปรียบเทียบสินเชื่อและปรึกษาผู้เชี่ยวชาญของเราเป็นฟรี 100% โดยเราได้รับค่าบริการจากธนาคารพาร์ทเนอร์เมื่อลูกค้าอนุมัติสินเชื่อ
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            ใช้เวลานานแค่ไหนในการอนุมัติ?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion1">
+                        <div class="accordion-body">
+                            โดยทั่วไปธนาคารจะใช้เวลา 3-7 วันทำการในการพิจารณาอนุมัติ หากเอกสารครบถ้วนและเป็นไปตามเงื่อนไข
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="accordion" id="faqAccordion2">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            ต้องเตรียมเอกสารอะไรบ้าง?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion2">
+                        <div class="accordion-body">
+                            เอกสารพื้นฐาน: บัตรประชาชน หลักฐานรายได้ สลิปเงินเดือน เอกสารสิทธิ์ทรัพย์สิน และสำเนาสมุดบัญชีธนาคาร 6 เดือนย้อนหลัง
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                            มีค่าใช้จ่ายอะไรบ้าง?
+                        </button>
+                    </h2>
+                    <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion2">
+                        <div class="accordion-body">
+                            ค่าใช้จ่ายหลัก: ค่าธรรมเนียมจัดการ ค่าประเมินทรัพย์ ค่าโอนกรรมสิทธิ์ และค่าอากรแสตมป์ ซึ่งแตกต่างกันไปตามธนาคารและจำนวนเงินกู้
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                            สามารถรีไฟแนนซ์หลายครั้งได้หรือไม่?
+                        </button>
+                    </h2>
+                    <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion2">
+                        <div class="accordion-body">
+                            สามารถทำได้ แต่ต้องคำนึงถึงค่าใช้จ่ายและผลประโยชน์ที่จะได้รับ รวมถึงเงื่อนไขของธนาคารแต่ละแห่ง
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-map"></i> แผนที่</h5>
+                </div>
+                <div class="card-body p-0">
+                    <iframe
+                        src="https://maps.google.com/maps?q=PHJ6%2B44%20%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E%E0%B8%A1%E0%B8%AB%E0%B8%B2%E0%B8%99%E0%B8%84%E0%B8%A3&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                        width="100%"
+                        height="450"
+                        style="border:0;"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.contact-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--kathai-border-light);
+}
+
+.contact-info-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.contact-info-item i {
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.contact-info-item strong {
+    color: var(--kathai-dark-blue);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.social-links {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: var(--kathai-transition);
+    border: 1px solid var(--kathai-border-light);
+}
+
+.social-link:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--kathai-shadow-sm);
+    text-decoration: none;
+}
+
+.social-link.facebook {
+    color: #1877f2;
+    border-color: #1877f2;
+}
+
+.social-link.facebook:hover {
+    background-color: rgba(24, 119, 242, 0.1);
+    color: #1877f2;
+}
+
+.social-link.line {
+    color: #00c300;
+    border-color: #00c300;
+}
+
+.social-link.line:hover {
+    background-color: rgba(0, 195, 0, 0.1);
+    color: #00c300;
+}
+
+.social-link.twitter {
+    color: #1da1f2;
+    border-color: #1da1f2;
+}
+
+.social-link.twitter:hover {
+    background-color: rgba(29, 161, 242, 0.1);
+    color: #1da1f2;
+}
+
+.social-link.linkedin {
+    color: #0077b5;
+    border-color: #0077b5;
+}
+
+.social-link.linkedin:hover {
+    background-color: rgba(0, 119, 181, 0.1);
+    color: #0077b5;
+}
+
+.social-link i {
+    font-size: 1.25rem;
+}
+
+.accordion-button {
+    font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(255, 71, 19, 0.1);
+    color: var(--kathai-gold-primary);
+}
+
+.map-placeholder {
+    background-color: var(--kathai-off-white);
+    border-radius: 8px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}

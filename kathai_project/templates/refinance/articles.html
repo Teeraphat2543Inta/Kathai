@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}บทความ - คัดให้ (KATHAI){% endblock %}
+
+{% block content %}
+<section class="articles-section py-5 bg-light-bg">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center section-heading">
+                <h1 class="fw-bold display-4">บทความ</h1>
+                <p class="lead text-muted">อัปเดตข่าวสารและบทความดี ๆ เกี่ยวกับการเงินและการรีไฟแนนซ์</p>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-4">
+            {% for article in articles %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+                    {% if article.image %}
+                    <img src="{{ article.image.url }}" class="card-img-top" alt="{{ article.title }}">
+                    {% else %}
+                    <img src="https://via.placeholder.com/400x250.png?text={{ article.title }}" class="card-img-top" alt="Placeholder Image">
+                    {% endif %}
+                    <div class="card-body d-flex flex-column p-4">
+                        <h5 class="card-title text-dark-blue fw-bold">{{ article.title }}</h5>
+                        <p class="card-text text-muted flex-grow-1">{{ article.summary }}</p>
+                        <a href="{% url 'refinance:article_detail' slug=article.slug %}" class="btn btn-outline-primary btn-sm mt-3 stretched-link">อ่านเพิ่มเติม <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">ยังไม่มีบทความในขณะนี้ โปรดกลับมาตรวจสอบภายหลัง</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,492 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load refinance_tags %}
+
+{% block title %}ผลการเปรียบเทียบสินเชื่อรีไฟแนนซ์ - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="comparison-header shadow-sm">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+      <div class="mb-3 mb-md-0">
+        <h1 class="title mb-1">ผลการเปรียบเทียบสินเชื่อรีไฟแนนซ์</h1>
+        <p class="subtitle">เรียงลำดับข้อเสนอสินเชื่อที่เหมาะกับเงื่อนไขของคุณ</p>
+      </div>
+      <div class="mini-stats d-flex gap-3">
+        <div class="mini-stat">
+          <div class="mini-label"><i class="bi bi-bank"></i> ข้อเสนอที่พบ</div>
+          <div class="mini-value text-primary">{{ total_products_found|default:0 }}</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-label"><i class="bi bi-currency-dollar"></i> LTV</div>
+          <div class="mini-value {% if ltv_ratio > 80 %}text-danger{% else %}text-success{% endif %}">{{ ltv_ratio|floatformat:2 }}%</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-label"><i class="bi bi-person-check"></i> DSR</div>
+          <div class="mini-value {% if dsr_ratio > 70 %}text-danger{% else %}text-success{% endif %}">{{ dsr_ratio|floatformat:2 }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ข้อมูลที่กรอก -->
+  <div class="card card-ghost mb-4">
+    <div class="card-body p-3 p-md-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="section-title mb-0"><i class="bi bi-info-circle me-2"></i>ข้อมูลที่คุณกรอก</h5>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'refinance:loan_comparison_wizard' %}">
+          แก้ไขข้อมูล <i class="bi bi-pencil-square ms-1"></i>
+        </a>
+      </div>
+      <div class="row g-3 g-md-4">
+        <div class="col-md-6">
+          <div class="summary-block">
+            <div class="block-title">ข้อมูลทรัพย์สิน</div>
+            <div class="item"><span>ราคาทรัพย์สิน</span><strong>{{ input_data.property_price|intcomma }} บาท</strong></div>
+            <div class="item"><span>ยอดหนี้คงเหลือ</span><strong>{{ input_data.current_loan_balance|intcomma }} บาท</strong></div>
+            <div class="item"><span>ประเภททรัพย์สิน</span><strong>{{ user_property_type }}</strong></div>
+            <div class="item"><span>จังหวัด</span><strong>{{ user_province }}</strong></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="summary-block">
+            <div class="block-title">ข้อมูลผู้กู้</div>
+            <div class="item"><span>อาชีพ</span><strong>{{ user_occupation }}</strong></div>
+            <div class="item"><span>รายได้ต่อเดือน</span><strong>{{ input_data.monthly_income|intcomma }} บาท</strong></div>
+            <div class="item"><span>ธนาคารปัจจุบัน</span><strong>{{ user_current_bank }}</strong></div>
+            <div class="item"><span>ระยะเวลาผ่อนคงเหลือ</span><strong>{{ user_remaining_years }} ปี</strong></div>
+            <div class="item"><span>ต้องการเงินกู้เพิ่ม</span><strong>{{ user_need_extra_loan }}</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if not has_results %}
+  <div class="card card-ghost">
+    <div class="card-body text-center py-5">
+      <p class="lead text-muted"><i class="bi bi-exclamation-circle me-2"></i>ไม่พบข้อเสนอสินเชื่อที่ตรงกับเงื่อนไขของคุณ</p>
+      <a href="{% url 'refinance:loan_comparison_wizard' %}" class="btn btn-warning mt-2">ลองกรอกข้อมูลใหม่</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ฟอร์มสำหรับเปรียบเทียบ -->
+  <form id="compareForm" action="{% url 'refinance:loan_summary_comparison' %}" method="post">
+    {% csrf_token %}
+
+    <!-- ปุ่มด้านบน -->
+    <div class="text-center mb-3">
+      <button type="submit" class="btn btn-primary btn-lg px-4" id="compareButtonTop" disabled>
+        <i class="bi bi-columns-gap me-2"></i> เปรียบเทียบที่เลือก (<span class="selected-count">0</span>)
+      </button>
+      <small class="text-muted d-block mt-1">เลือก 2–5 รายการเพื่อเปรียบเทียบ{% if not user.is_authenticated %} • <span class="text-danger"><i class="bi bi-lock-fill me-1"></i>เข้าสู่ระบบเพื่อใช้งาน</span>{% endif %}</small>
+    </div>
+
+    <div class="row g-3 g-md-4">
+      {% if comparison_data %}
+        {% for item in comparison_data %}
+        <div class="col-md-6 col-lg-4">
+          <div class="compare-card h-100">
+            <div class="compare-card__head">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="bank-name">
+                  {% if user.is_authenticated %}{{ item.bank_name }}{% else %}ธนาคาร XXXXXX{% endif %}
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input compare-checkbox"
+                         type="checkbox"
+                         name="selected_products"
+                         value="{{ item.product.id }}"
+                         id="checkbox-{{ item.product.id }}"
+                         {% if not user.is_authenticated %}disabled data-bs-toggle="tooltip" data-bs-placement="top" title="เข้าสู่ระบบเพื่อเปรียบเทียบ"{% endif %}>
+                </div>
+              </div>
+              <div class="product-name text-primary">{{ item.product_name }}</div>
+            </div>
+
+            <div class="compare-card__body">
+              <!-- ไฮไลต์ตัวเลขสำคัญ -->
+              <div class="pill-stats">
+                <div class="pill">
+                  <div class="pill-label">ผ่อน/เดือน</div>
+                  <div class="pill-value text-primary">{{ item.monthly_payment|intcomma }} <small>บาท</small></div>
+                </div>
+                <div class="pill">
+                  <div class="pill-label">ดอกเฉลี่ย 3 ปี</div>
+                  <div class="pill-value">{{ item.avg_3_year_rate|default:"-" }}<small>%</small></div>
+                </div>
+                <div class="pill">
+                  <div class="pill-label">ค่าธรรมเนียมรวม</div>
+                  <div class="pill-value">{{ item.total_fees|intcomma|default:"-" }} <small>บาท</small></div>
+                </div>
+              </div>
+
+              <!-- รายละเอียดหลัก -->
+              <ul class="kv-list mt-3">
+                {% if user.is_authenticated %}
+                  <li><i class="bi bi-percent"></i> อัตราดอกเบี้ยเฉลี่ย 3 ปีแรก <strong>{{ item.avg_3_year_rate }}%</strong></li>
+                  <li><i class="bi bi-graph-up"></i> ดอกเบี้ยตลอดสัญญา <strong>{{ item.total_interest|intcomma }}</strong> บาท</li>
+                  <li><i class="bi bi-tags"></i> ค่าธรรมเนียมรวม <strong>{{ item.total_fees|intcomma }}</strong> บาท</li>
+                  <li><i class="bi bi-wallet2"></i> ประหยัดต่อเดือน
+                    <strong class="{% if input_data.current_monthly_payment and item.monthly_payment < input_data.current_monthly_payment %}text-success{% endif %}">
+                      {% if input_data.current_monthly_payment and item.monthly_payment < input_data.current_monthly_payment %}
+                        {{ input_data.current_monthly_payment|sub:item.monthly_payment|intcomma }} บาท
+                      {% else %}
+                        0 บาท
+                      {% endif %}
+                    </strong>
+                  </li>
+                {% else %}
+                  <li class="text-muted"><i class="bi bi-percent"></i> อัตราดอกเบี้ยเฉลี่ย 3 ปีแรก <strong>โปรดเข้าสู่ระบบ</strong></li>
+                  <li class="text-muted"><i class="bi bi-graph-up"></i> ดอกเบี้ยตลอดสัญญา <strong>โปรดเข้าสู่ระบบ</strong></li>
+                  <li class="text-muted"><i class="bi bi-tags"></i> ค่าธรรมเนียมรวม <strong>โปรดเข้าสู่ระบบ</strong></li>
+                  <li class="text-muted"><i class="bi bi-wallet2"></i> ประหยัดต่อเดือน <strong>โปรดเข้าสู่ระบบ</strong></li>
+                {% endif %}
+                <li><i class="bi bi-star"></i> โปรโมชั่น
+                  <span class="text-info">{{ item.promotion_title|default:"ไม่มีโปรโมชั่นพิเศษ" }}</span>
+                </li>
+                <li><i class="bi bi-clock-history"></i> ระยะเวลาสูงสุด <strong>{{ item.max_term }}</strong> ปี</li>
+              </ul>
+            </div>
+
+            <div class="compare-card__foot">
+              {% if user.is_authenticated %}
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#productDetailModal-{{ forloop.counter }}">
+                  <i class="bi bi-search me-1"></i> รายละเอียด
+                </button>
+                <a href="{% url 'refinance:apply_loan' item.product.id %}" class="btn btn-kathai btn-sm">
+                  <i class="bi bi-send-fill me-1"></i> สมัครเลย
+                </a>
+              {% else %}
+                <button type="button" class="btn btn-outline-secondary btn-sm" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="เข้าสู่ระบบเพื่อดูรายละเอียด">
+                  <i class="bi bi-search me-1"></i> รายละเอียด
+                </button>
+                <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-box-arrow-in-right me-1"></i> เข้าสู่ระบบ
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal รายละเอียด (เดิม) -->
+        <div class="modal fade" id="productDetailModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="productDetailModalLabel-{{ forloop.counter }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="productDetailModalLabel-{{ forloop.counter }}">
+                  {{ item.bank_name }} - {{ item.product_name }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body p-4">
+
+                <div class="row text-center mb-4">
+                  <div class="col-md-4 detail-summary-box">
+                    <p class="mb-1 text-muted small">ผ่อนต่อเดือน</p>
+                    <h4 class="text-primary fw-bold">{{ item.monthly_payment|intcomma }} บาท</h4>
+                  </div>
+                  <div class="col-md-4 detail-summary-box">
+                    <p class="mb-1 text-muted small">ประหยัดดอกเบี้ย 3 ปีแรก</p>
+                    <h4 class="text-success fw-bold">
+                      {% if item.total_interest_saved_3_years %}
+                        {{ item.total_interest_saved_3_years|intcomma }} บาท
+                      {% else %}N/A{% endif %}
+                    </h4>
+                  </div>
+                  <div class="col-md-4 detail-summary-box">
+                    <p class="mb-1 text-muted small">ดอกเบี้ยพิเศษ 3 ปีแรก</p>
+                    <h4 class="text-primary fw-bold">{{ item.avg_3_year_rate }}%</h4>
+                  </div>
+                </div>
+
+                <h6 class="text-primary fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>อัตราดอกเบี้ยแต่ละปี</h6>
+                <div class="table-responsive mb-2">
+                  <table class="table table-bordered table-striped text-center detail-table">
+                    <thead class="table-light">
+                      <tr><th>ปีที่</th><th>อัตราดอกเบี้ย</th><th>(เทียบกับ M)</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>1</td><td>{{ item.first_year_rate }}%</td><td>(M - {{ item.mrr_spread_first_year|floatformat:3 }}%)</td></tr>
+                      <tr><td>2</td><td>{{ item.second_year_rate }}%</td><td>(M - {{ item.mrr_spread_second_year|floatformat:3 }}%)</td></tr>
+                      <tr><td>3</td><td>{{ item.third_year_rate|default:item.regular_rate }}%</td><td>(M - {{ item.mrr_spread_third_year|default:item.mrr_spread|floatformat:3 }}%)</td></tr>
+                      <tr><td>ปีที่ 4 - {{ item.max_term }}</td><td>{{ item.regular_rate }}%</td><td>(M - {{ item.mrr_spread|floatformat:3 }}%)</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="text-muted small text-end">M (MRR/MLR/MHR) ปัจจุบัน: {{ item.current_mrr }}%</p>
+
+                <hr class="my-4">
+
+                <h6 class="text-primary fw-bold mb-3"><i class="bi bi-cash-coin me-2"></i>ค่าใช้จ่าย & เอกสาร</h6>
+                <ul class="list-unstyled detail-list mb-2">
+                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ค่าจดจำนอง:</strong>
+                    {% if item.mortgage_registration_fee == 'ฟรี' or item.mortgage_registration_fee == 0 %}
+                      <span class="text-success">ฟรี</span>
+                    {% elif item.mortgage_registration_fee %}
+                      <span class="text-dark">{{ item.mortgage_registration_fee|intcomma }} บาท</span>
+                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
+                    <span class="text-muted small ms-2">(~1% ของวงเงิน)</span>
+                  </li>
+                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ค่าอากรแสตมป์:</strong>
+                    {% if item.stamp_duty_fee == 'ฟรี' or item.stamp_duty_fee == 0 %}
+                      <span class="text-success">ฟรี</span>
+                    {% elif item.stamp_duty_fee %}
+                      <span class="text-dark">{{ item.stamp_duty_fee|intcomma }} บาท</span>
+                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
+                    <span class="text-muted small ms-2">(~0.05% ของวงเงิน)</span>
+                  </li>
+                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ค่าประเมินราคา:</strong>
+                    {% if item.appraisal_fee_amount == 'ฟรี' or item.appraisal_fee_amount == 0 %}
+                      <span class="text-success">ฟรี</span>
+                    {% elif item.appraisal_fee_amount %}
+                      <span class="text-dark">{{ item.appraisal_fee_amount|intcomma }} บาท</span>
+                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
+                  </li>
+                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ค่าจัดการสินเชื่อ:</strong>
+                    {% if item.processing_fee_amount == 'ฟรี' or item.processing_fee_amount == 0 %}
+                      <span class="text-success">ฟรี</span>
+                    {% elif item.processing_fee_amount %}
+                      <span class="text-dark">{{ item.processing_fee_amount|intcomma }} บาท</span>
+                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
+                  </li>
+                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>MRTA:</strong>
+                    {% if item.mrta_insurance_fee == 'ฟรี' or item.mrta_insurance_fee == 0 %}
+                      <span class="text-success">ฟรี</span>
+                    {% elif item.mrta_insurance_fee %}
+                      <span class="text-dark">{{ item.mrta_insurance_fee|intcomma }} บาท</span>
+                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
+                  </li>
+                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ประกันอัคคีภัย:</strong>
+                    {% if item.fire_insurance_fee == 'ฟรี' or item.fire_insurance_fee == 0 %}
+                      <span class="text-success">ฟรี</span>
+                    {% elif item.fire_insurance_fee %}
+                      <span class="text-dark">{{ item.fire_insurance_fee|intcomma }} บาท</span>
+                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
+                  </li>
+                </ul>
+                <p class="mb-0 fw-bold ms-1">
+                  <i class="bi bi-check-circle-fill text-success me-2"></i> รวมค่าใช้จ่ายโดยประมาณ:
+                  <span class="text-primary">{{ item.total_fees|intcomma }} บาท</span>
+                </p>
+
+                {% if item.required_documents %}
+                <h6 class="text-primary fw-bold mt-4 mb-2"><i class="bi bi-file-earmark-text-fill me-2"></i>เอกสารที่ต้องเตรียม</h6>
+                <ul class="list-unstyled ms-2">
+                  {% for doc in item.required_documents %}
+                  <li><i class="bi bi-file-earmark me-2 text-info"></i>{{ doc }}</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+
+                {% if item.document_download_url %}
+                  <a href="{{ item.document_download_url }}" class="btn btn-outline-info btn-sm" target="_blank">
+                    <i class="bi bi-download me-1"></i> ดาวน์โหลดเอกสาร
+                  </a>
+                {% endif %}
+
+                <p class="small text-muted mt-4">
+                  <i class="bi bi-info-circle-fill me-1 text-primary"></i>
+                  ค่าใช้จ่ายเป็นประมาณการจริงอาจเปลี่ยนแปลงตามนโยบายธนาคาร
+                </p>
+
+                <hr class="my-4">
+
+                <h6 class="text-primary fw-bold mb-2"><i class="bi bi-plus-circle-fill me-2"></i>วงเงินกู้เพิ่ม</h6>
+                <ul class="list-unstyled detail-list mb-0">
+                  <li><i class="bi bi-arrow-right-short me-2"></i>กู้เพิ่มได้สูงสุด:
+                    <strong class="text-success">
+                      {% if item.additional_loan_ltv_max %}{{ item.additional_loan_ltv_max }}% ของราคาประเมิน{% else %}ไม่ระบุ/โปรดสอบถาม{% endif %}
+                    </strong>
+                  </li>
+                  <li><i class="bi bi-arrow-right-short me-2"></i>ดอกเบี้ย 3 ปีแรก (วงเงินเพิ่ม):
+                    <strong>{% if item.additional_loan_avg_3_year_rate %}{{ item.additional_loan_avg_3_year_rate }}%{% else %}ไม่ระบุ/โปรดสอบถาม{% endif %}</strong>
+                  </li>
+                  <li><i class="bi bi-arrow-right-short me-2"></i>ดอกเบี้ยตลอดอายุสัญญา (วงเงินเพิ่ม):
+                    <strong>{% if item.additional_loan_avg_lifetime_rate %}{{ item.additional_loan_avg_lifetime_rate }}%{% else %}ไม่ระบุ/โปรดสอบถาม{% endif %}</strong>
+                  </li>
+                </ul>
+
+                <hr class="my-4">
+
+                <h6 class="text-warning fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>หมายเหตุ</h6>
+                <ul class="small text-muted note-list">
+                  <li><i class="bi bi-chevron-right me-2"></i>กู้เท่าที่จำเป็นและชำระคืนไหว</li>
+                  <li><i class="bi bi-chevron-right me-2"></i>อัตราลอยตัวอาจเปลี่ยนแปลงตามประกาศของธนาคาร</li>
+                  <li><i class="bi bi-chevron-right me-2"></i>สิทธิ์และเงื่อนไขเป็นไปตามที่ธนาคารกำหนด</li>
+                </ul>
+              </div>
+              <div class="modal-footer bg-light">
+                <a href="{% url 'refinance:apply_loan' item.product.id %}" class="btn btn-kathai">
+                  <i class="bi bi-send-fill me-1"></i> สมัครเลย
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="card card-ghost">
+            <div class="card-body text-center py-5">
+              <p class="lead text-muted">ไม่พบข้อเสนอสินเชื่อที่ตรงกับเงื่อนไขของคุณ</p>
+              <a href="{% url 'refinance:loan_comparison_wizard' %}" class="btn btn-warning mt-2">ลองกรอกข้อมูลใหม่</a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Sticky compare dock (ลอยด้านล่าง) -->
+    <div id="compareDock" class="compare-dock shadow-lg">
+      <div class="dock-content">
+        <div class="dock-text">
+          <i class="bi bi-columns-gap me-2"></i> เลือกไว้ <strong class="selected-count">0</strong> รายการ
+          <span class="text-muted ms-2">เลือก 2–5 รายการเพื่อเปรียบเทียบ</span>
+        </div>
+        <div class="dock-actions">
+          <button type="submit" class="btn btn-primary" id="compareButtonDock" disabled>
+            เปรียบเทียบตอนนี้
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+  const checkboxes = document.querySelectorAll('.compare-checkbox');
+  const countEls = document.querySelectorAll('.selected-count');
+  const btnTop = document.getElementById('compareButtonTop');
+  const btnDock = document.getElementById('compareButtonDock');
+
+  function updateState() {
+    const checkedCount = document.querySelectorAll('.compare-checkbox:checked').length;
+    countEls.forEach(el => el.textContent = checkedCount);
+
+    const enable = (checkedCount >= 2 && checkedCount <= 5 && isAuthenticated);
+    [btnTop, btnDock].forEach(btn => { if (btn) btn.disabled = !enable; });
+
+    // แสดง/ซ่อน dock ตามการเลือก
+    const dock = document.getElementById('compareDock');
+    if (dock) {
+      dock.classList.toggle('show', checkedCount > 0);
+    }
+  }
+
+  checkboxes.forEach(chk => chk.addEventListener('change', updateState));
+  updateState();
+
+  // Bootstrap tooltip (สำหรับปุ่ม/สวิตช์ที่ disable)
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --surface:#ffffff;
+    --bg:#f5f6f8;
+    --text:#2b2f33;
+    --muted:#6c757d;
+    --primary:#0d6efd;
+    --gold:#a87f3b;
+    --border:#e6e8eb;
+    --soft:#f8f9fa;
+    --success:#198754;
+    --danger:#dc3545;
+    --shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+
+  body{background:var(--bg);}
+  .card-ghost{background:var(--surface); border:1px solid var(--border); border-radius:14px;}
+  .section-title{color:var(--text); font-weight:700;}
+  .title{font-weight:800; color:var(--text);}
+  .subtitle{color:var(--muted); margin:0;}
+
+  .comparison-header{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px 24px;
+    margin-bottom:18px;
+  }
+  .mini-stats .mini-stat{min-width:120px; text-align:center;}
+  .mini-label{color:var(--muted); font-size:.85rem;}
+  .mini-value{font-weight:800; font-size:1.3rem;}
+
+  .summary-block{background:var(--soft); border:1px dashed var(--border); border-radius:12px; padding:14px;}
+  .summary-block .block-title{color:var(--text); font-weight:600; margin-bottom:8px;}
+  .summary-block .item{display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed var(--border);}
+  .summary-block .item:last-child{border-bottom:none;}
+  .summary-block .item span{color:var(--muted);}
+  .summary-block .item strong{color:var(--text);}
+
+  .compare-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:0 6px 16px rgba(0,0,0,.05);
+    display:flex; flex-direction:column;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .compare-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow); }
+
+  .compare-card__head{ padding:16px 16px 8px 16px; border-bottom:1px solid var(--border);}
+  .bank-name{ font-weight:700; color:var(--text); }
+  .product-name{ font-weight:600; margin-top:6px; }
+
+  .compare-card__body{ padding:14px 16px; }
+  .pill-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .pill{ background:var(--soft); border:1px solid var(--border); border-radius:12px; padding:8px 10px; text-align:center; }
+  .pill-label{ color:var(--muted); font-size:.8rem; }
+  .pill-value{ font-weight:800; font-size:1.05rem; color:var(--text); }
+  .pill-value small{ font-weight:600; color:var(--muted); }
+
+  .kv-list{ list-style:none; padding-left:0; margin:0; }
+  .kv-list li{ display:flex; align-items:center; gap:8px; padding:6px 0; color:var(--text);}
+  .kv-list i{ color:#6c757d; }
+
+  .compare-card__foot{ padding:12px 16px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:8px; }
+
+  .btn-kathai{ background:var(--gold); color:#fff; border:none; }
+  .btn-kathai:hover{ background:#8c6a2e; color:#fff; }
+
+  /* Sticky compare dock */
+  .compare-dock{
+    position:fixed; left:0; right:0; bottom:-120px;
+    background:rgba(255,255,255,.98);
+    border-top:1px solid var(--border);
+    transition:bottom .2s ease;
+    z-index:1040;
+  }
+  .compare-dock.show{ bottom:0; }
+  .compare-dock .dock-content{
+    max-width:1200px; margin:0 auto; padding:10px 16px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .compare-dock .dock-text{ color:var(--text); }
+  .compare-dock .dock-actions .btn{ min-width:180px; }
+
+  /* Responsive */
+  @media (max-width: 991.98px){
+    .pill-stats{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width: 575.98px){
+    .pill-stats{ grid-template-columns:1fr; }
+    .mini-stats{ width:100%; justify-content:space-between; }
+  }
+</style>
+{% endblock %}

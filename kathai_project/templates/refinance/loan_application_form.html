@@ -1,0 +1,656 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+
+{% block title %}ยื่นคำขอรีไฟแนนซ์ - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <!-- Header / Progress -->
+      <div class="application-progress mb-4">
+        <div class="progress-header">
+          <h2><i class="bi bi-file-earmark-plus"></i> ยื่นคำขอรีไฟแนนซ์</h2>
+          <p class="text-muted">กรอกข้อมูลเพื่อยื่นคำขอสินเชื่อ ระบบจะใช้ข้อมูลจากการเปรียบเทียบล่าสุดของคุณ</p>
+        </div>
+        <div class="progress-steps">
+          <div class="step active"><div class="step-number">1</div><div class="step-label">ข้อมูลทั่วไป</div></div>
+          <div class="step"><div class="step-number">2</div><div class="step-label">รายละเอียดสินเชื่อ</div></div>
+          <div class="step"><div class="step-number">3</div><div class="step-label">เลือกธนาคาร & ยืนยัน</div></div>
+        </div>
+      </div>
+
+      {% if form.property.field.queryset|length > 0 %}
+
+      <form method="post" id="loanApplicationForm" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <!-- Notice -->
+        <div class="alert alert-info" id="autoFillNotice" style="display:none;">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle me-2"></i>
+            <div>
+              <strong>ข้อมูลถูกเติมอัตโนมัติ</strong>
+              <p class="mb-0">ระบบได้เติมข้อมูลจากการเปรียบเทียบล่าสุดของคุณ สามารถแก้ไขได้ตามต้องการ</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STEP 1 ========== -->
+        <div id="step1">
+          <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-house"></i> เลือกทรัพย์สิน</h5></div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    {{ form.property|add_class:"form-select" }}
+                    <label for="{{ form.property.id_for_label }}">เลือกทรัพย์สิน</label>
+                    {% if form.property.errors %}<div class="invalid-feedback">{{ form.property.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="property-actions">
+                    <a href="{% url 'refinance:property_create' %}" class="btn btn-outline-primary">
+                      <i class="bi bi-plus"></i> เพิ่มทรัพย์สินใหม่
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- รายละเอียดทรัพย์สิน -->
+              <div class="property-details" id="propertyDetails" style="display:none;">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="property-info">
+                      <h6>ข้อมูลทรัพย์สิน</h6>
+                      <div class="info-item"><span class="label">ประเภท:</span><span class="value" id="propertyType">-</span></div>
+                      <div class="info-item"><span class="label">มูลค่าประเมิน:</span><span class="value" id="propertyValue">-</span></div>
+                      <div class="info-item"><span class="label">จังหวัด:</span><span class="value" id="propertyProvince">-</span></div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="property-info">
+                      <h6>สินเชื่อปัจจุบัน</h6>
+                      <div class="info-item"><span class="label">หนี้คงเหลือ:</span><span class="value" id="currentDebt">-</span></div>
+                      <div class="info-item"><span class="label">ธนาคารปัจจุบัน:</span><span class="value" id="currentBank">-</span></div>
+                      <div class="info-item"><span class="label">LTV ปัจจุบัน:</span><span class="value" id="currentLTV">-</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button type="button" class="btn btn-kathai" onclick="goStep(2)">ถัดไป <i class="bi bi-arrow-right"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STEP 2 ========== -->
+        <div id="step2">
+          <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-calculator"></i> รายละเอียดสินเชื่อ</h5></div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    {{ form.loan_amount|add_class:"form-control" }}
+                    <label for="{{ form.loan_amount.id_for_label }}">จำนวนเงินกู้ที่ต้องการ (บาท)</label>
+                    {% if form.loan_amount.errors %}<div class="invalid-feedback">{{ form.loan_amount.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    {{ form.loan_term|add_class:"form-control" }}
+                    <label for="{{ form.loan_term.id_for_label }}">ระยะเวลากู้ (ปี)</label>
+                    {% if form.loan_term.errors %}<div class="invalid-feedback">{{ form.loan_term.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    {{ form.monthly_income|add_class:"form-control" }}
+                    <label for="{{ form.monthly_income.id_for_label }}">รายได้ต่อเดือน (บาท)</label>
+                    {% if form.monthly_income.errors %}<div class="invalid-feedback">{{ form.monthly_income.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    {{ form.monthly_expense|add_class:"form-control" }}
+                    <label for="{{ form.monthly_expense.id_for_label }}">รายจ่ายต่อเดือน (บาท)</label>
+                    {% if form.monthly_expense.errors %}<div class="invalid-feedback">{{ form.monthly_expense.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    {{ form.other_debts|add_class:"form-control" }}
+                    <label for="{{ form.other_debts.id_for_label }}">หนี้สินอื่น (บาท)</label>
+                    {% if form.other_debts.errors %}<div class="invalid-feedback">{{ form.other_debts.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    {{ form.purpose|add_class:"form-control" }}
+                    <label for="{{ form.purpose.id_for_label }}">วัตถุประสงค์</label>
+                    {% if form.purpose.errors %}<div class="invalid-feedback">{{ form.purpose.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="financial-summary mt-3" id="financialSummary">
+                <h6>สรุปข้อมูลทางการเงิน</h6>
+                <div class="row">
+                  <div class="col-md-4"><div class="summary-item"><span class="label">รายได้สุทธิ:</span><span class="value" id="netIncome">-</span></div></div>
+                  <div class="col-md-4"><div class="summary-item"><span class="label">อัตราส่วน DSR:</span><span class="value" id="dsrRatio">-</span></div></div>
+                  <div class="col-md-4"><div class="summary-item"><span class="label">อัตราส่วน LTV:</span><span class="value" id="ltvRatio">-</span></div></div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary" onclick="goStep(1)"><i class="bi bi-arrow-left"></i> ย้อนกลับ</button>
+                <button type="button" class="btn btn-kathai" onclick="goStep(3)">ถัดไป <i class="bi bi-arrow-right"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STEP 3 ========== -->
+        <div id="step3">
+          <!-- สินเชื่อที่แนะนำ -->
+          <div class="card mb-4" id="recommendedCard" style="display:none;">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="bi bi-bank"></i> สินเชื่อที่แนะนำ</h5>
+              <small class="text-muted">เลือกสินเชื่อที่ตรงกับความต้องการของคุณ</small>
+            </div>
+            <div class="card-body">
+              <div id="recommendedProducts"></div>
+            </div>
+          </div>
+
+          <!-- ธนาคารที่เลือกยื่นคำขอ -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="bi bi-building"></i> ธนาคารที่เลือกยื่นคำขอ</h5>
+              <small class="text-muted">เลือกได้มากกว่า 1 แห่ง</small>
+            </div>
+            <div class="card-body">
+              <div class="selected-banks" id="selectedBanks">
+                <div class="banks-container">
+
+                  {% for item in banks_with_stats %}
+                  {% with bank=item.bank %}
+                  {% with bank_id_str=bank.id|stringformat:"s" %}
+                  <div class="bank-option">
+                    <div class="form-check">
+                      <input
+                        type="checkbox"
+                        class="form-check-input"
+                        name="selected_banks"
+                        id="id_selected_banks_{{ bank.id }}"
+                        value="{{ bank.id }}"
+                        {% if bank_id_str in preselected_bank_ids %}checked{% endif %}
+                      >
+                      <label class="form-check-label bank-label"
+                             for="id_selected_banks_{{ bank.id }}"
+                             data-bank-id="{{ bank.id }}"
+                             data-bank-name="{{ bank.name|default_if_none:'' }}">
+                        <div class="bank-card">
+                          <div class="bank-header">
+                            <strong>{{ bank.name }}</strong>
+                            {% if bank.is_featured %}<span class="badge bg-primary">แนะนำ</span>{% endif %}
+                          </div>
+
+                          <!-- รายละเอียดช่วยตัดสินใจ -->
+                          <div class="bank-details">
+                            <div class="row g-2 small text-muted">
+                              <div class="col-sm-6">
+                                <div><i class="bi bi-percent"></i> อัตราดอกเบี้ยต่ำสุด:
+                                  <strong>{% if item.min_interest %}{{ item.min_interest }}%{% else %}-{% endif %}</strong>
+                                </div>
+                                <div><i class="bi bi-bar-chart"></i> LTV สูงสุด:
+                                  <strong>{% if item.max_ltv %}{{ item.max_ltv }}%{% else %}-{% endif %}</strong>
+                                </div>
+                                <div><i class="bi bi-clock-history"></i> ระยะเวลากู้สูงสุด:
+                                  <strong>{% if item.max_term %}{{ item.max_term }} ปี{% else %}-{% endif %}</strong>
+                                </div>
+                              </div>
+                              <div class="col-sm-6">
+                                <div><i class="bi bi-cash-coin"></i> รายได้ขั้นต่ำ:
+                                  <strong>{% if item.min_income %}{{ item.min_income|floatformat:0|intcomma }} บาท{% else %}-{% endif %}</strong>
+                                </div>
+                                <div><i class="bi bi-receipt-cutoff"></i> ค่าดำเนินการ:
+                                  <strong>{% if item.processing_fee_percent is not None %}{{ item.processing_fee_percent }}%{% else %}-{% endif %}</strong>
+                                </div>
+                                <div><i class="bi bi-collection"></i> ผลิตภัณฑ์รีไฟแนนซ์:
+                                  <strong>{{ item.product_count }}</strong> รายการ
+                                </div>
+                              </div>
+                            </div>
+
+                            {% if item.best_product_name %}
+                              <div class="mt-2"><small class="text-muted">
+                                <i class="bi bi-star"></i> สินเชื่อเด่น: <strong>{{ item.best_product_name }}</strong>
+                              </small></div>
+                            {% endif %}
+
+                            {% if item.active_promos %}
+                              <div class="mt-2">
+                                <small class="text-muted"><i class="bi bi-megaphone"></i> โปรโมชัน:
+                                  {% for t in item.active_promos %}
+                                    <span class="badge bg-warning text-dark">{{ t }}</span>
+                                  {% endfor %}
+                                </small>
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                  {% endwith %}
+                  {% endwith %}
+                  {% empty %}
+                  <div class="text-muted">ยังไม่มีธนาคารที่เปิดให้ยื่นคำขอ</div>
+                  {% endfor %}
+
+                </div>
+              </div>
+              {% if form.selected_banks.errors %}
+                <div class="invalid-feedback d-block">{{ form.selected_banks.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- สรุปสินเชื่อที่เลือก -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="bi bi-list-check"></i> สินเชื่อรีไฟแนนซ์ที่เลือก</h5>
+              <small class="text-muted">ตรวจสอบก่อนยื่นคำขอ</small>
+            </div>
+            <div class="card-body">
+              <div id="chosenSummary" class="row g-3"></div>
+              <small class="text-muted d-block mt-2">สามารถกลับไปแก้ไขได้ก่อนกดยื่น</small>
+            </div>
+          </div>
+
+          <!-- ข้อมูลเพิ่มเติม + ปุ่มส่ง -->
+          <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-info-circle"></i> ข้อมูลเพิ่มเติม</h5></div>
+            <div class="card-body">
+              <div class="form-floating mb-3">
+                {{ form.notes|add_class:"form-control" }}
+                <label for="{{ form.notes.id_for_label }}">หมายเหตุ / ข้อมูลเพิ่มเติม</label>
+                {% if form.notes.errors %}<div class="invalid-feedback">{{ form.notes.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                <label class="form-check-label" for="agreeTerms">ยอมรับ <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">ข้อตกลงและเงื่อนไข</a></label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="consentDataUsage" required>
+                <label class="form-check-label" for="consentDataUsage">ยินยอมให้ใช้ข้อมูลส่วนบุคคลเพื่อการพิจารณาสินเชื่อ</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <div class="d-grid gap-2 d-md-flex justify-content-between">
+                <div>
+                  <a href="{% url 'refinance:loan_application_list' %}" class="btn btn-outline-secondary me-md-2">
+                    <i class="bi bi-arrow-left-circle"></i> กลับรายการคำขอ
+                  </a>
+                  <button type="submit" name="save_draft" value="1" class="btn btn-outline-primary me-md-2">
+                    <i class="bi bi-save"></i> บันทึกร่าง
+                  </button>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-outline-secondary me-md-2" onclick="goStep(2)">
+                    <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                  </button>
+                  <button type="submit" name="submit_application" value="1" class="btn btn-kathai">
+                    <i class="bi bi-send"></i> ยื่นคำขอ
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> <!-- /step3 -->
+
+      </form>
+
+      {% else %}
+      <div class="card"><div class="card-body">
+        <div class="no-properties text-center py-5">
+          <i class="bi bi-exclamation-triangle text-warning" style="font-size:4rem;"></i>
+          <h4 class="mt-3">คุณต้องเพิ่มข้อมูลทรัพย์สินก่อน</h4>
+          <p class="text-muted">เพื่อที่จะยื่นคำขอรีไฟแนนซ์ คุณต้องมีข้อมูลทรัพย์สินในระบบก่อน</p>
+          <div class="mt-4"><a href="{% url 'refinance:property_create' %}" class="btn btn-kathai btn-lg"><i class="bi bi-plus"></i> เพิ่มทรัพย์สิน</a></div>
+        </div>
+      </div></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="termsModalLabel">ข้อตกลงและเงื่อนไข</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body">
+      <h6>1. ข้อตกลงการใช้บริการ</h6><p>ผู้สมัครยอมรับและตกลงที่จะปฏิบัติตามข้อตกลงและเงื่อนไขการใช้บริการของคัดให้...</p>
+      <h6>2. การเก็บรักษาข้อมูล</h6><p>ข้อมูลส่วนบุคคลที่ท่านให้ไว้จะถูกเก็บรักษาอย่างปลอดภัยและใช้เพื่อการพิจารณาสินเชื่อเท่านั้น</p>
+      <h6>3. การยื่นคำขอ</h6><p>การยื่นคำขอผ่านระบบนี้ไม่ได้หมายความว่าท่านจะได้รับการอนุมัติสินเชื่อโดยอัตโนมัติ ธนาคารจะพิจารณาตามเงื่อนไขของแต่ละธนาคาร</p>
+      <h6>4. ความรับผิดชอบ</h6><p>ท่านรับผิดชอบต่อความถูกต้องของข้อมูลที่ให้ไว้ และยอมรับผลของการพิจารณาจากธนาคาร</p>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button><button type="button" class="btn btn-kathai" onclick="acceptTerms()">ยอมรับเงื่อนไข</button></div>
+  </div></div>
+</div>
+
+{# JSON จาก view (DB จริง) #}
+{% if properties_json %}<script id="propertiesData" type="application/json">{{ properties_json|safe }}</script>{% endif %}
+{% if recommended_products_json %}<script id="recommendedProductsData" type="application/json">{{ recommended_products_json|safe }}</script>{% endif %}
+
+<style>
+/* (คง style ชุดเดิม และเพิ่มรายละเอียดให้การ์ดธนาคารอ่านง่าย) */
+.application-progress{background:linear-gradient(135deg,rgba(255,71,19,.05) 0%,rgba(245,179,53,.05) 100%);padding:2rem;border-radius:var(--kathai-border-radius-lg);margin-bottom:2rem;}
+.progress-header{text-align:center;margin-bottom:2rem;}
+.progress-header h2{color:var(--kathai-dark-blue);font-weight:700;margin-bottom:.5rem;}
+.progress-steps{display:flex;justify-content:center;gap:2rem;}
+.step{display:flex;flex-direction:column;align-items:center;opacity:.5;transition:var(--kathai-transition);}
+.step.active{opacity:1;}
+.step-number{width:40px;height:40px;border-radius:50%;background:var(--kathai-border-light);color:var(--kathai-text-grey);display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:.5rem;}
+.step.active .step-number{background:var(--kathai-gold-primary);color:#fff;}
+.step-label{font-size:.9rem;color:var(--kathai-text-grey);text-align:center;}
+.step.active .step-label{color:var(--kathai-dark-blue);font-weight:600;}
+.card{border:none;box-shadow:var(--kathai-shadow-sm);border-radius:var(--kathai-border-radius-lg);margin-bottom:1.5rem;}
+.card-header{background:var(--kathai-off-white);border-bottom:1px solid var(--kathai-border-light);border-radius:var(--kathai-border-radius-lg) var(--kathai-border-radius-lg) 0 0;}
+.card-header h5{color:var(--kathai-dark-blue);font-weight:600;}
+.property-actions{display:flex;align-items:center;height:100%;justify-content:flex-end;}
+.property-details{background:var(--kathai-off-white);padding:1.5rem;border-radius:8px;margin-top:1rem;}
+.property-info h6{color:var(--kathai-dark-blue);font-weight:600;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--kathai-gold-primary);}
+.info-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;padding:.25rem 0;}
+.info-item .label{font-weight:500;color:var(--kathai-text-grey);}
+.info-item .value{font-weight:600;color:var(--kathai-dark-blue);}
+.financial-summary{background:var(--kathai-off-white);padding:1.5rem;border-radius:8px;border-left:4px solid var(--kathai-gold-primary);}
+.financial-summary h6{color:var(--kathai-dark-blue);font-weight:600;margin-bottom:1rem;}
+.summary-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;padding:.5rem;background:#fff;border-radius:6px;border:1px solid var(--kathai-border-light);}
+.summary-item .label{font-weight:500;color:var(--kathai-text-grey);}
+.summary-item .value{font-weight:700;color:var(--kathai-dark-blue);}
+.loading-products{min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.banks-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;}
+.bank-option{position:relative;}
+.bank-label{cursor:pointer;width:100%;margin-bottom:0;display:block;}
+.bank-card{padding:1.25rem;border:2px solid var(--kathai-border-light);border-radius:var(--kathai-border-radius-lg);background:#fff;transition:var(--kathai-transition);}
+.bank-card:hover{border-color:var(--kathai-gold-primary);box-shadow:var(--kathai-shadow-sm);}
+.form-check input[type="checkbox"]:checked + .bank-label .bank-card{border-color:var(--kathai-gold-primary);background:linear-gradient(135deg,rgba(255,71,19,.05) 0%,rgba(245,179,53,.05) 100%);}
+.bank-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;}
+.bank-header strong{color:var(--kathai-dark-blue);font-size:1.1rem;}
+.bank-details small{color:var(--kathai-text-grey);}
+.no-properties{background:var(--kathai-off-white);border-radius:var(--kathai-border-radius-lg);padding:2rem;}
+.form-floating>label{color:var(--kathai-text-grey);}
+.form-floating>.form-control:focus~label,.form-floating>.form-control:not(:placeholder-shown)~label{color:var(--kathai-gold-primary);}
+.form-control:focus{border-color:var(--kathai-gold-primary);box-shadow:0 0 0 .2rem rgba(245,179,53,.25);}
+.form-check-input:checked{background-color:var(--kathai-gold-primary);border-color:var(--kathai-gold-primary);}
+.form-check-input:focus{box-shadow:0 0 0 .2rem rgba(245,179,53,.25);}
+.invalid-feedback{display:block;width:100%;margin-top:.25rem;font-size:.875rem;color:#dc3545;}
+.was-validated .form-control:invalid{border-color:#dc3545;}
+.was-validated .form-control:valid{border-color:#198754;}
+@media (max-width:768px){
+  .application-progress{padding:1rem;}
+  .progress-steps{gap:1rem;}
+  .step-number{width:32px;height:32px;font-size:.9rem;}
+  .step-label{font-size:.8rem;}
+  .banks-container{grid-template-columns:1fr;}
+  .bank-card{padding:1rem;}
+  .property-actions{justify-content:flex-start;margin-top:1rem;}
+  .info-item,.summary-item{flex-direction:column;align-items:flex-start;gap:.25rem;}
+  .financial-summary{padding:1rem;}
+}
+@media (max-width:576px){
+  .progress-steps{flex-direction:column;gap:1rem;}
+  .step{flex-direction:row;gap:1rem;}
+  .step-number{margin-bottom:0;}
+  .bank-header{flex-direction:column;align-items:flex-start;gap:.5rem;}
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  autoFillFormData();
+  initializeFormValidation();
+  setupPropertySelection();
+  setupRealTimeCalculations();
+  hydrateRecommendedProducts();
+  setupBankSelectionUI();
+  goStep(1);
+
+  const sel = document.getElementById('id_property');
+  if (sel && sel.value) {
+    showPropertyDetails(sel.value);
+  }
+});
+
+let currentStep = 1;
+function goStep(n){
+  currentStep = n;
+  ['step1','step2','step3'].forEach((id,idx)=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = (idx+1===n)?'block':'none';
+  });
+  document.querySelectorAll('.progress-steps .step').forEach((s,i)=>{
+    i===n-1 ? s.classList.add('active') : s.classList.remove('active');
+  });
+}
+
+function autoFillFormData(){
+  const s = localStorage.getItem('loanComparisonData');
+  if(!s) return;
+  const d = JSON.parse(s);
+  document.getElementById('autoFillNotice').style.display = 'block';
+  setVal('id_monthly_income', d.monthlyIncome);
+  setVal('id_loan_amount', d.currentLoanBalance);
+  setVal('id_loan_term', d.remainingYears);
+  calculateFinancialSummary();
+}
+function setVal(id,v){ const el=document.getElementById(id); if(el && v!=null) el.value=v; }
+
+function initializeFormValidation(){
+  const form=document.getElementById('loanApplicationForm');
+  if(!form) return;
+  form.addEventListener('submit', function(e){
+    const anyChecked = !!document.querySelector('.selected-banks input[type="checkbox"]:checked');
+    if(!anyChecked){
+      e.preventDefault(); e.stopPropagation();
+      alert('กรุณาเลือกธนาคารอย่างน้อย 1 แห่ง');
+      goStep(3);
+      return;
+    }
+    if(!form.checkValidity()){ e.preventDefault(); e.stopPropagation(); }
+    form.classList.add('was-validated');
+  });
+}
+
+function setupPropertySelection(){
+  const sel=document.getElementById('id_property');
+  if(!sel) return;
+  sel.addEventListener('change', ()=>{
+    showPropertyDetails(sel.value);
+    hydrateRecommendedProducts();
+  });
+}
+
+function showPropertyDetails(propertyId){
+  const dataEl=document.getElementById('propertiesData');
+  if(!dataEl){ document.getElementById('propertyDetails').style.display='none'; return; }
+  let map={}; try{ map=JSON.parse(dataEl.textContent||'{}'); }catch{}
+  const item=map[String(propertyId)];
+  const wrap=document.getElementById('propertyDetails');
+  if(!item){ wrap.style.display='none'; return; }
+  byId('propertyType').textContent = item.type ?? '-';
+  byId('propertyValue').textContent = formatNumber(item.value ?? 0)+' บาท';
+  byId('propertyProvince').textContent = item.province ?? '-';
+  byId('currentDebt').textContent = formatNumber(item.current_debt ?? 0)+' บาท';
+  byId('currentBank').textContent = item.current_bank ?? '-';
+  byId('currentLTV').textContent = (item.ltv ?? 0)+'%';
+  wrap.style.display='block';
+  calculateFinancialSummary();
+}
+
+function setupRealTimeCalculations(){
+  ['id_monthly_income','id_monthly_expense','id_loan_amount','id_other_debts'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input', calculateFinancialSummary);
+  });
+}
+
+function calculateFinancialSummary(){
+  const income=toNum('id_monthly_income'), expense=toNum('id_monthly_expense'), loan=toNum('id_loan_amount'), other=toNum('id_other_debts');
+  const net=income-expense;
+  const estPay = loan*0.004; // ประมาณการ
+  const totalDebt = estPay + other*0.02;
+  const dsr = income>0 ? (totalDebt/income)*100 : 0;
+
+  // LTV จาก properties_json
+  let propVal=0; const sel=document.getElementById('id_property'), dataEl=document.getElementById('propertiesData');
+  if(sel && dataEl){ try{ const map=JSON.parse(dataEl.textContent||'{}'); const it=map[String(sel.value)]; propVal = it && it.value ? parseFloat(it.value) : 0; }catch{} }
+  const ltv = propVal>0 ? (loan/propVal)*100 : 0;
+
+  byId('netIncome').textContent = formatNumber(net)+' บาท';
+  byId('dsrRatio').textContent = dsr.toFixed(1)+'%';
+  byId('ltvRatio').textContent = ltv.toFixed(1)+'%';
+  setBadge('dsrRatio', dsr, 70, 80);
+  setBadge('ltvRatio', ltv, 80, 90);
+  byId('netIncome').className = net>0 ? 'value text-success' : 'value text-danger';
+}
+
+function setupBankSelectionUI(){
+  const container = document.getElementById('selectedBanks');
+  if(!container) return;
+  container.addEventListener('change', function(e){
+    if(e.target && e.target.type==='checkbox'){
+      if(e.target.checked){ scrollToChosenSummary(); }
+      renderChosenSummary();
+    }
+  });
+  renderChosenSummary();
+}
+
+function renderChosenSummary(){
+  const wrap = document.getElementById('chosenSummary');
+  if(!wrap) return;
+  const checks = document.querySelectorAll('.selected-banks input[type="checkbox"]');
+  const items = [];
+  checks.forEach(inp=>{
+    if(inp.checked){
+      const lbl = document.querySelector(`label.bank-label[for="${inp.id}"]`);
+      const name = lbl ? (lbl.dataset.bankName || lbl.textContent.trim()) : inp.value;
+
+      // ดึงสรุปรายละเอียดสั้น ๆ จาก card ใกล้ ๆ
+      let meta='';
+      const card = lbl ? lbl.querySelector('.bank-details') : null;
+      if(card){
+        const txt = card.innerText.replace(/\s+/g,' ').trim();
+        meta = txt ? ' • ' + txt.split(' ผลิตภัณฑ์รีไฟแนนซ์:')[0] : '';
+      }
+
+      items.push({id: inp.value, name, meta});
+    }
+  });
+
+  if(items.length===0){
+    wrap.innerHTML = `<div class="col-12 text-muted">ยังไม่เลือกธนาคาร</div>`;
+    return;
+  }
+
+  wrap.innerHTML = items.map(it=>`
+    <div class="col-md-6">
+      <div class="card" style="border:1px solid var(--kathai-border-light);">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div><strong>${escapeHtml(it.name)}</strong></div>
+            ${it.meta ? `<div class="small text-muted">${escapeHtml(it.meta)}</div>` : ''}
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="uncheckBank('${cssEscape(it.id)}')">
+            <i class="bi bi-x"></i> เอาออก
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function uncheckBank(val){
+  const inp = document.querySelector(`.selected-banks input[type="checkbox"][value="${cssEscape(val)}"]`);
+  if(inp){ inp.checked = false; renderChosenSummary(); }
+}
+
+function scrollToChosenSummary(){
+  const el = document.getElementById('chosenSummary');
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function hydrateRecommendedProducts(){
+  const dataEl=document.getElementById('recommendedProductsData');
+  const card=document.getElementById('recommendedCard');
+  const container=document.getElementById('recommendedProducts');
+  if(!dataEl || !card || !container){ return; }
+  let items=[]; try{ items=JSON.parse(dataEl.textContent||'[]'); }catch{}
+  if(!Array.isArray(items) || items.length===0){ card.style.display='none'; return; }
+
+  container.innerHTML = `<div class="row">${
+    items.map(p=>`
+      <div class="col-md-6 mb-3">
+        <div class="card product-recommendation">
+          <div class="card-body">
+            <h6 class="card-title">${escapeHtml(p.bank_name||'')}</h6>
+            <p class="card-text small">${escapeHtml(p.product_name||'')}</p>
+            <div class="product-highlight">
+              <span class="interest-rate">${escapeHtml(p.interest_rate_display||'')}</span>
+              ${p.promotion?`<span class="promotion-badge">${escapeHtml(p.promotion)}</span>`:''}
+            </div>
+            <div class="product-features">
+              ${(p.features||[]).map(f=>`<small><i class="bi bi-check-circle text-success"></i> ${escapeHtml(f)}</small>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('')
+  }</div>`;
+  card.style.display='block';
+}
+
+function acceptTerms(){ const t=byId('agreeTerms'); if(t) t.checked=true; const m=bootstrap.Modal.getInstance(byId('termsModal')); if(m) m.hide(); }
+
+function setBadge(id,val,good,warn){
+  const el=byId(id); if(!el) return;
+  if(val<=good) el.className='value text-success';
+  else if(val<=warn) el.className='value text-warning';
+  else el.className='value text-danger';
+}
+
+function formatNumber(n){ return Number(n||0).toLocaleString('th-TH'); }
+function byId(id){ return document.getElementById(id); }
+function toNum(id){ return parseFloat(byId(id)?.value)||0; }
+function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+function cssEscape(s){ return String(s).replace(/["\\]/g,'\\$&'); }
+
+function saveAsDraft(){
+  const form=document.getElementById('loanApplicationForm'); if(!form) return;
+  const fd=new FormData(form);
+  localStorage.setItem('loanApplicationDraft', JSON.stringify(Object.fromEntries(fd)));
+  alert('บันทึกร่างเรียบร้อยแล้ว');
+}
+</script>
+{% endblock %}

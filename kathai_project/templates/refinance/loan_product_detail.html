@@ -1,0 +1,437 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - {{ product.bank.name }} - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'refinance:home' %}">หน้าแรก</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'refinance:loan_product_list' %}">ผลิตภัณฑ์สินเชื่อ</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'refinance:bank_detail' product.bank.pk %}">{{ product.bank.name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Product Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card product-header-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            {% if product.bank.logo %}
+                            <img src="{{ product.bank.logo.url }}" alt="{{ product.bank.name }}" class="img-fluid bank-logo">
+                            {% else %}
+                            <i class="bi bi-bank" style="font-size: 3rem; color: {{ product.bank.brand_color|default:'#007bff' }};"></i>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-10">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h2 class="mb-2">{{ product.name }}</h2>
+                                    <p class="text-muted mb-2">{{ product.bank.name }} • {{ product.get_product_type_display }}</p>
+                                    <div class="product-badges">
+                                        {% if product.is_popular %}
+                                        <span class="badge bg-warning text-dark me-2">
+                                            <i class="bi bi-fire"></i> ยอดนิยม
+                                        </span>
+                                        {% endif %}
+                                        <span class="badge bg-primary">
+                                            {{ product.get_interest_rate_type_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="interest-rate-display">
+                                        <h3 class="text-primary mb-0">{{ product.interest_rate }}%</h3>
+                                        <small class="text-muted">อัตราดอกเบี้ย</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Product Overview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> ภาพรวมผลิตภัณฑ์</h5>
+                </div>
+                <div class="card-body">
+                    {% if product.description %}
+                    <p class="product-description">{{ product.description }}</p>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="overview-item">
+                                <i class="bi bi-cash-stack text-success"></i>
+                                <div>
+                                    <strong>วงเงินกู้</strong>
+                                    <p class="mb-0">{{ product.min_loan_amount|floatformat:0 }} - {{ product.max_loan_amount|floatformat:0 }} บาท</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="overview-item">
+                                <i class="bi bi-clock text-info"></i>
+                                <div>
+                                    <strong>ระยะเวลาผ่อน</strong>
+                                    <p class="mb-0">สูงสุด {{ product.max_term_years }} ปี</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="overview-item">
+                                <i class="bi bi-house text-primary"></i>
+                                <div>
+                                    <strong>LTV สูงสุด</strong>
+                                    <p class="mb-0">{{ product.max_ltv }}%</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="overview-item">
+                                <i class="bi bi-person-check text-warning"></i>
+                                <div>
+                                    <strong>รายได้ขั้นต่ำ</strong>
+                                    <p class="mb-0">{{ product.min_income|floatformat:0 }} บาท/เดือน</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Calculator -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-calculator"></i> คำนวณค่าผ่อน</h5>
+                </div>
+                <div class="card-body">
+                    <form id="loanCalculator">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="loanAmount" min="{{ product.min_loan_amount }}" max="{{ product.max_loan_amount }}" value="3000000">
+                                    <label for="loanAmount">จำนวนเงินกู้ (บาท)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="loanTerm" min="1" max="{{ product.max_term_years }}" value="20">
+                                    <label for="loanTerm">ระยะเวลา (ปี)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="interestRate" value="{{ product.interest_rate }}" step="0.01">
+                                    <label for="interestRate">อัตราดอกเบี้ย (%)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="calculateLoan()">คำนวณ</button>
+                    </form>
+                    
+                    <div id="calculationResult" class="mt-4" style="display: none;">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> ผลการคำนวณ</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>ค่าผ่อนต่อเดือน</strong>
+                                    <p class="mb-0 h5 text-primary" id="monthlyPayment">-</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>ดอกเบี้ยรวม</strong>
+                                    <p class="mb-0" id="totalInterest">-</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>ยอดชำระรวม</strong>
+                                    <p class="mb-0" id="totalPayment">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate History -->
+            {% if rate_history %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-graph-up"></i> ประวัติอัตราดอกเบี้ย</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>วันที่มีผล</th>
+                                    <th>อัตราดอกเบี้ย</th>
+                                    <th>หมายเหตุ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for history in rate_history %}
+                                <tr>
+                                    <td>{{ history.effective_date|date:"d/m/Y" }}</td>
+                                    <td><span class="badge bg-primary">{{ history.interest_rate }}%</span></td>
+                                    <td>{{ history.notes|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-speedometer2"></i> ข้อมูลด่วน</h6>
+                </div>
+                <div class="card-body">
+                    <div class="quick-info-item">
+                        <span class="label">อัตราดอกเบี้ย</span>
+                        <span class="value text-primary fw-bold">{{ product.interest_rate }}%</span>
+                    </div>
+                    <div class="quick-info-item">
+                        <span class="label">ประเภทอัตรา</span>
+                        <span class="value">{{ product.get_interest_rate_type_display }}</span>
+                    </div>
+                    <div class="quick-info-item">
+                        <span class="label">ค่าธรรมเนียมจัดการ</span>
+                        <span class="value">{{ product.processing_fee }}%</span>
+                    </div>
+                    <div class="quick-info-item">
+                        <span class="label">ค่าประเมินทรัพย์</span>
+                        <span class="value">{{ product.appraisal_fee|floatformat:0 }} บาท</span>
+                    </div>
+                    <div class="quick-info-item">
+                        <span class="label">อายุผู้กู้</span>
+                        <span class="value">{{ product.min_age }} - {{ product.max_age }} ปี</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirements -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-list-check"></i> เงื่อนไขการอนุมัติ</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="requirements-list">
+                        <li><i class="bi bi-check-circle text-success"></i> รายได้ต่อเดือนไม่ต่ำกว่า {{ product.min_income|floatformat:0 }} บาท</li>
+                        <li><i class="bi bi-check-circle text-success"></i> อายุ {{ product.min_age }}-{{ product.max_age }} ปี</li>
+                        <li><i class="bi bi-check-circle text-success"></i> LTV ไม่เกิน {{ product.max_ltv }}%</li>
+                        <li><i class="bi bi-check-circle text-success"></i> มีหลักฐานรายได้ที่ชัดเจน</li>
+                        <li><i class="bi bi-check-circle text-success"></i> ทรัพย์สินมีเอกสารสิทธิ์ครบถ้วน</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contact Bank -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-telephone"></i> ติดต่อธนาคาร</h6>
+                </div>
+                <div class="card-body">
+                    {% if product.bank.contact_phone %}
+                    <div class="contact-item mb-2">
+                        <i class="bi bi-telephone-fill text-primary"></i>
+                        <span>{{ product.bank.contact_phone }}</span>
+                    </div>
+                    {% endif %}
+                    {% if product.bank.contact_email %}
+                    <div class="contact-item mb-2">
+                        <i class="bi bi-envelope-fill text-primary"></i>
+                        <span>{{ product.bank.contact_email }}</span>
+                    </div>
+                    {% endif %}
+                    {% if product.bank.website %}
+                    <div class="contact-item mb-3">
+                        <i class="bi bi-globe text-primary"></i>
+                        <a href="{{ product.bank.website }}" target="_blank">เว็บไซต์ธนาคาร</a>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid">
+                        <a href="{% url 'refinance:bank_detail' product.bank.pk %}" class="btn btn-outline-primary">
+                            ดูข้อมูลธนาคาร
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-gear"></i> การดำเนินการ</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'refinance:loan_comparison_wizard' %}" class="btn btn-kathai">
+                            <i class="bi bi-calculator"></i> เปรียบเทียบสินเชื่อ
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'refinance:loan_application_create' %}" class="btn btn-success">
+                            <i class="bi bi-file-plus"></i> สมัครสินเชื่อ
+                        </a>
+                        {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-success">
+                            <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบเพื่อสมัคร
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'refinance:contact_us' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-chat-dots"></i> ปรึกษาผู้เชี่ยวชาญ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.product-header-card {
+    border: none;
+    box-shadow: var(--kathai-shadow-md);
+    border-radius: var(--kathai-border-radius-lg);
+    background: linear-gradient(135deg, rgba(255, 71, 19, 0.03) 0%, rgba(245, 179, 53, 0.03) 100%);
+}
+
+.bank-logo {
+    max-height: 60px;
+    object-fit: contain;
+}
+
+.interest-rate-display {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(13, 110, 253, 0.1);
+    border-radius: 8px;
+}
+
+.overview-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: var(--kathai-off-white);
+    border-radius: 8px;
+}
+
+.overview-item i {
+    font-size: 2rem;
+}
+
+.overview-item strong {
+    color: var(--kathai-dark-blue);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.quick-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--kathai-border-light);
+}
+
+.quick-info-item:last-child {
+    border-bottom: none;
+}
+
+.quick-info-item .label {
+    color: var(--kathai-text-grey);
+    font-size: 0.9rem;
+}
+
+.quick-info-item .value {
+    font-weight: 500;
+    color: var(--kathai-dark-blue);
+}
+
+.requirements-list {
+    list-style: none;
+    padding: 0;
+}
+
+.requirements-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+#calculationResult {
+    border-left: 4px solid var(--kathai-gold-primary);
+}
+</style>
+
+<script>
+function calculateLoan() {
+    const loanAmount = parseFloat(document.getElementById('loanAmount').value);
+    const loanTerm = parseFloat(document.getElementById('loanTerm').value);
+    const interestRate = parseFloat(document.getElementById('interestRate').value);
+    
+    if (!loanAmount || !loanTerm || !interestRate) {
+        alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+    }
+    
+    const monthlyRate = interestRate / 100 / 12;
+    const numberOfPayments = loanTerm * 12;
+    
+    let monthlyPayment;
+    if (monthlyRate > 0) {
+        monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+    } else {
+        monthlyPayment = loanAmount / numberOfPayments;
+    }
+    
+    const totalPayment = monthlyPayment * numberOfPayments;
+    const totalInterest = totalPayment - loanAmount;
+    
+    document.getElementById('monthlyPayment').textContent = monthlyPayment.toLocaleString('th-TH', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }) + ' บาท';
+    
+    document.getElementById('totalInterest').textContent = totalInterest.toLocaleString('th-TH', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }) + ' บาท';
+    
+    document.getElementById('totalPayment').textContent = totalPayment.toLocaleString('th-TH', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }) + ' บาท';
+    
+    document.getElementById('calculationResult').style.display = 'block';
+}
+</script>
+{% endblock %}

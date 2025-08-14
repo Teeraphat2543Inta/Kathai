@@ -1,0 +1,682 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ application.application_no }} - รายละเอียดคำขอ - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'refinance:home' %}">หน้าแรก</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'refinance:loan_application_list' %}">คำขอรีไฟแนนซ์</a></li>
+            <li class="breadcrumb-item active">{{ application.application_no }}</li>
+        </ol>
+    </nav>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Application Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card application-header-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">คำขอรีไฟแนนซ์ {{ application.application_no }}</h2>
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-house"></i> {{ application.property.name }} • 
+                                <i class="bi bi-calendar"></i> {{ application.created_at|date:"d M Y" }}
+                            </p>
+                            <div class="application-meta">
+                                <span class="badge bg-{{ application.status|lower }} status-badge-lg">
+                                    {{ application.get_status_display }}
+                                </span>
+                                {% if application.submitted_at %}
+                                <span class="text-muted ms-3">
+                                    <i class="bi bi-send"></i> ส่งเมื่อ {{ application.submitted_at|date:"d/m/Y H:i" }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="loan-amount-display">
+                                <h4 class="text-primary mb-0">{{ application.loan_amount|floatformat:0 }}</h4>
+                                <small class="text-muted">จำนวนเงินกู้ (บาท)</small>
+                            </div>
+                            <div class="action-buttons mt-3">
+                                {% if application.status == 'draft' %}
+                                <a href="{% url 'refinance:loan_application_update' application.pk %}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil"></i> แก้ไข
+                                </a>
+                                <form method="post" action="{% url 'refinance:loan_application_submit' application.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm" 
+                                            onclick="return confirm('คุณแน่ใจหรือไม่ที่จะส่งคำขอนี้?')">
+                                        <i class="bi bi-send"></i> ส่งคำขอ
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Application Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-file-text"></i> รายละเอียดคำขอ</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <h6 class="detail-group-title">ข้อมูลสินเชื่อ</h6>
+                                <div class="detail-item">
+                                    <span class="label">เลขที่คำขอ:</span>
+                                    <span class="value">{{ application.application_no }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">จำนวนเงินกู้:</span>
+                                    <span class="value text-primary fw-bold">{{ application.loan_amount|floatformat:0 }} บาท</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">ระยะเวลากู้:</span>
+                                    <span class="value">{{ application.loan_term }} ปี</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">วัตถุประสงค์:</span>
+                                    <span class="value">{{ application.purpose|capfirst }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <h6 class="detail-group-title">ข้อมูลทางการเงิน</h6>
+                                <div class="detail-item">
+                                    <span class="label">รายได้ต่อเดือน:</span>
+                                    <span class="value text-success">{{ application.monthly_income|floatformat:0 }} บาท</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">รายจ่ายต่อเดือน:</span>
+                                    <span class="value text-warning">{{ application.monthly_expense|floatformat:0 }} บาท</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">หนี้สินอื่น:</span>
+                                    <span class="value">{{ application.other_debts|floatformat:0 }} บาท</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">รายได้สุทธิ:</span>
+                                    {% with net_income=application.monthly_income|sub:application.monthly_expense %}
+                                    <span class="value {% if net_income > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ net_income|floatformat:0 }} บาท
+                                    </span>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Information -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-house"></i> ข้อมูลทรัพย์สิน</h5>
+                    <a href="{% url 'refinance:property_detail' application.property.pk %}" 
+                       class="btn btn-outline-primary btn-sm">
+                        ดูรายละเอียด
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="property-item">
+                                <span class="label">ชื่อทรัพย์สิน:</span>
+                                <span class="value">{{ application.property.name }}</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="label">ประเภท:</span>
+                                <span class="value">{{ application.property.get_property_type_display }}</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="label">จังหวัด:</span>
+                                <span class="value">{{ application.property.province.name }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="property-item">
+                                <span class="label">มูลค่าประเมิน:</span>
+                                <span class="value text-success">{{ application.property.estimated_value|floatformat:0 }} บาท</span>
+                            </div>
+                            {% if application.property.existing_loan_balance %}
+                            <div class="property-item">
+                                <span class="label">หนี้คงเหลือ:</span>
+                                <span class="value text-warning">{{ application.property.existing_loan_balance|floatformat:0 }} บาท</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="label">LTV ปัจจุบัน:</span>
+                                {% with ltv=application.property.existing_loan_balance|div:application.property.estimated_value|mul:100 %}
+                                <span class="value">{{ ltv|floatformat:1 }}%</span>
+                                {% endwith %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Banks -->
+            {% if application_banks %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-bank"></i> ธนาคารที่ยื่นสมัคร</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ธนาคาร</th>
+                                    <th>ผลิตภัณฑ์</th>
+                                    <th>สถานะ</th>
+                                    <th>อัตราที่เสนอ</th>
+                                    <th>วงเงินที่อนุมัติ</th>
+                                    <th>วันที่ตอบกลับ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app_bank in application_banks %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if app_bank.bank.logo %}
+                                            <img src="{{ app_bank.bank.logo.url }}" alt="{{ app_bank.bank.name }}" 
+                                                 class="bank-logo-sm me-2">
+                                            {% endif %}
+                                            {{ app_bank.bank.name }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if app_bank.loan_product %}
+                                        {{ app_bank.loan_product.name }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ app_bank.status|lower }}">
+                                            {{ app_bank.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if app_bank.offered_rate %}
+                                        <span class="text-primary fw-bold">{{ app_bank.offered_rate }}%</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if app_bank.offered_amount %}
+                                        {{ app_bank.offered_amount|floatformat:0 }} บาท
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if app_bank.response_at %}
+                                        {{ app_bank.response_at|date:"d/m/Y" }}
+                                        {% else %}
+                                        <span class="text-muted">รอการตอบกลับ</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Documents -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-paperclip"></i> เอกสารแนบ</h5>
+                    <a href="{% url 'refinance:document_upload_for_application' application.pk %}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-plus"></i> เพิ่มเอกสาร
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                    <div class="row">
+                        {% for document in documents %}
+                        <div class="col-md-6 mb-3">
+                            <div class="document-item">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-file-earmark-text document-icon me-3"></i>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">{{ document.name }}</h6>
+                                        <small class="text-muted">{{ document.get_document_type_display }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ document.uploaded_at|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                    <div class="document-actions">
+                                        {% if document.file %}
+                                        <a href="{{ document.file.url }}" target="_blank" 
+                                           class="btn btn-outline-primary btn-sm me-1">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                data-bs-toggle="modal" data-bs-target="#deleteDocModal{{ document.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delete Document Modal -->
+                            <div class="modal fade" id="deleteDocModal{{ document.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-sm">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h6 class="modal-title">ลบเอกสาร</h6>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>ลบเอกสาร "{{ document.name }}"?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ยกเลิก</button>
+                                            <form method="post" action="{% url 'refinance:document_delete' document.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm">ลบ</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-file-earmark-x text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">ยังไม่มีเอกสารแนบ</p>
+                        <a href="{% url 'refinance:document_upload_for_application' application.pk %}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-plus"></i> เพิ่มเอกสารแรก
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Status Timeline -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-clock-history"></i> ประวัติสถานะ</h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item {% if application.created_at %}completed{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>สร้างคำขอ</h6>
+                                <small class="text-muted">{{ application.created_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if application.submitted_at %}completed{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>ส่งคำขอ</h6>
+                                {% if application.submitted_at %}
+                                <small class="text-muted">{{ application.submitted_at|date:"d/m/Y H:i" }}</small>
+                                {% else %}
+                                <small class="text-muted">รอดำเนินการ</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if application.reviewed_at %}completed{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>พิจารณาคำขอ</h6>
+                                {% if application.reviewed_at %}
+                                <small class="text-muted">{{ application.reviewed_at|date:"d/m/Y H:i" }}</small>
+                                {% else %}
+                                <small class="text-muted">รอการพิจารณา</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if application.approved_at %}completed{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>ผลการอนุมัติ</h6>
+                                {% if application.approved_at %}
+                                <small class="text-muted">{{ application.approved_at|date:"d/m/Y H:i" }}</small>
+                                {% else %}
+                                <small class="text-muted">รอผลการอนุมัติ</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-lightning"></i> การดำเนินการ</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if application.status == 'draft' %}
+                        <form method="post" action="{% url 'refinance:loan_application_submit' application.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100" 
+                                    onclick="return confirm('คุณแน่ใจหรือไม่ที่จะส่งคำขอนี้?')">
+                                <i class="bi bi-send"></i> ส่งคำขอ
+                            </button>
+                        </form>
+                        <a href="{% url 'refinance:loan_application_update' application.pk %}" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i> แก้ไขคำขอ
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'refinance:document_upload_for_application' application.pk %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-paperclip"></i> เพิ่มเอกสาร
+                        </a>
+                        
+                        <a href="{% url 'refinance:contact_us' %}" 
+                           class="btn btn-outline-info">
+                            <i class="bi bi-chat-dots"></i> ปรึกษาผู้เชี่ยวชาญ
+                        </a>
+                        
+                        {% if application.status == 'draft' %}
+                        <button type="button" class="btn btn-outline-danger" 
+                                data-bs-toggle="modal" data-bs-target="#deleteApplicationModal">
+                            <i class="bi bi-trash"></i> ลบคำขอ
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if application.notes or application.admin_notes %}
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-sticky"></i> หมายเหตุ</h6>
+                </div>
+                <div class="card-body">
+                    {% if application.notes %}
+                    <div class="note-item">
+                        <h6>หมายเหตุของคุณ:</h6>
+                        <p class="small">{{ application.notes }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if application.admin_notes %}
+                    <div class="note-item">
+                        <h6>หมายเหตุจากแอดมิน:</h6>
+                        <p class="small text-info">{{ application.admin_notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Delete Application Modal -->
+    {% if application.status == 'draft' %}
+    <div class="modal fade" id="deleteApplicationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">ยืนยันการลบคำขอ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>คุณแน่ใจหรือไม่ที่จะลบคำขอรีไฟแนนซ์ <strong>"{{ application.application_no }}"</strong>?</p>
+                    <p class="text-muted">การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <form method="post" action="{% url 'refinance:loan_application_delete' application.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">ลบคำขอ</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.application-header-card {
+    border: none;
+    box-shadow: var(--kathai-shadow-md);
+    border-radius: var(--kathai-border-radius-lg);
+    background: linear-gradient(135deg, rgba(255, 71, 19, 0.03) 0%, rgba(245, 179, 53, 0.03) 100%);
+}
+
+.status-badge-lg {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+.loan-amount-display {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(13, 110, 253, 0.1);
+    border-radius: 8px;
+}
+
+.detail-group {
+    margin-bottom: 1.5rem;
+}
+
+.detail-group-title {
+    color: var(--kathai-gold-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--kathai-gold-primary);
+}
+
+.detail-item, .property-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+}
+
+.detail-item .label, .property-item .label {
+    font-weight: 500;
+    color: var(--kathai-text-grey);
+    flex: 1;
+}
+
+.detail-item .value, .property-item .value {
+    font-weight: 600;
+    color: var(--kathai-dark-blue);
+    text-align: right;
+    flex: 1;
+}
+
+.bank-logo-sm {
+    height: 30px;
+    object-fit: contain;
+}
+
+.document-item {
+    padding: 1rem;
+    border: 1px solid var(--kathai-border-light);
+    border-radius: 8px;
+    background-color: var(--kathai-off-white);
+    transition: var(--kathai-transition);
+}
+
+.document-item:hover {
+    box-shadow: var(--kathai-shadow-sm);
+    border-color: var(--kathai-border-gold);
+}
+
+.document-icon {
+    font-size: 1.5rem;
+    color: var(--kathai-gold-primary);
+}
+
+.timeline {
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--kathai-border-light);
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 50px;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 7px;
+    top: 5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--kathai-border-light);
+    border: 3px solid var(--kathai-white);
+}
+
+.timeline-item.completed .timeline-marker {
+    background-color: var(--kathai-gold-primary);
+}
+
+.timeline-content h6 {
+    margin-bottom: 0.25rem;
+    color: var(--kathai-dark-blue);
+}
+
+.note-item {
+    padding: 1rem;
+    background-color: rgba(13, 202, 240, 0.1);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.note-item:last-child {
+    margin-bottom: 0;
+}
+
+.note-item h6 {
+    color: var(--kathai-dark-blue);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.table th {
+    background-color: var(--kathai-off-white);
+    border-bottom: 2px solid var(--kathai-border-light);
+    font-weight: 600;
+    color: var(--kathai-dark-blue);
+    font-size: 0.875rem;
+}
+
+.table td {
+    vertical-align: middle;
+    font-size: 0.875rem;
+}
+
+/* Status badges */
+.bg-draft { background-color: #6c757d !important; }
+.bg-submitted { background-color: #0dcaf0 !important; }
+.bg-pending { background-color: #ffc107 !important; }
+.bg-under_review { background-color: #fd7e14 !important; }
+.bg-approved { background-color: #198754 !important; }
+.bg-rejected { background-color: #dc3545 !important; }
+.bg-cancelled { background-color: #6c757d !important; }
+
+.action-buttons .btn {
+    margin-left: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .application-header-card .row {
+        text-align: center;
+    }
+    
+    .application-header-card .col-md-4 {
+        margin-top: 1rem;
+    }
+    
+    .action-buttons {
+        text-align: center;
+    }
+    
+    .action-buttons .btn {
+        margin: 0.25rem;
+    }
+    
+    .detail-item, .property-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .detail-item .value, .property-item .value {
+        text-align: left;
+    }
+    
+    .timeline-item {
+        padding-left: 40px;
+    }
+    
+    .timeline::before {
+        left: 10px;
+    }
+    
+    .timeline-marker {
+        left: 2px;
+    }
+}
+</style>
+{% endblock %}

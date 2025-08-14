@@ -1,0 +1,1646 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}คัดให้ - รีไฟแนนซ์บ้านและอสังหาฯ ที่ดีที่สุด{% endblock %}</title>
+
+    {# Kanit Font #}
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    {# Bootstrap 5.3 CSS #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    {# Bootstrap Icons #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            /* --- Color Palette Refined (Updated based on image_2b20b8.jpg) --- */
+            --primary-red: #FF4713;
+            --primary-yellow: #F5B335;
+            --neutral-black: #000000;
+            --neutral-grey: #383838;
+            --neutral-l-grey: #89939E;
+            --neutral-grey-blue-light: #EEEEEE;
+            --neutral-grey-blue-dark: #ABBED1;
+            --neutral-white: #F5F7FA;
+
+            --orange-001: #EE7623;
+            --orange-002: #F4A36C;
+            --orange-003: #FAD7BF;
+            /* Assuming FAD7#FAD7BF meant FAD7BF */
+
+            --success-001: #65C063;
+            --success-002: #86E184;
+            --success-003: #BFE7BF;
+            --success-004: #EBF7EB;
+
+            --warning-001: #FFF100;
+            --warning-002: #F79421;
+            --warning-003: #FFC670;
+            --warning-004: #FFF4E4;
+
+            --danger-001: #C33025;
+            --danger-002: #ED2145;
+            --danger-003: #F2617A;
+            --danger-004: #FAC2CC;
+            --danger-005: #FDE0E5;
+
+            /* Mapped to existing Kathai theme names for compatibility, adjust as needed */
+            --kathai-gold-primary: var(--primary-red);
+            /* Using primary red for the main gold equivalent */
+            --kathai-gold-light: var(--primary-yellow);
+            /* Using primary yellow for the light gold equivalent */
+            --kathai-dark-blue: var(--neutral-black);
+            /* Using black for dark blue equivalent */
+            --kathai-text-grey: var(--neutral-l-grey);
+            /* Using L_Grey for text grey */
+            --kathai-light-bg: var(--neutral-white);
+            /* Using white for light background */
+            --kathai-off-white: var(--neutral-grey-blue-light);
+            /* Using light grey-blue for off-white */
+            --kathai-white: #ffffff;
+            /* Keeping pure white as is, as it's not explicitly redefined in the new palette as pure white */
+
+            /* --- Shadows for Depth & Elegance --- */
+            --kathai-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --kathai-shadow-md: 0 8px 25px rgba(0, 0, 0, 0.08);
+            --kathai-shadow-lg: 0 15px 45px rgba(0, 0, 0, 0.12);
+            --kathai-shadow-xl: 0 25px 70px rgba(0, 0, 0, 0.15);
+            /* For hero elements */
+
+            /* --- Borders & Radii for Softness --- */
+            --kathai-border-radius-lg: 1.25rem;
+            /* Slightly smaller for less chunky look */
+            --kathai-border-radius-md: 0.75rem;
+            --kathai-border-light: rgba(0, 0, 0, 0.07);
+            /* Very subtle border for separation */
+            --kathai-border-gold: rgba(255, 71, 19, 0.5);
+            /* Semi-transparent primary-red border */
+
+            /* --- Transitions for Smoothness --- */
+            --kathai-transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            /* Slightly faster, still fluid */
+            --kathai-fast-transition: all 0.25s ease-out;
+            /* For quicker feedback */
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--kathai-light-bg);
+            color: var(--kathai-dark-blue);
+            line-height: 1.6;
+            /* Reduced line-height for less vertical space */
+            overflow-x: hidden;
+            /* Prevent horizontal scroll from animations */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Kanit', sans-serif;
+            color: var(--kathai-dark-blue);
+            font-weight: 700;
+            line-height: 1.2;
+            /* Tighter line-height for headings */
+            letter-spacing: normal;
+        }
+
+        p {
+            font-weight: 300;
+            font-size: 0.95rem;
+            /* Slightly smaller body text for more content per line */
+        }
+
+        /* --- Navbar Refinement --- */
+        .navbar {
+            background-color: var(--kathai-white) !important;
+            box-shadow: var(--kathai-shadow-md);
+            padding: 0.8rem 0;
+            /* Reduced padding */
+            border-bottom-left-radius: var(--kathai-border-radius-lg);
+            border-bottom-right-radius: var(--kathai-border-radius-lg);
+            border-bottom: 1px solid var(--kathai-border-light);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            transition: var(--kathai-transition);
+        }
+
+        .navbar-scrolled {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: var(--kathai-shadow-lg);
+            backdrop-filter: blur(10px);
+            border-bottom-color: transparent;
+        }
+
+        .navbar-brand {
+            font-family: 'Kanit', sans-serif;
+            font-weight: 800;
+            color: var(--kathai-gold-primary) !important;
+            font-size: 1.9rem;
+            /* Slightly smaller brand name */
+            letter-spacing: -0.01em;
+        }
+
+        .navbar-brand img {
+            transition: transform 0.3s ease-out;
+            height: 48px;
+            /* Adjusted logo height */
+        }
+
+        .navbar-brand:hover img {
+            transform: scale(1.03);
+        }
+
+        .nav-link {
+            color: var(--kathai-dark-blue) !important;
+            font-weight: 500;
+            margin: 0 0.6rem;
+            /* Reduced margin */
+            position: relative;
+            transition: var(--kathai-fast-transition);
+            padding: 0.4rem 0.2rem;
+            font-size: 0.95rem;
+            /* Slightly smaller nav links */
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2.5px;
+            /* Slightly thinner underline */
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--kathai-gold-light);
+            transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border-radius: 2px;
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: calc(100% - 0.8rem);
+            /* Adjust width */
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--kathai-gold-primary) !important;
+            transform: translateY(-1px);
+            /* Subtle lift */
+        }
+
+        /* เพิ่ม CSS สำหรับปรับปรุง dropdown */
+        .dropdown-menu {
+            min-width: 280px;
+            padding: 0.75rem 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border: none;
+            border-radius: 12px;
+        }
+
+        .dropdown-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--kathai-gold-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.5rem 1.25rem 0.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1.25rem;
+            transition: all 0.2s ease;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 12px;
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        .dropdown-item:hover {
+            background-color: rgba(255, 71, 19, 0.05);
+            color: var(--kathai-gold-primary);
+            padding-left: 1.5rem;
+        }
+
+        .dropdown-item:hover i {
+            opacity: 1;
+            color: var(--kathai-gold-primary);
+        }
+
+        .dropdown-item.text-danger:hover {
+            background-color: rgba(220, 53, 69, 0.05);
+            color: #dc3545;
+        }
+
+        .dropdown-item.text-danger:hover i {
+            color: #dc3545;
+        }
+
+        .dropdown-divider {
+            margin: 0.75rem 1.25rem;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        /* ปรับปรุงการแสดงผลบนมือถือ */
+        @media (max-width: 992px) {
+            .dropdown-menu {
+                min-width: 250px;
+                margin-top: 0.5rem;
+            }
+
+            .dropdown-item {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .dropdown-header {
+                font-size: 0.7rem;
+                padding: 0.4rem 1rem 0.2rem;
+            }
+        }
+
+        /* --- Buttons with Luxurious Gradient --- */
+        .btn-kathai {
+            background: linear-gradient(135deg, var(--orange-001) 0%, var(--warning-001) 100%);
+            border: none;
+            color: var(--kathai-white);
+            font-weight: 600;
+            padding: 0.8rem 2rem;
+            /* Reduced padding */
+            border-radius: var(--kathai-border-radius-md);
+            transition: var(--kathai-transition);
+            box-shadow: 0 6px 20px rgba(199, 159, 63, 0.3);
+            /* Keep original shadow for now, as new palette doesn't specify */
+            text-transform: none;
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            font-size: 0.95rem;
+            /* Smaller button text */
+        }
+
+        .btn-kathai:hover {
+            background: linear-gradient(135deg, var(--warning-001), var(--warning-002));
+            /* Adjusting hover gradient */
+            color: var(--kathai-white);
+            box-shadow: 0 8px 25px rgba(255, 71, 19, 0.4);
+            /* Adjust shadow based on new primary color */
+            transform: translateY(-3px);
+        }
+
+        .btn-kathai::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transform: skewX(-20deg);
+            transition: all 0.6s ease;
+            z-index: 2;
+        }
+
+        .btn-kathai:hover::before {
+            left: 100%;
+        }
+
+        .btn-outline-primary {
+            border-color: var(--kathai-gold-primary);
+            color: var(--kathai-gold-primary);
+            font-weight: 600;
+            border-radius: var(--kathai-border-radius-md);
+            padding: 0.8rem 2rem;
+            transition: var(--kathai-transition);
+            text-transform: none;
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            font-size: 0.95rem;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--kathai-gold-primary);
+            color: var(--kathai-white);
+            box-shadow: 0 4px 15px rgba(255, 71, 19, 0.15);
+            /* Adjust shadow based on new primary color */
+            transform: translateY(-3px);
+        }
+
+        .btn-outline-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--kathai-gold-primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: -1;
+        }
+
+        .btn-outline-primary:hover::before {
+            transform: scaleX(1);
+        }
+
+        .btn-outline-secondary {
+            border-color: var(--kathai-text-grey);
+            color: var(--kathai-text-grey);
+            border-radius: var(--kathai-border-radius-md);
+            padding: 0.8rem 2rem;
+            transition: var(--kathai-transition);
+            text-transform: none;
+            letter-spacing: 0.02em;
+            font-size: 0.95rem;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: var(--kathai-text-grey);
+            color: var(--kathai-white);
+            border-color: var(--kathai-text-grey);
+            transform: translateY(-3px);
+        }
+
+        /* --- Cards & Elevated Glass Effect --- */
+        .card {
+            border: none;
+            border-radius: var(--kathai-border-radius-lg);
+            box-shadow: var(--kathai-shadow-md);
+            transition: var(--kathai-transition);
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.85);
+            /* Slightly less opaque */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .card:hover {
+            box-shadow: var(--kathai-shadow-lg);
+            transform: translateY(-6px);
+            border-color: var(--kathai-border-gold);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle at center, rgba(255, 71, 19, 0.06) 0%, transparent 70%);
+            /* Adjust gradient color */
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .card:hover::before {
+            width: 250%;
+            height: 250%;
+            opacity: 1;
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--kathai-border-light);
+            padding: 1.2rem 1.5rem;
+            /* Reduced padding */
+        }
+
+        .card-body {
+            padding: 1.8rem;
+            /* Reduced padding */
+        }
+
+        /* --- Forms Refinement --- */
+        .form-control,
+        .form-select {
+            border-radius: var(--kathai-border-radius-md);
+            border: 1px solid var(--kathai-border-light);
+            padding: 0.8rem 1.1rem;
+            /* Slightly smaller fields */
+            background-color: rgba(255, 255, 255, 0.85);
+            color: var(--kathai-dark-blue);
+            transition: var(--kathai-fast-transition);
+            font-size: 0.95rem;
+            /* Consistent font size */
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--kathai-gold-primary);
+            box-shadow: 0 0 0 0.2rem rgba(255, 71, 19, 0.1);
+            /* Adjust shadow color */
+            outline: none;
+            background-color: var(--kathai-white);
+        }
+
+        .form-control::placeholder {
+            color: var(--kathai-text-grey);
+            opacity: 0.6;
+            font-size: 0.9rem;
+            /* Smaller placeholder */
+        }
+
+        label {
+            font-weight: 500;
+            color: var(--kathai-dark-blue);
+            margin-bottom: 0.4rem;
+            /* Reduced margin */
+            font-size: 0.9rem;
+            /* Smaller label text */
+        }
+
+        .form-check-input:checked {
+            background-color: var(--kathai-gold-primary);
+            border-color: var(--kathai-gold-primary);
+        }
+
+        /* --- Footer Elegance --- */
+        footer {
+            background-color: var(--neutral-black) !important;
+            /* Using the new neutral black */
+            color: var(--kathai-white);
+            padding: 4rem 0;
+            /* Reduced padding */
+            border-top-left-radius: var(--kathai-border-radius-lg);
+            border-top-right-radius: var(--kathai-border-radius-lg);
+            margin-top: 6rem;
+            /* Reduced margin */
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.18);
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="diagonal-lines-footer" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M-1,1 l2,-2 M0,8 l8,-8 M7,9 l2,-2" stroke="rgba(255,255,255,0.025)" stroke-width="0.7"></path></pattern></defs><rect width="100%" height="100%" fill="url(%23diagonal-lines-footer)"></rect></svg>') top left / 4% auto repeat;
+            opacity: 0.8;
+            z-index: 1;
+        }
+
+        footer .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        footer h5,
+        footer h6 {
+            color: var(--kathai-gold-light);
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            letter-spacing: normal;
+            font-size: 1.1rem;
+            /* Smaller footer headings */
+        }
+
+        footer p,
+        footer small {
+            color: rgba(255, 255, 255, 0.7);
+            /* Slightly lighter text */
+            margin-bottom: 0.6rem;
+            font-size: 0.85rem;
+            /* Smaller footer text */
+            line-height: 1.5;
+        }
+
+        footer hr {
+            border-color: rgba(255, 255, 255, 0.08);
+            margin: 3rem 0;
+        }
+
+        footer a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--kathai-fast-transition);
+        }
+
+        footer a:hover {
+            color: var(--kathai-gold-light);
+            text-decoration: underline;
+        }
+
+        footer .social-icons a {
+            font-size: 1.8rem;
+            /* Slightly smaller social icons */
+            transition: var(--kathai-fast-transition);
+            opacity: 0.85;
+        }
+
+        footer .social-icons a:hover {
+            color: var(--kathai-gold-light) !important;
+            transform: translateY(-3px) scale(1.08);
+            text-shadow: 0 0 8px rgba(245, 179, 53, 0.4);
+            /* Adjust shadow color */
+            opacity: 1;
+        }
+
+        /* --- General Layout & Section Styling --- */
+        main {
+            padding-top: 3rem;
+            /* Reduced padding-top */
+            padding-bottom: 3rem;
+        }
+
+        .section-gap {
+            padding-top: 5rem;
+            /* Reduced standard section padding */
+            padding-bottom: 5rem;
+        }
+
+        .section-heading {
+            text-align: center;
+            margin-bottom: 3.5rem;
+            /* Reduced margin */
+        }
+
+        .section-heading h2 {
+            font-size: 2.8rem;
+            /* Reduced heading size */
+            margin-bottom: 0.8rem;
+        }
+
+        .section-heading p {
+            font-size: 1.1rem;
+            /* Reduced intro text size */
+            color: var(--kathai-text-grey);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- Hero Section - Grand & Inviting --- */
+        .hero-section {
+            /* สไตล์สำหรับหน้าจอขนาดใหญ่ (คอมพิวเตอร์) */
+            background: url('{% static "img/herobg10.png" %}') no-repeat center center / cover;
+            background-attachment: scroll;
+            color: var(--kathai-white);
+            padding: 8rem 0 5rem;
+            margin-top: -90px;
+            border-bottom-left-radius: var(--kathai-border-radius-lg);
+            border-bottom-right-radius: var(--kathai-border-radius-lg);
+            box-shadow: var(--kathai-shadow-xl);
+            position: relative;
+            overflow: hidden;
+            min-height: 75vh;
+            display: flex;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        /* * Media Query สำหรับหน้าจอขนาดเล็ก (โทรศัพท์)
+         * ตั้งค่าที่ max-width: 767.98px ซึ่งเป็นขนาดเล็กกว่าขนาดกลาง (md) ของ Bootstrap
+         */
+        @media (max-width: 767.98px) {
+            .hero-section {
+                background: url('{% static "img/herobg-mobile.png" %}') no-repeat center center / cover;
+                /* คุณสามารถปรับ padding หรือสไตล์อื่นๆ ที่เหมาะกับหน้าจอมือถือได้ที่นี่ */
+            }
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="diagonal-lines-hero" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M-1,1 l2,-2 M0,10 l10,-10 M9,11 l2,-2" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"></path></pattern></defs><rect width="100%" height="100%" fill="url(%23diagonal-lines-hero)"></rect></svg>') top left / 10% auto repeat;
+            opacity: 0.6;
+            z-index: -1;
+            animation: movePattern 25s linear infinite;
+        }
+
+        .hero-section .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-section h1 {
+            font-family: 'Kanit', sans-serif;
+            color: var(--kathai-white);
+            font-size: 4.5rem;
+            /* Reduced heading size */
+            font-weight: 800;
+            margin-bottom: 1.2rem;
+            
+        }
+
+        .hero-section h2 {
+            font-family: 'Kanit', sans-serif;
+            font-size: 2.1rem;
+            /* Reduced sub-heading size */
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 2.2rem;
+        }
+
+        .hero-section span.text-warning {
+            color: var(--primary-yellow) !important;
+            /* Using the new primary yellow */
+            text-shadow: 0 0 12px rgba(245, 179, 53, 0.5);
+            /* Adjust shadow color */
+        }
+
+        .hero-section .d-flex.gap-3 a.btn {
+            font-size: 1.1rem;
+            /* Reduced button size */
+            padding: 1rem 2.5rem;
+        }
+
+        .hero-section .bg-white.rounded.shadow {
+            /* Form card in hero */
+            background: rgba(255, 255, 255, 0.65);
+            /* Slightly more transparent */
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--kathai-border-radius-lg);
+            box-shadow: var(--kathai-shadow-xl);
+            position: relative;
+            z-index: 10;
+            padding: 2.5rem;
+            /* Reduced padding */
+        }
+
+        /* NEW: Style for feature item text inside hero section (Corrected Selector) */
+        .hero-section .feature-item-text {
+            color: var(--neutral-black);
+            /* Set text color to grey */
+        }
+
+        .hero-section .text-highlight-gold-underline {
+            color: var(--neutral-black) !important;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+            /* เพิ่มเงาเล็กน้อย */
+
+        }
+
+        .hero-section .bg-white.rounded.shadow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+            border-radius: var(--kathai-border-radius-lg);
+            pointer-events: none;
+        }
+
+        .hero-section .form-label {
+            color: var(--kathai-dark-blue) !important;
+            font-weight: 600;
+        }
+
+        /* --- Icon Styling --- */
+        .bi {
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+
+        .bi-check-circle-fill {
+            color: var(--neutral-black) !important;
+            /* Using the new success color */
+            font-size: 1.4rem;
+            /* Reduced checkmark size */
+        }
+
+        /* --- Feature Cards (Why KATHAI?) --- */
+        .card-feature {
+            box-shadow: var(--kathai-shadow-sm);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: var(--kathai-border-radius-lg);
+            transition: var(--kathai-transition);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .card-feature:hover {
+            box-shadow: var(--kathai-shadow-lg);
+            transform: translateY(-8px);
+            border-color: var(--kathai-gold-primary);
+        }
+
+        .card-feature .card-body {
+            padding: 2rem;
+            /* Reduced padding */
+        }
+
+        .card-feature .display-4 {
+            color: var(--kathai-gold-primary) !important;
+            font-size: 3rem;
+            /* Reduced number size */
+            font-weight: 800;
+            margin-bottom: 0.4rem;
+        }
+
+        .card-feature .bi {
+            color: var(--kathai-gold-light) !important;
+            font-size: 4rem !important;
+            /* Reduced icon size */
+            transition: transform 0.35s ease-out, color 0.35s ease-out;
+        }
+
+        .card-feature:hover .bi {
+            transform: scale(1.1) rotate(5deg);
+            color: var(--kathai-gold-primary) !important;
+        }
+
+        .card-feature .card-title {
+            font-size: 1.6rem;
+            /* Reduced feature title size */
+            font-weight: 700;
+        }
+
+        .card-feature .card-text {
+            font-size: 0.9rem;
+            /* Reduced text size */
+            color: var(--kathai-text-grey);
+        }
+
+        /* --- Process Steps - Dynamic Flow --- */
+        .process-step {
+            position: relative;
+            transition: var(--kathai-transition);
+            padding: 1.8rem;
+            /* Reduced padding */
+            border-radius: var(--kathai-border-radius-lg);
+            background: var(--kathai-off-white);
+            box-shadow: var(--kathai-shadow-sm);
+            border: 1px solid var(--kathai-border-light);
+            text-align: center;
+        }
+
+        .process-step:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--kathai-shadow-md);
+            border-color: var(--kathai-gold-primary);
+        }
+
+        .process-step .step-number-circle {
+            background-color: var(--kathai-gold-primary) !important;
+            box-shadow: var(--kathai-shadow-md);
+            border: 2.5px solid rgba(255, 255, 255, 0.5);
+            width: 90px !important;
+            /* Reduced size */
+            height: 90px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.2rem;
+            position: relative;
+            z-index: 2;
+            transition: var(--kathai-transition);
+            font-size: 3rem;
+            /* Reduced number size */
+            font-weight: 800;
+            color: var(--kathai-white);
+        }
+
+        .process-step:hover .step-number-circle {
+            transform: scale(1.08) rotate(5deg);
+            background: linear-gradient(45deg, var(--kathai-gold-light), var(--kathai-gold-primary)) !important;
+            box-shadow: 0 8px 25px rgba(255, 71, 19, 0.35);
+            /* Adjust shadow color */
+        }
+
+        .process-step h5 {
+            margin-top: 0.8rem;
+            font-size: 1.5rem;
+            /* Reduced step title size */
+            color: var(--kathai-dark-blue);
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+        }
+
+        .process-step p {
+            color: var(--kathai-text-grey);
+            font-size: 0.9rem;
+        }
+
+        .process-step-arrow {
+            /* For connecting steps if needed visually */
+            position: absolute;
+            right: -15px;
+            /* Adjust as needed */
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--kathai-gold-primary);
+            font-size: 1.8rem;
+            z-index: 0;
+        }
+
+        @media (max-width: 768px) {
+            .process-step-arrow {
+                display: none;
+            }
+        }
+
+        /* --- Bank Logos Section - Trust & Authority --- */
+        /* เพิ่มในไฟล์ CSS ของคุณ (เช่น styles.css) */
+
+        .bank-logo-card {
+            display: flex;
+            flex-direction: column;
+            /* จัดเรียงองค์ประกอบในแนวตั้ง */
+            justify-content: space-between;
+            /* จัดโลโก้และชื่อให้อยู่บน-ล่างสุด */
+            align-items: center;
+            /* จัดให้อยู่กึ่งกลางแนวนอน */
+            height: 95px;
+            /* กำหนดความสูงที่แน่นอนของกล่อง อาจปรับได้ตามความเหมาะสม */
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            /* เพิ่มเงาเล็กน้อย */
+        }
+
+        .bank-logo-card:hover {
+            transform: translateY(-5px);
+            /* เลื่อนขึ้นเล็กน้อยเมื่อเมาส์ชี้ */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            /* เพิ่มเงาเมื่อเมาส์ชี้ */
+        }
+
+        .bank-logo-card img {
+            max-height: 80px;
+            /* กำหนดความสูงสูงสุดของโลโก้ */
+            width: auto;
+            /* รักษาอัตราส่วนภาพ */
+            object-fit: contain;
+            /* ทำให้โลโก้พอดีกับพื้นที่โดยไม่บิดเบี้ยว */
+            margin-bottom: 10px;
+            /* ระยะห่างระหว่างโลโก้กับชื่อธนาคาร */
+        }
+
+        .bank-logo-card small {
+            font-size: 0.85em;
+            /* ขนาดฟอนต์สำหรับชื่อธนาคาร */
+            color: #555;
+            text-align: center;
+            display: block;
+            /* ทำให้ small กินพื้นที่เต็มบรรทัด */
+            width: 100%;
+            /* ให้ชื่อธนาคารครอบคลุมความกว้างการ์ด */
+        }
+
+        /* เพิ่ม responsive adjustments หากจำเป็น */
+        @media (max-width: 767.98px) {
+            .bank-logo-card {
+                height: 150px;
+                /* ปรับความสูงสำหรับหน้าจอขนาดเล็ก */
+                padding: 10px;
+            }
+
+            .bank-logo-card img {
+                max-height: 30px;
+            }
+        }
+
+        /* --- Utility classes & Responsive Adjustments --- */
+        .text-gold {
+            color: var(--kathai-gold-primary) !important;
+        }
+
+        .lead {
+            font-size: 1.2rem;
+            /* Reduced lead text size */
+            font-weight: 300;
+            color: var(--kathai-text-grey);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            /* Slightly narrower container for more focus */
+        }
+
+        /* Scroll to top button */
+        #scrollToTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            /* Adjusted position */
+            right: 30px;
+            /* Adjusted position */
+            z-index: 999;
+            border: none;
+            outline: none;
+            background-color: var(--kathai-gold-primary);
+            color: white;
+            cursor: pointer;
+            border-radius: 50% !important;
+            font-size: 1.6rem;
+            /* Slightly smaller icon size for better fit */
+            box-shadow: var(--kathai-shadow-md);
+            transition: var(--kathai-fast-transition);
+            opacity: 0.9;
+            width: 55px;
+            /* Reduced size */
+            height: 55px;
+            /* Reduced size */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            /* Fallback for older browsers */
+            line-height: 1;
+            /* Ensure line height doesn't push it off center */
+        }
+
+        #scrollToTopBtn i.bi {
+            margin: 0;
+            /* Remove any margin on the icon itself */
+            line-height: 1;
+            /* Explicitly set line-height to 1 for the icon */
+        }
+
+        #scrollToTopBtn:hover {
+            background-color: var(--kathai-gold-light);
+            transform: translateY(-4px);
+            box-shadow: var(--kathai-shadow-lg);
+            opacity: 1;
+        }
+
+        /* Animations */
+        @keyframes fadeInTop {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes movePattern {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 100px 100px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Intersection Observer based animation classes */
+        .animate__fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .animate__fade-in-up.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 960px;
+            }
+
+            .hero-section h1 {
+                font-size: 2.9rem;
+            }
+
+            .hero-section h2 {
+                font-size: 1.9rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .navbar {
+                padding: 0.6rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 1.7rem;
+            }
+
+            .navbar-brand img {
+                height: 45px;
+            }
+
+            .nav-link {
+                margin: 0.2rem 0;
+                padding: 0.3rem 0.2rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-link::after {
+                width: 0 !important;
+            }
+
+            .btn-kathai,
+            .btn-outline-primary,
+            .btn-outline-secondary {
+                padding: 0.7rem 1.8rem;
+                font-size: 0.9rem;
+            }
+
+            .hero-section {
+                padding: 7rem 0 4rem;
+                margin-top: -80px;
+                /* Re-adjust based on actual navbar height */
+                min-height: 70vh;
+            }
+
+            .hero-section h1 {
+                font-size: 3.2rem;
+            }
+
+            .hero-section h2 {
+                font-size: 1.7rem;
+            }
+
+            .hero-section .bg-white.rounded.shadow {
+                padding: 2.2rem;
+            }
+
+            .section-heading h2 {
+                font-size: 2.5rem;
+            }
+
+            .section-heading p {
+                font-size: 1rem;
+            }
+
+            .card-feature .card-body {
+                padding: 1.8rem;
+            }
+
+            .card-feature .display-4 {
+                font-size: 2.8rem;
+            }
+
+            .card-feature .bi {
+                font-size: 3.5rem !important;
+            }
+
+            .process-step .step-number-circle {
+                width: 80px !important;
+                height: 80px !important;
+                font-size: 2.7rem;
+            }
+
+            .process-step h5 {
+                font-size: 1.4rem;
+            }
+
+            .bank-logo-card {
+                padding: 1.3rem;
+            }
+
+            .bank-logo-card img {
+                max-height: 45px;
+            }
+
+            footer {
+                padding: 3.5rem 0;
+                margin-top: 5rem;
+            }
+
+            footer .social-icons a {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                line-height: 1.5;
+            }
+
+            p {
+                font-size: 0.9rem;
+            }
+
+            .hero-section {
+                padding: 6rem 0 3.5rem;
+                margin-top: -70px;
+                /* Further adjustment for smaller screens */
+                min-height: 65vh;
+            }
+
+            .hero-section h1 {
+                font-size: 2.8rem;
+                margin-bottom: 1rem;
+            }
+
+            .hero-section h2 {
+                font-size: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .hero-section .d-flex.gap-3 a.btn {
+                font-size: 1rem;
+                padding: 0.9rem 2.2rem;
+            }
+
+            .hero-section .bg-white.rounded.shadow {
+                padding: 2rem;
+            }
+
+            .section-gap {
+                padding-top: 4rem;
+                padding-bottom: 4rem;
+            }
+
+            .section-heading h2 {
+                font-size: 2.2rem;
+            }
+
+            .section-heading p {
+                font-size: 0.95rem;
+            }
+
+            .card-feature .card-body {
+                padding: 1.5rem;
+            }
+
+            .card-feature .display-4 {
+                font-size: 2.4rem;
+            }
+
+            .card-feature .bi {
+                font-size: 3rem !important;
+            }
+
+            .process-step {
+                padding: 1.5rem;
+            }
+
+            .process-step .step-number-circle {
+                width: 70px !important;
+                height: 70px !important;
+                font-size: 2.4rem;
+            }
+
+            .process-step h5 {
+                font-size: 1.3rem;
+            }
+
+            .bank-logo-card {
+                padding: 1.1rem;
+            }
+
+            .bank-logo-card img {
+                max-height: 40px;
+            }
+
+            .bank-logo-card strong {
+                font-size: 1.1rem;
+            }
+
+            #scrollToTopBtn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+                /* Ensure icon scales down */
+            }
+
+            footer {
+                padding: 2.8rem 0;
+                margin-top: 4rem;
+            }
+
+            footer .social-icons a {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-section h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero-section h2 {
+                font-size: 1.2rem;
+            }
+
+            .hero-section .d-flex.gap-3 {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-section .d-flex.gap-3 a.btn {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .btn-kathai,
+            .btn-outline-primary,
+            .btn-outline-secondary {
+                width: 100%;
+            }
+
+            .bank-logo-card {
+                padding: 1rem;
+            }
+
+            .bank-logo-card img {
+                max-height: 35px;
+            }
+
+            .bank-logo-card strong {
+                font-size: 1rem;
+            }
+
+            .section-heading h2 {
+                font-size: 1.8rem;
+            }
+
+            .section-heading p {
+                font-size: 0.85rem;
+            }
+
+            .card-feature .card-body {
+                padding: 1.2rem;
+            }
+
+            .card-feature .display-4 {
+                font-size: 2rem;
+            }
+
+            .card-feature .bi {
+                font-size: 2.5rem !important;
+            }
+
+            .process-step {
+                padding: 1.2rem;
+            }
+
+            .process-step .step-number-circle {
+                width: 60px !important;
+                height: 60px !important;
+                font-size: 2rem;
+            }
+
+            .process-step h5 {
+                font-size: 1.1rem;
+            }
+
+            #scrollToTopBtn {
+                bottom: 15px;
+                right: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+
+        /* Custom CSS */
+        .accordion-button:focus {
+            box-shadow: none !important;
+            border-color: transparent !important;
+        }
+
+        .accordion-item:focus-within {
+            box-shadow: none !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'refinance:home' %}">
+                <img src="{% static 'img/katsanlogo.png' %}" alt="คัดให้ Logo" height="55"
+                    class="d-inline-block align-text-top me-2">
+
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if not user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'refinance:loan_comparison_wizard' %}">เปรียบเทียบดอกเบี้ย</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'refinance:contact_us' %}">ติดต่อเรา</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">เกี่ยวกับเรา</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'refinance:faq' %}">คำถามที่พบบ่อย</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'refinance:loan_comparison_wizard' %}">เปรียบเทียบดอกเบี้ย</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'refinance:dashboard' %}">แดชบอร์ด</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'refinance:bank_list' %}">ธนาคาร</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'refinance:loan_product_list' %}">ผลิตภัณฑ์สินเชื่อ</a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> {{ user.first_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li>
+                                <h6 class="dropdown-header">ส่วนตัว</h6>
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'refinance:dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i> แดชบอร์ด
+                                </a></li>
+                            <li><a class="dropdown-item" href="{% url 'refinance:property_list' %}">
+                                    <i class="bi bi-house"></i> ทรัพย์สินของฉัน
+                                </a></li>
+                            <li><a class="dropdown-item" href="{% url 'refinance:loan_application_list' %}">
+                                    <i class="bi bi-file-text"></i> คำขอสินเชื่อ
+                                </a></li>
+                            <li><a class="dropdown-item" href="{% url 'refinance:document_list' %}">
+                                    <i class="bi bi-file-earmark"></i> เอกสารของฉัน
+                                </a></li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <h6 class="dropdown-header">ข้อมูลและบริการ</h6>
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'refinance:contact_us' %}">
+                                    <i class="bi bi-telephone"></i> ติดต่อเรา
+                                </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                    <i class="bi bi-info-circle"></i> เกี่ยวกับเรา
+                                </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                    <i class="bi bi-question-circle"></i> คำถามที่พบบ่อย
+                                </a></li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li><a class="dropdown-item" href="#">
+                                    <i class="bi bi-gear"></i> ตั้งค่า
+                                </a></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                    <i class="bi bi-box-arrow-right"></i> ออกจากระบบ
+                                </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:register' %}">
+                            <i class="bi bi-person-plus"></i> สมัครสมาชิก
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="py-5">
+        {% block content %}
+        <div class="col-md-6 col-lg-3 animate__fade-in-up" style="animation-delay: 0.3s;">
+            <div class="card h-100 text-center card-feature">
+                <div class="card-body">
+                    <div class="mb-4">
+                        <i class="bi bi-bank2 text-gold" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">หลายธนาคาร</h5>
+                    <h3 class="display-4">15+</h3>
+                    <p class="card-text">ธนาคารพาร์ทเนอร์</p>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+    </main>
+
+    <footer class="bg-dark text-white">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 col-lg-3 mb-4 mb-md-0">
+                    <h5 class="mb-3"><i class="bi bi-gem me-2"></i> คัดให้</h5>
+                    <p>
+                        แพลตฟอร์มรีไฟแนนซ์บ้านและอสังหาฯ ชั้นนำ
+                        ที่ช่วยให้คุณประหยัดดอกเบี้ยและบริหารการเงินได้อย่างชาญฉลาด.
+                    </p>
+                    <div class="social-icons mt-4">
+                        <a href="#" class="text-white me-3"><i class="bi bi-facebook fs-4"></i></a>
+                        <a href="#" class="text-white me-3"><i class="bi bi-line fs-4"></i></a>
+                        <a href="#" class="text-white me-3"><i class="bi bi-twitter-x fs-4"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-linkedin fs-4"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4 mb-md-0">
+                    <h6 class="mb-3">ลิงก์ด่วน</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'refinance:home' %}" class="py-1 d-block">หน้าแรก</a></li>
+                        <li><a href="{% url 'refinance:loan_comparison_wizard' %}"
+                                class="py-1 d-block">เปรียบเทียบสินเชื่อ</a></li>
+                        {% comment %} <li><a href="#" class="py-1 d-block">เกี่ยวกับเรา</a></li> {% endcomment %}
+                        {% comment %} <li><a href="#" class="py-1 d-block">บริการของเรา</a></li> {% endcomment %}
+                        <li><a href="{% url 'refinance:article_list' %}" class="py-1 d-block">บทความ</a></li>
+                        <li><a href="{% url 'refinance:faq' %}" class="py-1 d-block">คำถามที่พบบ่อย</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4 mb-md-0">
+                    <h6 class="mb-3">นโยบาย</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'accounts:privacy_policy' %}" class="py-1 d-block">นโยบายความเป็นส่วนตัว</a></li>
+                        <li><a href="{% url 'accounts:terms_and_conditions' %}" class="py-1 d-block">ข้อกำหนดและเงื่อนไข</a></li>
+
+                    </ul>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <h6 class="mb-3">ติดต่อเรา</h6>
+                    <p><i class="bi bi-telephone-fill me-2"></i> 02-XXX-XXXX</p>
+                    <p><i class="bi bi-envelope-fill me-2"></i> info@kathai.com</p>
+                    <p class="mb-0">
+                        <i class="bi bi-geo-alt-fill me-2"></i> บริษัท คัดสรร อินโนเวชั่น จำกัด<br>
+                        170/57 อาคารโอเชี่ยนทาวเวอร์ 1 ชั้น 18 <br>
+                        ซอยสุขุมวิท 16 (สามมิตร) ถ.รัชดาภิเษกตัดใหม่ <br>
+                        แขวงคลองเตย เขตคลองเตย กรุงเทพ ฯ 10110
+                    </p>
+                    <p class="mt-2 mb-0"><small>เลขประจำตัวผู้เสียภาษี 0105562169834</small></p>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <small>&copy; 2025 คัดให้. สงวนลิขสิทธิ์.</small>
+            </div>
+        </div>
+    </footer>
+
+    {# Scroll to Top Button #}
+    <button onclick="topFunction()" id="scrollToTopBtn" title="กลับขึ้นด้านบน">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    {# Bootstrap 5.3 JS Bundle #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}
+    <script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        // Simple Parallax for hero section background (adjust speed by changing multiplier)
+        document.addEventListener('scroll', function() {
+            const hero = document.querySelector('.hero-section');
+            if (hero) {
+                let scrollPosition = window.pageYOffset;
+                hero.style.backgroundPositionY = -scrollPosition * 0.12 + 'px'; /* Slightly less parallax */
+            }
+        });
+        // Add a class to navbar on scroll for subtle elevation/shadow
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 40) {
+                /* Changed scroll threshold */
+                navbar.classList.add('navbar-scrolled');
+            } else {
+                navbar.classList.remove('navbar-scrolled');
+            }
+        });
+        // Scroll to top button functionality
+        let scrollToTopBtn = document.getElementById("scrollToTopBtn");
+        window.onscroll = function() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                /* Changed scroll threshold */
+                scrollToTopBtn.style.display = "flex";
+            } else {
+                scrollToTopBtn.style.display = "none";
+            }
+        };
+        scrollToTopBtn.addEventListener("click", function() {
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        });
+        // Intersection Observer for scroll-triggered animations
+        const animateElements = document.querySelectorAll('.animate__fade-in-up');
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        animateElements.forEach(element => {
+            observer.observe(element);
+        });
+    </script>
+    {% endblock %}
+</body>
+
+</html>

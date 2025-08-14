@@ -1,0 +1,296 @@
+{% extends 'base.html' %} {# สืบทอดจาก Base Template ของคุณ #}
+{% load static %} {# ถ้าคุณใช้ static files เช่น รูปภาพ หรือ CSS เฉพาะ #}
+{% load humanize %} {# โหลด humanize สำหรับ floatformat:0 และ intcomma #}
+
+{% block title %}แดชบอร์ด - KATHAI{% endblock %}
+
+{% block extra_css %}
+{# คุณสามารถเพิ่ม CSS เฉพาะของหน้านี้ที่นี่ได้ #}
+<style>
+    :root {
+        --kathai-primary: #007bff; /* ตัวอย่างสีน้ำเงิน */
+        --kathai-dark: #343a40; /* ตัวอย่างสีดำเทา */
+        --kathai-success: #28a745;
+        --kathai-info: #17a2b8;
+        --kathai-warning: #ffc107;
+        --kathai-danger: #dc3545;
+    }
+
+    .dashboard-card {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        border-radius: 10px;
+        overflow: hidden; /* Ensures child elements respect border-radius */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }
+    .dashboard-card .card-body {
+        padding: 1.5rem;
+    }
+    .dashboard-card .card-title {
+        color: var(--kathai-dark);
+        font-weight: 600;
+        font-size: 1.1rem; /* ทำให้หัวข้อเล็กลง */
+    }
+    .dashboard-card .card-text {
+        color: var(--kathai-primary);
+        font-size: 2.2rem; /* ทำให้ตัวเลขเล็กลงเล็กน้อย */
+        font-weight: bold;
+        margin-bottom: 0; /* ลบ margin ด้านล่าง */
+    }
+    .profile-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .profile-section img {
+        width: 80px; /* ลดขนาดรูปโปรไฟล์ */
+        height: 80px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid var(--kathai-primary);
+    }
+    .profile-section h4 {
+        font-size: 1.25rem; /* ลดขนาดหัวข้อโปรไฟล์ */
+    }
+    .profile-section p {
+        font-size: 0.9rem; /* ลดขนาดข้อความในโปรไฟล์ */
+    }
+
+    .application-list-item {
+        border-left: 4px solid var(--kathai-primary); /* ลดขนาด border-left */
+        margin-bottom: 0.5rem; /* ลด margin-bottom */
+        border-radius: 5px;
+        transition: all 0.2s ease;
+        padding: 0.75rem 1rem; /* ลด padding */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #fff;
+    }
+    .application-list-item:hover {
+        background-color: #f7f7f7; /* สี hover อ่อนลง */
+    }
+    .application-no {
+        font-weight: bold;
+        color: var(--kathai-dark);
+        font-size: 0.95rem; /* ลดขนาด text */
+    }
+    .application-list-item small {
+        font-size: 0.75rem; /* ลดขนาด text */
+    }
+
+    .status-badge-custom {
+        padding: 0.3em 0.6em; /* ลด padding badge */
+        border-radius: 0.4rem; /* ลด border-radius badge */
+        font-weight: bold;
+        font-size: 0.75em; /* ลด font-size badge */
+        min-width: 70px; /* เพิ่ม min-width เพื่อให้ขนาดสม่ำเสมอ */
+        text-align: center;
+    }
+    .status-badge-submitted { background-color: #ffc107; color: #343a40; } /* Warning */
+    .status-badge-pending { background-color: #17a2b8; color: #fff; } /* Info */
+    .status-badge-under_review { background-color: #007bff; color: #fff; } /* Primary */
+    .status-badge-approved { background-color: var(--kathai-success); color: #fff; } /* Success */
+    .status-badge-rejected { background-color: var(--kathai-danger); color: #fff; } /* Danger */
+    .status-badge-completed { background-color: #6c757d; color: #fff; } /* Secondary */
+    .status-badge-draft { background-color: #e9ecef; color: #6c757d; } /* Draft */
+
+
+    /* New styles for individual property cards */
+    .property-item-card {
+        border: 1px solid #e9ecef; /* Lighter border */
+        border-radius: 8px;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03); /* Lighter shadow */
+        cursor: pointer; /* Indicate clickable */
+    }
+    .property-item-card:hover {
+        transform: translateY(-3px); /* Less aggressive lift */
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08); /* More visible but still light shadow */
+    }
+    .property-item-card .card-body {
+        padding: 1rem 1.25rem; /* Reduced padding */
+    }
+    .property-item-card .card-title {
+        font-size: 1.05rem; /* Smaller title */
+        color: var(--kathai-dark); /* Keep dark for consistency */
+        margin-bottom: 0.5rem; /* Reduced margin */
+        font-weight: 600; /* Slightly bolder for prominence */
+    }
+    .property-detail-line {
+        font-size: 0.85rem; /* Smaller detail text */
+        margin-bottom: 0.2rem; /* Reduced spacing between lines */
+        color: #555;
+    }
+    .property-detail-line strong {
+        font-weight: 500; /* Slightly lighter bold for elegance */
+        color: var(--kathai-primary); /* Make key details more prominent */
+    }
+    .property-detail-line i {
+        color: #6c757d; /* Icon color for details */
+        margin-right: 0.5rem;
+    }
+    .property-detail-line:last-child {
+        margin-bottom: 0; /* No margin on last line */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-0" style="color: var(--kathai-dark); font-size: 2rem;">สวัสดีครับ, {{ request.user.first_name|default:request.user.username }}!</h1>
+            <p class="lead" style="color: #6c757d; font-size: 1.1rem;">ภาพรวมสถานะการรีไฟแนนซ์ของคุณ</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'refinance:application_create' %}" class="btn btn-kathai btn-lg">
+                <i class="bi bi-plus-circle-fill me-2"></i>ยื่นคำขอใหม่
+            </a>
+        </div>
+    </div>
+
+    {# User Profile Overview #}
+    {% if request.user.is_authenticated and request.user.userprofile %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="profile-section d-flex align-items-center">
+                {% if request.user.userprofile.profile_picture %}
+                <img src="{{ request.user.userprofile.profile_picture.url }}" alt="Profile Picture" class="me-4">
+                {% else %}
+                <img src="{% static 'images/default_profile.png' %}" alt="Default Profile Picture" class="me-4">
+                {% endif %}
+                <div>
+                    <h4 style="color: var(--kathai-dark);">ข้อมูลโปรไฟล์ของคุณ</h4>
+                    <p class="mb-0" style="color: #555;"><strong>อีเมล:</strong> {{ request.user.email }}</p>
+                    <p class="mb-0" style="color: #555;"><strong>เบอร์โทร:</strong> {{ request.user.userprofile.phone_number|default:'-' }}</p>
+                    <p class="mb-0" style="color: #555;"><strong>รายได้ต่อเดือน:</strong> {{ request.user.userprofile.monthly_income|floatformat:0|intcomma|default:'-' }} บาท</p> {# ใช้ intcomma เพื่อจัดรูปแบบตัวเลข #}
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-sm btn-outline-secondary mt-2">แก้ไขโปรไฟล์</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Statistics Cards #}
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">คำขอทั้งหมด</h5>
+                    <p class="card-text">{{ user_stats.total_applications }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">รอพิจารณา</h5>
+                    <p class="card-text">{{ user_stats.pending_applications }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">อนุมัติแล้ว</h5>
+                    <p class="card-text">{{ user_stats.approved_applications }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">ทรัพย์สินในระบบ</h5>
+                    <p class="card-text">{{ user_stats.total_properties }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Recent Applications #}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm dashboard-card">
+                <div class="card-header bg-white py-3" style="border-bottom: 1px solid #eee;"> {# เพิ่ม py-3 #}
+                    <h4 class="mb-0" style="color: var(--kathai-dark);">คำขอรีไฟแนนซ์ล่าสุด</h4>
+                </div>
+                <div class="card-body">
+                    {% if recent_applications %}
+                        <div class="list-group list-group-flush">
+                            {% for app in recent_applications %}
+                            <a href="{% url 'refinance:loan_application_detail' app.id %}" class="list-group-item application-list-item">
+                                <div>
+                                    <span class="application-no">#{{ app.application_no|default:'N/A' }}</span>
+                                    <br>
+                                    <small class="text-muted">ยื่นเมื่อ: {{ app.submitted_at|date:"d M Y" }}</small>
+                                </div>
+                                <div>
+                                    <span class="badge status-badge-custom status-badge-{{ app.status|lower }}">
+                                        {{ app.get_status_display }}
+                                    </span>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        <div class="text-end mt-3">
+                            <a href="{% url 'refinance:loan_application_list' %}" class="btn btn-outline-primary btn-sm">ดูคำขอทั้งหมด <i class="bi bi-arrow-right"></i></a> {# ใช้ btn-sm #}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">คุณยังไม่มีคำขอรีไฟแนนซ์ล่าสุด</p>
+                        <a href="{% url 'refinance:application_create' %}" class="btn btn-kathai mt-3">ยื่นคำขอรีไฟแนนซ์แรกของคุณ</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# User Properties #}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm dashboard-card">
+                <div class="card-header bg-white py-3" style="border-bottom: 1px solid #eee;"> {# เพิ่ม py-3 #}
+                    <h4 class="mb-0" style="color: var(--kathai-dark);">ทรัพย์สินของคุณ</h4>
+                </div>
+                <div class="card-body">
+                    {% if user_properties %}
+                        <div class="row g-3">
+                            {% for prop in user_properties %}
+                            <div class="col-md-6 col-lg-4">
+                                <a href="{% url 'refinance:property_detail' prop.id %}" class="card h-100 property-item-card text-decoration-none"> {# ทำให้ทั้ง card คลิกได้ #}
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-house-fill me-2"></i>{{ prop.name|default:'ไม่มีชื่อ' }}
+                                        </h5>
+                                        <p class="property-detail-line">
+                                            <i class="bi bi-tag-fill"></i><strong>ประเภท:</strong> {{ prop.get_property_type_display|default:'-' }}
+                                        </p>
+                                        <p class="property-detail-line">
+                                            <i class="bi bi-currency-dollar"></i><strong>มูลค่าโดยประมาณ:</strong> {{ prop.estimated_value|floatformat:0|intcomma|default:'-' }} บาท
+                                        </p>
+                                        <p class="property-detail-line">
+                                            <i class="bi bi-geo-alt-fill"></i><strong>ที่อยู่:</strong> {{ prop.address|default:'-' }}{% if prop.province %}, {{ prop.province.name }}{% endif %}
+                                        </p>
+                                        {# ไม่ต้องมีปุ่ม "รายละเอียด" แล้ว เพราะทั้ง card คลิกได้ #}
+                                    </div>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-end mt-4">
+                            <a href="{% url 'refinance:property_list' %}" class="btn btn-outline-primary btn-sm">ดูทรัพย์สินทั้งหมด <i class="bi bi-arrow-right"></i></a> {# ใช้ btn-sm #}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">คุณยังไม่มีทรัพย์สินในระบบ</p>
+                        <a href="{% url 'refinance:property_add' %}" class="btn btn-kathai mt-3">เพิ่มทรัพย์สินใหม่</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ article.title }} - คัดให้ (KATHAI){% endblock %}
+
+{% block content %}
+<section class="article-detail-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <article>
+                    <header class="mb-4 text-center">
+                        {% if article.image %}
+                        <img src="{{ article.image.url }}" class="img-fluid rounded-4 mb-4" alt="{{ article.title }}">
+                        {% else %}
+                        <img src="https://via.placeholder.com/800x450.png?text={{ article.title }}" class="img-fluid rounded-4 mb-4" alt="Placeholder Image">
+                        {% endif %}
+                        <h1 class="fw-bold display-5 text-dark-blue">{{ article.title }}</h1>
+                        <p class="text-muted small">
+                            <i class="bi bi-person-circle me-1"></i> โดย แอดมิน &nbsp;
+                            <i class="bi bi-calendar me-1"></i> เผยแพร่เมื่อ {{ article.published_date|date:"d M Y" }}
+                        </p>
+                    </header>
+                    <div class="article-content fs-5 text-dark-blue" style="line-height: 1.8;">
+                        {{ article.content|safe }}
+                    </div>
+                    <div class="mt-5 text-center">
+                        <a href="{% url 'refinance:article_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i> กลับไปยังหน้าบทความ
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}เปรียบเทียบดอกเบี้ย - KATHAI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4"><i class="bi bi-calculator"></i> เปรียบเทียบดอกเบี้ยสินเชื่อ</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> กรอกข้อมูลการคำนวณ</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.loan_amount.id_for_label }}" class="form-label">{{ form.loan_amount.label }}</label>
+                            {{ form.loan_amount|add_class:"form-control" }}
+                            {% if form.loan_amount.errors %}
+                                <div class="text-danger small">{{ form.loan_amount.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.loan_term.id_for_label }}" class="form-label">{{ form.loan_term.label }}</label>
+                            {{ form.loan_term|add_class:"form-control" }}
+                            {% if form.loan_term.errors %}
+                                <div class="text-danger small">{{ form.loan_term.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.property_value.id_for_label }}" class="form-label">{{ form.property_value.label }}</label>
+                            {{ form.property_value|add_class:"form-control" }}
+                            {% if form.property_value.errors %}
+                                <div class="text-danger small">{{ form.property_value.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-kathai w-100">
+                            <i class="bi bi-search"></i> เปรียบเทียบ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            {% if comparison_data %}
+            <div class="mb-3">
+                <div class="alert alert-info">
+                    <strong>ข้อมูลการคำนวณ:</strong> 
+                    จำนวนเงินกู้ {{ loan_amount|floatformat:0 }} บาท | 
+                    ระยะเวลา {{ loan_term }} ปี | 
+                    อัตราส่วน LTV: {{ ltv_ratio|floatformat:1 }}%
+                </div>
+            </div>
+            
+            <div class="row g-3">
+                {% for data in comparison_data %}
+                <div class="col-md-6">
+                    <div class="card comparison-card h-100">
+                        <div class="card-header d-flex align-items-center">
+                            <strong>{{ data.product.bank.name }}</strong>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">{{ data.product.name }}</h6>
+                            
+                            <div class="row text-center mb-3">
+                                <div class="col-12"> {# เปลี่ยนจาก col-6 สองอัน เป็น col-12 อันเดียว #}
+                                    <div class="loan-rate">{{ data.product.interest_rate }}%</div> {# ใช้ interest_rate #}
+                                    <small class="text-muted">อัตราดอกเบี้ย</small> {# เปลี่ยนข้อความกำกับ #}
+                                </div>
+                            </div>
+                            
+                            <div class="row text-center mb-3">
+                                <div class="col-12">
+                                    <div class="monthly-payment">
+                                        {# ใช้ monthly_payment_min หรือ monthly_payment_max ตามแต่ว่าคุณต้องการแสดงค่าเดียวหรือช่วง #}
+                                        {# เนื่องจากใน LoanProduct มีแค่ interest_rate เดียว ผมแนะนำให้คำนวณ monthly_payment_min หรือ monthly_payment_max เพียงค่าเดียว #}
+                                        {# หรือถ้าคุณต้องการให้แสดงช่วง ก็ต้องปรับ LoanProduct model ให้มี min_interest_rate และ max_interest_rate #}
+                                        {# หากใช้ interest_rate เดียว ควรแสดงแค่ monthly_payment_min #}
+                                        {{ data.monthly_payment_min|floatformat:0 }} บาท/เดือน 
+                                    </div>
+                                    <small class="text-muted">ค่าผ่อนรายเดือน (โดยประมาณ)</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i> 
+                                        ค่าธรรมเนียมจัดการ: {{ data.product.processing_fee }}% 
+                                        ({{ data.processing_fee_amount|floatformat:0 }} บาท)
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'refinance:application_create' %}" class="btn btn-outline-warning btn-sm w-100">
+                                <i class="bi bi-plus"></i> ยื่นคำขอ
+                            </a>
+                            {% else %}
+                            <a href="{% url 'accounts:register' %}" class="btn btn-outline-warning btn-sm w-100">
+                                <i class="bi bi-person-plus"></i> สมัครเพื่อยื่นคำขอ
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-calculator text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="text-muted mt-3">กรอกข้อมูลเพื่อเปรียบเทียบดอกเบี้ย</h4>
+                    <p class="text-muted">ใส่จำนวนเงินกู้และระยะเวลาที่ต้องการ</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

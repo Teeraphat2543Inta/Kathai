@@ -1,0 +1,359 @@
+โค้ด `bank_detail.html` ที่คุณให้มานี้มีการจัดการโลโก้ของธนาคารได้ดีอยู่แล้วครับ โดยมีเงื่อนไข `{% if bank.logo %}` เพื่อแสดงโลโก้ที่อัปโหลด และ `{% else %}` เพื่อแสดงไอคอน `bi bi-bank` เป็นตัวสำรองหากไม่มีโลโก้
+
+```html
+{% if bank.logo %}
+<img src="{{ bank.logo.url }}" alt="{{ bank.name }}" class="img-fluid bank-logo-large">
+{% else %}
+<i class="bi bi-bank" style="font-size: 4rem; color: {{ bank.brand_color|default:'#007bff' }};"></i>
+{% endif %}
+```
+
+หากคุณต้องการให้ `bank_detail.html` มีพฤติกรรมที่สอดคล้องกันกับ `bank_list.html` ที่เราได้แก้ไขไปก่อนหน้านี้ (คือใช้ไฟล์ `logo.png` แทนไอคอนเมื่อไม่มีโลโก้) คุณสามารถแก้ไขส่วน `else` ได้ดังนี้ครับ:
+
+**โค้ดที่แก้ไข (เปลี่ยน fallback จากไอคอนเป็นรูปภาพ `logo.png`)**
+
+```html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ bank.name }} - รายละเอียดธนาคาร - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'refinance:home' %}">หน้าแรก</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'refinance:bank_list' %}">ธนาคาร</a></li>
+            <li class="breadcrumb-item active">{{ bank.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bank-header-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            {% if bank.logo %}
+                            <img src="{{ bank.logo.url }}" alt="{{ bank.name }}" class="img-fluid bank-logo-large">
+                            {% else %}
+                            {# แก้ไขตรงนี้: ใช้รูปภาพ logo.png แทนไอคอน #}
+                            <img src="{% static 'images/logo.png' %}" alt="{{ bank.name }} Logo Placeholder" class="img-fluid bank-logo-large" style="max-height: 80px;">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-10">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h2 class="mb-2">{{ bank.name }}</h2>
+                                    <p class="text-muted mb-2">{{ bank.code }} • {{ bank.get_bank_type_display }}</p>
+                                    {% if bank.marketing_message %}
+                                    <div class="alert alert-info d-inline-block">
+                                        <i class="bi bi-megaphone"></i> {{ bank.marketing_message }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    {% if bank.is_featured %}
+                                    <span class="badge bg-warning text-dark mb-2">
+                                        <i class="bi bi-star-fill"></i> แนะนำพิเศษ
+                                    </span>
+                                    {% endif %}
+                                    {% if bank.website %}
+                                    <div>
+                                        <a href="{{ bank.website }}" target="_blank" class="btn btn-outline-primary">
+                                            <i class="bi bi-globe"></i> เว็บไซต์ธนาคาร
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            {% if bank.description %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> เกี่ยวกับธนาคาร</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ bank.description }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-credit-card"></i> ผลิตภัณฑ์สินเชื่อ</h5>
+                    <span class="badge bg-primary">{{ loan_products.count }} ผลิตภัณฑ์</span>
+                </div>
+                <div class="card-body">
+                    {% if loan_products %}
+                    <div class="row">
+                        {% for product in loan_products %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card loan-product-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ product.name }}</h6>
+                                    <div class="product-details">
+                                        <div class="detail-row">
+                                            <span class="label">อัตราดอกเบี้ย:</span>
+                                            <span class="value text-primary fw-bold">{{ product.interest_rate }}%</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">ประเภท:</span>
+                                            <span class="value">{{ product.get_product_type_display }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">วงเงิน:</span>
+                                            <span class="value">{{ product.min_loan_amount|floatformat:0 }} - {{ product.max_loan_amount|floatformat:0 }} บาท</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">LTV สูงสุด:</span>
+                                            <span class="value">{{ product.max_ltv }}%</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <a href="{% url 'refinance:loan_product_detail' product.pk %}"
+                                           class="btn btn-outline-primary btn-sm">
+                                            ดูรายละเอียด
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-credit-card-x text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">ยังไม่มีผลิตภัณฑ์สินเชื่อ</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if promotions %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-gift"></i> โปรโมชั่นพิเศษ</h5>
+                    <span class="badge bg-success">{{ promotions.count }} โปรโมชั่น</span>
+                </div>
+                <div class="card-body">
+                    {% for promotion in promotions %}
+                    <div class="promotion-item mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="promotion-title">{{ promotion.title }}</h6>
+                                <p class="promotion-description">{{ promotion.description|truncatechars:150 }}</p>
+                                <div class="promotion-meta">
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i>
+                                        {{ promotion.start_date }} - {{ promotion.end_date }}
+                                    </small>
+                                    {% if promotion.special_rate %}
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        อัตราพิเศษ {{ promotion.special_rate }}%
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="promotion-type">
+                                <span class="badge bg-{{ promotion.promotion_type|lower }}">
+                                    {{ promotion.get_promotion_type_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-telephone"></i> ข้อมูลติดต่อ</h6>
+                </div>
+                <div class="card-body">
+                    {% if bank.contact_phone %}
+                    <div class="contact-item mb-2">
+                        <i class="bi bi-telephone-fill text-primary"></i>
+                        <span>{{ bank.contact_phone }}</span>
+                    </div>
+                    {% endif %}
+                    {% if bank.contact_email %}
+                    <div class="contact-item mb-2">
+                        <i class="bi bi-envelope-fill text-primary"></i>
+                        <span>{{ bank.contact_email }}</span>
+                    </div>
+                    {% endif %}
+                    {% if bank.website %}
+                    <div class="contact-item mb-2">
+                        <i class="bi bi-globe text-primary"></i>
+                        <a href="{{ bank.website }}" target="_blank">เว็บไซต์ธนาคาร</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-bar-chart"></i> สถิติ</h6>
+                </div>
+                <div class="card-body">
+                    <div class="stat-row">
+                        <span class="stat-label">ผลิตภัณฑ์สินเชื่อ:</span>
+                        <span class="stat-value">{{ loan_products.count }} รายการ</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">โปรโมชั่นพิเศษ:</span>
+                        <span class="stat-value">{{ promotions.count }} รายการ</span>
+                    </div>
+                    {% if fees %}
+                    <div class="stat-row">
+                        <span class="stat-label">ค่าธรรมเนียม:</span>
+                        <span class="stat-value">{{ fees.count }} ประเภท</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if fees %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-receipt"></i> ค่าธรรมเนียม</h6>
+                </div>
+                <div class="card-body">
+                    {% for fee in fees %}
+                    <div class="fee-item mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="fee-name">{{ fee.fee_type.name }}</span>
+                            <span class="fee-amount text-primary">{{ fee.amount }}{% if fee.fee_type.fee_type == 'percentage' %}%{% else %} บาท{% endif %}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-lightning"></i> การดำเนินการ</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'refinance:loan_comparison_wizard' %}" class="btn btn-kathai">
+                            <i class="bi bi-calculator"></i> เปรียบเทียบสินเชื่อ
+                        </a>
+                        <a href="{% url 'refinance:loan_product_list' %}?bank={{ bank.id }}" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i> ดูผลิตภัณฑ์ทั้งหมด
+                        </a>
+                        <a href="{% url 'refinance:contact_us' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-chat-dots"></i> ปรึกษาผู้เชี่ยวชาญ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bank-header-card {
+    border: none;
+    box-shadow: var(--kathai-shadow-md);
+    border-radius: var(--kathai-border-radius-lg);
+    background: linear-gradient(135deg, rgba(255, 71, 19, 0.03) 0%, rgba(245, 179, 53, 0.03) 100%);
+}
+
+.bank-logo-large {
+    max-height: 80px;
+    object-fit: contain;
+}
+
+.loan-product-card {
+    border: 1px solid var(--kathai-border-light);
+    transition: var(--kathai-transition);
+}
+
+.loan-product-card:hover {
+    box-shadow: var(--kathai-shadow-sm);
+    transform: translateY(-2px);
+    border-color: var(--kathai-border-gold);
+}
+
+.detail-row, .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.detail-row .label, .stat-row .stat-label {
+    font-weight: 500;
+    color: var(--kathai-text-grey);
+}
+
+.detail-row .value, .stat-row .stat-value {
+    text-align: right;
+    color: var(--kathai-dark-blue);
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.promotion-item {
+    padding: 1rem;
+    border: 1px solid var(--kathai-border-light);
+    border-radius: var(--kathai-border-radius-md);
+    background-color: rgba(25, 135, 84, 0.02);
+}
+
+.promotion-title {
+    color: var(--kathai-gold-primary);
+    font-weight: 600;
+}
+
+.promotion-description {
+    margin-bottom: 0.5rem;
+    color: var(--kathai-dark-blue);
+}
+
+.fee-item {
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--kathai-border-light);
+}
+
+.fee-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.fee-name {
+    color: var(--kathai-text-grey);
+}
+
+.fee-amount {
+    font-weight: 600;
+}
+
+.bg-special_rate { background-color: #ffc107 !important; }
+.bg-fee_waiver { background-color: #198754 !important; }
+.bg-cashback { background-color: #0dcaf0 !important; }
+.bg-gift { background-color: #e91e63 !important; }
+.bg-other { background-color: #6c757d !important; }
+</style>
+{% endblock %}
+```

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}นโยบายความเป็นส่วนตัว | KATHAI{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-warning text-dark text-center py-5 rounded-top-4 position-relative">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-25" style="background-image: url('https://via.placeholder.com/1500x500?text=KATHAI+Background'); background-size: cover; background-position: center;"></div>
+                    <div class="position-relative">
+                        <i class="bi bi-shield-lock display-3 mb-3 text-dark"></i>
+                        <h1 class="h2 fw-bold mb-2">นโยบายการคุ้มครองข้อมูลส่วนบุคคล</h1>
+                        <p class="text-muted mb-0">เรามุ่งมั่นที่จะปกป้องข้อมูลของคุณให้ปลอดภัยและเป็นความลับ</p>
+                        <p class="text-muted small mt-2 mb-0">วันปรับปรุงล่าสุด : 07 สิงหาคม 2568</p>
+                    </div>
+                </div>
+                <div class="card-body p-md-5">
+                    <div class="accordion accordion-flush" id="privacyAccordion">
+
+                        <div class="accordion-item border-start border-warning border-3 mb-3 rounded-2 shadow-sm">
+                            <h2 class="accordion-header" id="pHeadingOne">
+                                <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#pCollapseOne" aria-expanded="false" aria-controls="pCollapseOne">
+                                    <i class="bi bi-info-circle me-3 text-warning"></i> วัตถุประสงค์ของนโยบายฯ
+                                </button>
+                            </h2>
+                            <div id="pCollapseOne" class="accordion-collapse collapse" aria-labelledby="pHeadingOne" data-bs-parent="#privacyAccordion">
+                                <div class="accordion-body">
+                                    <p>นโยบายฉบับนี้จัดทำขึ้นเพื่อคุ้มครองข้อมูลส่วนบุคคลของคุณ ให้คุณได้ทราบถึงแนวทางการปฏิบัติตามนโยบายของบริษัท วัตถุประสงค์ในการรวบรวมจัดเก็บข้อมูล และสิทธิที่คุณสามารถจัดการเกี่ยวกับข้อมูลของคุณเองได้ โดยการยินยอมถือว่าคุณได้ยอมรับวัตถุประสงค์ที่กำหนดและเงื่อนไขในนโยบายนี้ หากคุณไม่เห็นด้วยกับเนื้อหาในนโยบายฉบับนี้ คุณสามารถใช้สิทธิเลือกได้ว่าต้องการใช้บริการต่อไปหรือไม่</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item border-start border-warning border-3 mb-3 rounded-2 shadow-sm">
+                            <h2 class="accordion-header" id="pHeadingTwo">
+                                <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#pCollapseTwo" aria-expanded="false" aria-controls="pCollapseTwo">
+                                    <i class="bi bi-person-circle me-3 text-warning"></i> ข้อ 1 การจัดเก็บข้อมูลส่วนบุคคล
+                                </button>
+                            </h2>
+                            <div id="pCollapseTwo" class="accordion-collapse collapse" aria-labelledby="pHeadingTwo" data-bs-parent="#privacyAccordion">
+                                <div class="accordion-body">
+                                    <p>บริษัทรวบรวมข้อมูลที่คุณได้เข้าใช้บริการของเว็บไซต์ ดังนี้:</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-dot me-2 text-warning"></i> **ข้อมูลเกี่ยวกับบุคคล:** ชื่อ-นามสกุล, คำนำหน้า, วัน เดือน ปี พ.ศ. เกิด, เลขประจำตัวประชาชน (เพื่อการยืนยันตัวตน), รายได้ต่อเดือน, อาชีพที่ประกอบปัจจุบัน, อายุงาน, ช่วงเวลาที่สะดวกให้ติดต่อ</li>
+                                        <li><i class="bi bi-dot me-2 text-warning"></i> **ข้อมูลในการติดต่อ:** หมายเลขโทรศัพท์, อีเมลติดต่อ, ที่อยู่ปัจจุบัน</li>
+                                        <li><i class="bi bi-dot me-2 text-warning"></i> **ข้อมูลที่เกี่ยวข้องกับบริการ:** ราคาบ้านที่ซื้อ, ยอดหนี้บ้านคงเหลือ, ยอดผ่อนสินเชื่อต่อเดือน, รายได้รวมต่อเดือน, ธนาคารที่ผ่อนชำระอยู่, ประวัติการผ่อนชำระที่ผ่านมา, ยอดหนี้รถคงเหลือ, ประเภทรถ, รุ่นและรุ่นย่อยของรถ, อายุการใช้งานของรถ</li>
+                                        <li><i class="bi bi-dot me-2 text-warning"></i> **ข้อมูลเกี่ยวกับกิจกรรมในการใช้งานเว็บไซต์:** ที่อยู่ Internet Protocol (IP Address), การเก็บและใช้คุกกี้ (Cookies), ประเภทระบบปฏิบัติการ (Operating System), รุ่นอุปกรณ์ที่เข้าใช้งาน (Version), ประเภทเบราว์เซอร์ (Browser), ขนาดหน้าจอที่เข้าใช้งาน (Screen Resolution), ประวัติการเข้าชม URL ต่างๆ ในเว็บไซต์, กิจกรรมในการกดปุ่มหรือคลิกฟังก์ชันต่างๆ</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item border-start border-warning border-3 mb-3 rounded-2 shadow-sm">
+                            <h2 class="accordion-header" id="pHeadingThree">
+                                <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#pCollapseThree" aria-expanded="false" aria-controls="pCollapseThree">
+                                    <i class="bi bi-graph-up me-3 text-warning"></i> ข้อ 2 วัตถุประสงค์ และการใช้งานข้อมูลส่วนบุคคล
+                                </button>
+                            </h2>
+                            <div id="pCollapseThree" class="accordion-collapse collapse" aria-labelledby="pHeadingThree" data-bs-parent="#privacyAccordion">
+                                <div class="accordion-body">
+                                    <p>บริษัทรวบรวมข้อมูลส่วนบุคคลทั้งหมดเพื่อวัตถุประสงค์ดังต่อไปนี้:</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-caret-right-fill me-2 text-warning"></i> เพื่อตรวจสอบและระบุตัวตนเมื่อคุณใช้บริการกับทางเว็บไซต์</li>
+                                        <li><i class="bi bi-caret-right-fill me-2 text-warning"></i> เพื่อปรับปรุงและพัฒนาประสบการณ์การใช้งานเว็บไซต์ให้ดียิ่งขึ้น</li>
+                                        <li><i class="bi bi-caret-right-fill me-2 text-warning"></i> เพื่อให้เราสามารถติดต่อสื่อสารเกี่ยวกับแต่ละขั้นตอนการดำเนินการของคุณในครั้งถัดไป</li>
+                                        <li><i class="bi bi-caret-right-fill me-2 text-warning"></i> เพื่อปรับปรุงประสิทธิภาพ คุณภาพของผลิตภัณฑ์ประเภทต่างๆ</li>
+                                        <li><i class="bi bi-caret-right-fill me-2 text-warning"></i> เพื่อส่งอีเมลแจ้งขั้นตอนการดำเนินการต่างๆ ในผลิตภัณฑ์ของเว็บไซต์</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item border-start border-warning border-3 mb-3 rounded-2 shadow-sm">
+                            <h2 class="accordion-header" id="pHeadingFour">
+                                <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#pCollapseFour" aria-expanded="false" aria-controls="pCollapseFour">
+                                    <i class="bi bi-share me-3 text-warning"></i> ข้อ 3 การเปิดเผยข้อมูล
+                                </button>
+                            </h2>
+                            <div id="pCollapseFour" class="accordion-collapse collapse" aria-labelledby="pHeadingFour" data-bs-parent="#privacyAccordion">
+                                <div class="accordion-body">
+                                    <p>บริษัทไม่มีการเปิดเผยข้อมูลส่วนบุคคลของคุณในทุกกรณี หากไม่ได้รับความยินยอมจากคุณก่อน ในกรณีที่คุณได้ยอมรับและยินยอม บริษัทสามารถเปิดเผยข้อมูลส่วนบุคคลให้กับบุคคลและกลุ่มพันธมิตรทางธุรกิจเพื่อดำเนินการทุกขั้นตอน รวมถึงสถานะการติดต่อ ผลการพิจารณาสินเชื่อ วงเงินอนุมัติ วันที่อนุมัติสินเชื่อกลับมายังบริษัท</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-dot me-2 text-warning"></i> **บริษัทและบริษัทในเครือ**</li>
+                                        <li><i class="bi bi-dot me-2 text-warning"></i> **กลุ่มพันธมิตรทางธุรกิจของบริษัท**</li>
+                                        <li><i class="bi bi-dot me-2 text-warning"></i> **ผู้ประมวลผลข้อมูล ทั้งในและต่างประเทศ**</li>
+                                        <li><i class="bi bi-dot me-2 text-warning"></i> **หน่วยงานหรือเจ้าหน้าที่ที่ใช้อำนาจหน้าที่ตามกฎหมาย**</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

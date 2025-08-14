@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KATHAI - รีไฟแนนซ์บ้านและอสังหา</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Kanit', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(255, 152, 0, 0.3);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .nav {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+        
+        .nav a:hover {
+            opacity: 0.8;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, #ffffff 0%, #fff3e0 100%);
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            color: #e65100;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        
+        .cta-button {
+            background: linear-gradient(135deg, #ff6f00 0%, #ff8f00 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(255, 111, 0, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 111, 0, 0.4);
+        }
+        
+        .features {
+            padding: 4rem 0;
+            background: white;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: #ff9800;
+            margin-bottom: 1rem;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #e65100;
+            margin-bottom: 1rem;
+        }
+        
+        .form-section {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
+            padding: 4rem 0;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #ffcc80;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #ff9800;
+        }
+        
+        .comparison-section {
+            padding: 4rem 0;
+            background: white;
+        }
+        
+        .comparison-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+            color: white;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            font-weight: bold;
+        }
+        
+        .table-row {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            border-bottom: 1px solid #f5f5f5;
+            align-items: center;
+        }
+        
+        .table-row:nth-child(even) {
+            background: #fafafa;
+        }
+        
+        .bank-logo {
+            width: 40px;
+            height: 40px;
+            background: #ff9800;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        
+        .apply-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .apply-btn:hover {
+            background: #45a049;
+        }
+        
+        .tracking-section {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            padding: 4rem 0;
+        }
+        
+        .tracking-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 1rem 0;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .status-pending { background: #ff9800; }
+        .status-approved { background: #4caf50; }
+        .status-rejected { background: #f44336; }
+        
+        .admin-section {
+            background: #f5f5f5;
+            padding: 4rem 0;
+        }
+        
+        .admin-dashboard {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav {
+                justify-content: center;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .table-header, .table-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .form-container {
+                padding: 2rem;
+                margin: 0 1rem;
+            }
+        }
+        
+        .tab-container {
+            margin-bottom: 2rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid #ffcc80;
+            margin-bottom: 2rem;
+        }
+        
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .tab-button.active {
+            color: #ff9800;
+            border-bottom: 3px solid #ff9800;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">KATHAI</div>
+                <nav>
+                    <ul class="nav">
+                        <li><a href="#home" onclick="showSection('home')">หน้าแรก</a></li>
+                        <li><a href="#application" onclick="showSection('application')">สมัครสินเชื่อ</a></li>
+                        <li><a href="#comparison" onclick="showSection('comparison')">เปรียบเทียบ</a></li>
+                        <li><a href="#tracking" onclick="showSection('tracking')">ติดตามผล</a></li>
+                        <li><a href="#admin" onclick="showSection('admin')">แอดมิน</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- หน้าแรก -->
+    <section id="home" class="page-section">
+        <div class="hero">
+            <div class="container">
+                <h1>รีไฟแนนซ์บ้านง่ายๆ ในคลิกเดียว</h1>
+                <p>เปรียบเทียบดอกเบี้ยจากหลายธนาคาร และยื่นสมัครได้ทันที</p>
+                <button class="cta-button" onclick="showSection('application')">
+                    <i class="fas fa-rocket"></i> เริ่มต้นเลย
+                </button>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="container">
+                <h2 class="section-title">ทำไมต้อง KATHAI?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-calculator"></i></div>
+                        <h3>เปรียบเทียบดอกเบี้ย</h3>
+                        <p>เปรียบเทียบดอกเบี้ยจากหลายธนาคารในที่เดียว</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-university"></i></div>
+                        <h3>ยื่นสมัครหลายธนาคาร</h3>
+                        <p>ยื่นสมัครสินเชื่อหลายธนาคารพร้อมกันในครั้งเดียว</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                        <h3>ติดตามผลแบบเรียลไทม์</h3>
+                        <p>ติดตามสถานะการอนุมัติสินเชื่อแบบเรียลไทม์</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h3>ปลอดภัย 100%</h3>
+                        <p>ข้อมูลของคุณปลอดภัยด้วยระบบรักษาความปลอดภัยชั้นสูง</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ฟอร์มสมัครสินเชื่อ -->
+    <section id="application" class="page-section hidden">
+        <div class="form-section">
+            <div class="container">
+                <h2 class="section-title">สมัครรีไฟแนนซ์บ้าน</h2>
+                
+                <div class="form-container">
+                    <form id="applicationForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>ชื่อ-นามสกุล</label>
+                                <input type="text" name="fullName" required placeholder="กรอกชื่อ-นามสกุล">
+                            </div>
+                            <div class="form-group">
+                                <label>เบอร์โทรศัพท์</label>
+                                <input type="tel" name="phone" required placeholder="08X-XXX-XXXX">
+                            </div>
+                            <div class="form-group">
+                                <label>อีเมล</label>
+                                <input type="email" name="email" required placeholder="your@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label>เลขบัตรประชาชน</label>
+                                <input type="text" name="idCard" required placeholder="X-XXXX-XXXXX-XX-X">
+                            </div>
+                            <div class="form-group">
+                                <label>รายได้ต่อเดือน (บาท)</label>
+                                <input type="number" name="income" required placeholder="50,000">
+                            </div>
+                            <div class="form-group">
+                                <label>ประเภทงาน</label>
+                                <select name="jobType" required>
+                                    <option value="">เลือกประเภทงาน</option>
+                                    <option value="employee">พนักงานบริษัท</option>
+                                    <option value="government">ข้าราชการ</option>
+                                    <option value="business">ธุรกิจส่วนตัว</option>
+                                    <option value="freelance">อิสระ</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>วงเงินที่ต้องการ (บาท)</label>
+                                <input type="number" name="loanAmount" required placeholder="2,000,000">
+                            </div>
+                            <div class="form-group">
+                                <label>ระยะเวลาผ่อน (ปี)</label>
+                                <select name="loanTerm" required>
+                                    <option value="">เลือกระยะเวลา</option>
+                                    <option value="5">5 ปี</option>
+                                    <option value="10">10 ปี</option>
+                                    <option value="15">15 ปี</option>
+                                    <option value="20">20 ปี</option>
+                                    <option value="25">25 ปี</option>
+                                    <option value="30">30 ปี</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="cta-button" style="width: 100%;">
+                            <i class="fas fa-search"></i> ค้นหาสินเชื่อที่เหมาะสม
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- เปรียบเทียบดอกเบี้ย -->
+    <section id="comparison" class="page-section hidden">
+        <div class="comparison-section">
+            <div class="container">
+                <h2 class="section-title">เปรียบเทียบดอกเบี้ย</h2>
+                
+                <div class="comparison-table">
+                    <div class="table-header">
+                        <div>ธนาคาร</div>
+                        <div>ดอกเบี้ย</div>
+                        <div>ค่าธรรมเนียม</div>
+                        <div>ยอดผ่อน/เดือน</div>
+                        <div>การดำเนินการ</div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div>
+                            <span class="bank-logo">KB</span>
+                            <strong>ธนาคารกสิกรไทย</strong>
+                        </div>
+                        <div>3.85%</div>
+                        <div>5,000 บาท</div>
+                        <div>12,500 บาท</div>
+                        <div><button class="apply-btn" onclick="applyLoan('กสิกรไทย')">สมัคร</button></div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div>
+                            <span class="bank-logo">SCB</span>
+                            <strong>ธนาคารไทยพาณิชย์</strong>
+                        </div>
+                        <div>3.75%</div>
+                        <div>4,500 บาท</div>
+                        <div>12,350 บาท</div>
+                        <div><button class="apply-btn" onclick="applyLoan('ไทยพาณิชย์')">สมัคร</button></div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div>
+                            <span class="bank-logo">BBL</span>
+                            <strong>ธนาคารกรุงเทพ</strong>
+                        </div>
+                        <div>3.95%</div>
+                        <div>6,000 บาท</div>
+                        <div>12,680 บาท</div>
+                        <div><button class="apply-btn" onclick="applyLoan('กรุงเทพ')">สมัคร</button></div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div>
+                            <span class="bank-logo">KTB</span>
+                            <strong>ธนาคารกรุงไทย</strong>
+                        </div>
+                        <div>4.05%</div>
+                        <div>4,000 บาท</div>
+                        <div>12,800 บาท</div>
+                        <div><button class="apply-btn" onclick="applyLoan('กรุงไทย')">สมัคร</button></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ติดตามผล -->
+    <section id="tracking" class="page-section hidden">
+        <div class="tracking-section">
+            <div class="container">
+                <h2 class="section-title">ติดตามสถานะการสมัคร</h2>
+                
+                <div class="tracking-card">
+                    <h3>คำขอสินเชื่อ #001</h3>
+                    <p><strong>ธนาคาร:</strong> ธนาคารไทยพาณิชย์</p>
+                    <p><strong>วงเงิน:</strong> 2,000,000 บาท</p>
+                    <p><strong>วันที่สมัคร:</strong> 15 มิถุนายน 2025</p>
+                    <p><strong>สถานะ:</strong> <span class="status-badge status-pending">รอการพิจารณา</span></p>
+                    <div style="margin-top: 1rem;">
+                        <div style="width: 100%; background: #f0f0f0; border-radius: 10px; height: 10px;">
+                            <div style="width: 60%; background: #ff9800; height: 100%; border-radius: 10px;"></div>
+                        </div>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem;">ความคืบหน้า: 60%</p>
+                    </div>
+                </div>
+                
+                <div class="tracking-card">
+                    <h3>คำขอสินเชื่อ #002</h3>
+                    <p><strong>ธนาคาร:</strong> ธนาคารกสิกรไทย</p>
+                    <p><strong>วงเงิน:</strong> 1,500,000 บาท</p>
+                    <p><strong>วันที่สมัคร:</strong> 10 มิถุนายน 2025</p>
+                    <p><strong>สถานะ:</strong> <span class="status-badge status-approved">อนุมัติแล้ว</span></p>
+                    <div style="margin-top: 1rem;">
+                        <div style="width: 100%; background: #f0f0f0; border-radius: 10px; height: 10px;">
+                            <div style="width: 100%; background: #4caf50; height: 100%; border-radius: 10px;"></div>
+                        </div>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem;">ความคืบหน้า: 100%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ระบบแอดมิน -->
+    <section id="admin" class="page-section hidden">
+        <div class="admin-section">
+            <div class="container">
+                <h2 class="section-title">ระบบจัดการแอดมิน</h2>
+                
+                <div class="admin-dashboard">
+                    <div class="admin-stats">
+                        <div class="stat-card">
+                            <div class="stat-number">1,247</div>
+                            <div>คำขอทั้งหมด</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">892</div>
+                            <div>อนุมัติแล้ว</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">255</div>
+                            <div>รอพิจารณา</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">100</div>
+                            <div>ปฏิเสธ</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-button active" onclick="showTab('pending')">รอพิจารณา</button>
+                            <button class="tab-button" onclick="showTab('approved')">อนุมัติแล้ว</button>
+                            <button class="tab-button" onclick="showTab('rejected')">ปฏิเสธ</button>
+                        </div>
+                        
+                        <div id="pending" class="tab-content active">
+                            <h3>คำขอที่รอพิจารณา</h3>
+                            <div class="tracking-card">
+                                <h4>นาย สมชาย ใจดี</h4>
+                                <p>วงเงิน: 2,000,000 บาท | ธนาคาร: SCB</p>
+                                <div style="margin-top: 1rem;">
+                                    <button class="apply-btn" style="background: #4caf50; margin-right: 1rem;" onclick="updateStatus('approve')">อนุมัติ</button>
+                                    <button class="apply-btn" style="background: #f44336;" onclick="updateStatus('reject')">ปฏิเสธ</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="approved" class="tab-content">
+                            <h3>คำขอที่อนุมัติแล้ว</h3>
+                            <div class="tracking-card">
+                                <h4>นางสาว สุมาลี รักดี</h4>
+                                <p>วงเงิน: 1,500,000 บาท | ธนาคาร: KB</p>
+                                <p><span class="status-badge status-approved">อนุมัติแล้ว</span></p>
+                            </div>
+                        </div>
+                        
+                        <div id="rejected" class="tab-content">
+                            <h3>คำขอที่ปฏิเสธ</h3>
+                            <div class="tracking-card">
+                                <h4>นาย วิชัย หาเงิน</h4>
+                                <p>วงเงิน: 3,000,000 บาท | ธนาคาร: BBL</p>
+                                <p><span class="status-badge status-rejected">ปฏิเสธ</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle">ยืนยันการสมัคร</h3>
+            <p id="modalMessage">คุณต้องการสมัครสินเชื่อกับธนาคารนี้หรือไม่?</p>
+            <div style="margin-top: 2rem; text-align: center;">
+                <button class="cta-button" onclick="confirmApplication()" style="margin-right: 1rem;">ยืนยัน</button>
+                <button class="apply-btn" onclick="closeModal()" style="background: #666;">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 KATHAI - แพลตฟอร์มรีไฟแนนซ์บ้านและอสังหาริมทรัพย์</p>
+            <p>ติดต่อเรา: 02-XXX-XXXX | info@kathai.com</p>
+        </div>
+    </footer>
+
+    <script>
+        // ข้อมูลจำลองสำหรับระบบ
+        let applications = [];
+        let currentUser = null;
+        let selectedBank = '';
+        
+        // ฟังก์ชันแสดงหน้าต่างๆ
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.page-section');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // อัพเดทเมนู
+            const navLinks = document.querySelectorAll('.nav a');
+            navLinks.forEach(link => {
+                link.style.fontWeight = 'normal';
+            });
+            event.target.style.fontWeight = 'bold';
+        }
+        
+        // ฟังก์ชันจัดการฟอร์มสมัคร
+        document.getElementById('applicationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const applicationData = {
+                id: 'APP' + Date.now(),
+                fullName: formData.get('fullName'),
+                phone: formData.get('phone'),
+                email: formData.get('email'),
+                idCard: formData.get('idCard'),
+                income: parseInt(formData.get('income')),
+                jobType: formData.get('jobType'),
+                loanAmount: parseInt(formData.get('loanAmount')),
+                loanTerm: parseInt(formData.get('loanTerm')),
+                date: new Date().toLocaleDateString('th-TH'),
+                status: 'pending'
+            };
+            
+            currentUser = applicationData;
+            
+            // คำนวณและแสดงผลเปรียบเทียบ
+            calculateLoanComparison(applicationData);
+            showSection('comparison');
+            
+            // แสดงข้อความสำเร็จ
+            alert('ข้อมูลของคุณได้รับการบันทึกแล้ว กำลังคำนวณเงื่อนไขสินเชื่อที่เหมาะสมให้คุณ');
+        });
+        
+        // ฟังก์ชันคำนวณเปรียบเทียบสินเชื่อ
+        function calculateLoanComparison(data) {
+            const banks = [
+                {
+                    name: 'ธนาคารกสิกรไทย',
+                    code: 'KB',
+                    baseRate: 3.85,
+                    fee: 5000,
+                    color: '#00a651'
+                },
+                {
+                    name: 'ธนาคารไทยพาณิชย์',
+                    code: 'SCB',
+                    baseRate: 3.75,
+                    fee: 4500,
+                    color: '#4e2d8e'
+                },
+                {
+                    name: 'ธนาคารกรุงเทพ',
+                    code: 'BBL',
+                    baseRate: 3.95,
+                    fee: 6000,
+                    color: '#1e4d8b'
+                },
+                {
+                    name: 'ธนาคารกรุงไทย',
+                    code: 'KTB',
+                    baseRate: 4.05,
+                    fee: 4000,
+                    color: '#0066cc'
+                }
+            ];
+            
+            // อัพเดทตารางเปรียบเทียบ
+            const tableContainer = document.querySelector('.comparison-table');
+            let tableHTML = `
+                <div class="table-header">
+                    <div>ธนาคาร</div>
+                    <div>ดอกเบี้ย</div>
+                    <div>ค่าธรรมเนียม</div>
+                    <div>ยอดผ่อน/เดือน</div>
+                    <div>การดำเนินการ</div>
+                </div>
+            `;
+            
+            banks.forEach(bank => {
+                const monthlyPayment = calculateMonthlyPayment(
+                    data.loanAmount,
+                    bank.baseRate,
+                    data.loanTerm
+                );
+                
+                tableHTML += `
+                    <div class="table-row">
+                        <div>
+                            <span class="bank-logo">${bank.code}</span>
+                            <strong>${bank.name}</strong>
+                        </div>
+                        <div>${bank.baseRate}%</div>
+                        <div>${bank.fee.toLocaleString()} บาท</div>
+                        <div>${monthlyPayment.toLocaleString()} บาท</div>
+                        <div><button class="apply-btn" onclick="applyLoan('${bank.name}')">สมัคร</button></div>
+                    </div>
+                `;
+            });
+            
+            tableContainer.innerHTML = tableHTML;
+        }
+        
+        // ฟังก์ชันคำนวณค่าผ่อนรายเดือน
+        function calculateMonthlyPayment(principal, annualRate, years) {
+            const monthlyRate = annualRate / 100 / 12;
+            const numberOfPayments = years * 12;
+            
+            const monthlyPayment = principal * 
+                (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
+                (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+                
+            return Math.round(monthlyPayment);
+        }
+        
+        // ฟังก์ชันสมัครสินเชื่อ
+        function applyLoan(bankName) {
+            selectedBank = bankName;
+            document.getElementById('modalTitle').textContent = 'ยืนยันการสมัครสินเชื่อ';
+            document.getElementById('modalMessage').textContent = 
+                `คุณต้องการสมัครสินเชื่อกับ${bankName} หรือไม่?`;
+            document.getElementById('modal').style.display = 'block';
+        }
+        
+        // ฟังก์ชันยืนยันการสมัคร
+        function confirmApplication() {
+            if (currentUser && selectedBank) {
+                const newApplication = {
+                    ...currentUser,
+                    bank: selectedBank,
+                    applicationDate: new Date().toLocaleDateString('th-TH'),
+                    status: 'pending',
+                    progress: Math.floor(Math.random() * 40) + 20 // 20-60%
+                };
+                
+                applications.push(newApplication);
+                
+                // อัพเดทหน้าติดตามผล
+                updateTrackingSection();
+                
+                closeModal();
+                alert(`สมัครสินเชื่อกับ${selectedBank}เรียบร้อยแล้ว คุณสามารถติดตามผลได้ในหน้า "ติดตามผล"`);
+                showSection('tracking');
+            }
+        }
+        
+        // ฟังก์ชันอัพเดทหน้าติดตามผล
+        function updateTrackingSection() {
+            const trackingContainer = document.querySelector('#tracking .container');
+            let trackingHTML = '<h2 class="section-title">ติดตามสถานะการสมัคร</h2>';
+            
+            if (applications.length === 0) {
+                trackingHTML += '<div class="tracking-card"><p>ยังไม่มีการสมัครสินเชื่อ</p></div>';
+            } else {
+                applications.forEach((app, index) => {
+                    const statusClass = app.status === 'approved' ? 'status-approved' :
+                                      app.status === 'rejected' ? 'status-rejected' : 'status-pending';
+                    const statusText = app.status === 'approved' ? 'อนุมัติแล้ว' :
+                                     app.status === 'rejected' ? 'ปฏิเสธ' : 'รอการพิจารณา';
+                    
+                    trackingHTML += `
+                        <div class="tracking-card">
+                            <h3>คำขอสินเชื่อ #${String(index + 1).padStart(3, '0')}</h3>
+                            <p><strong>ชื่อ:</strong> ${app.fullName}</p>
+                            <p><strong>ธนาคาร:</strong> ${app.bank}</p>
+                            <p><strong>วงเงิน:</strong> ${app.loanAmount.toLocaleString()} บาท</p>
+                            <p><strong>วันที่สมัคร:</strong> ${app.applicationDate}</p>
+                            <p><strong>สถานะ:</strong> <span class="status-badge ${statusClass}">${statusText}</span></p>
+                            <div style="margin-top: 1rem;">
+                                <div style="width: 100%; background: #f0f0f0; border-radius: 10px; height: 10px;">
+                                    <div style="width: ${app.progress}%; background: ${app.status === 'approved' ? '#4caf50' : '#ff9800'}; height: 100%; border-radius: 10px;"></div>
+                                </div>
+                                <p style="margin-top: 0.5rem; font-size: 0.9rem;">ความคืบหน้า: ${app.progress}%</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            trackingContainer.innerHTML = trackingHTML;
+        }
+        
+        // ฟังก์ชันจัดการแท็บในหน้าแอดมิน
+        function showTab(tabId) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const buttons = document.querySelectorAll('.tab-button');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            buttons.forEach(button => button.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // ฟังก์ชันอัพเดทสถานะในหน้าแอดมิน
+        function updateStatus(action) {
+            const message = action === 'approve' ? 'อนุมัติคำขอเรียบร้อยแล้ว' : 'ปฏิเสธคำขอเรียบร้อยแล้ว';
+            alert(message);
+            
+            // อัพเดทสถิติ
+            updateAdminStats();
+        }
+        
+        // ฟังก์ชันอัพเดทสถิติแอดมิน
+        function updateAdminStats() {
+            const stats = document.querySelectorAll('.stat-number');
+            stats[0].textContent = (parseInt(stats[0].textContent) + 1).toString();
+            
+            if (Math.random() > 0.3) { // 70% chance of approval
+                stats[1].textContent = (parseInt(stats[1].textContent) + 1).toString();
+                stats[2].textContent = Math.max(0, parseInt(stats[2].textContent) - 1).toString();
+            } else {
+                stats[3].textContent = (parseInt(stats[3].textContent) + 1).toString();
+                stats[2].textContent = Math.max(0, parseInt(stats[2].textContent) - 1).toString();
+            }
+        }
+        
+        // ฟังก์ชันจัดการ Modal
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+        
+        // ปิด Modal เมื่อคลิกนอก Modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // ฟังก์ชันจำลองข้อมูลเริ่มต้น
+        function initializeData() {
+            // สร้างข้อมูลจำลองสำหรับการติดตาม
+            const sampleApplications = [
+                {
+                    id: 'APP001',
+                    fullName: 'นางสาว สุมาลี รักดี',
+                    bank: 'ธนาคารไทยพาณิชย์',
+                    loanAmount: 2000000,
+                    applicationDate: '15 มิถุนายน 2025',
+                    status: 'pending',
+                    progress: 60
+                },
+                {
+                    id: 'APP002',
+                    fullName: 'นาย วิชัย สำเร็จ',
+                    bank: 'ธนาคารกสิกรไทย',
+                    loanAmount: 1500000,
+                    applicationDate: '10 มิถุนายน 2025',
+                    status: 'approved',
+                    progress: 100
+                }
+            ];
+            
+            applications = sampleApplications;
+            updateTrackingSection();
+        }
+        
+        // เรียกฟังก์ชันเริ่มต้นเมื่อหน้าเว็บโหลดเสร็จ
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+            
+            // เพิ่ม animation เมื่อโหลดหน้า
+            const cards = document.querySelectorAll('.feature-card, .tracking-card, .stat-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+        
+        // เพิ่มฟังก์ชันการค้นหาและกรองข้อมูล
+        function searchApplications(query) {
+            const filteredApps = applications.filter(app => 
+                app.fullName.toLowerCase().includes(query.toLowerCase()) ||
+                app.bank.toLowerCase().includes(query.toLowerCase())
+            );
+            return filteredApps;
+        }
+        
+        // ฟังก์ชันเพิ่มเติมสำหรับการจัดการข้อมูล
+        function exportData() {
+            const dataStr = JSON.stringify(applications, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'kathai_applications.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // ฟังก์ชันการแจ้งเตือนแบบเรียลไทม์
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 2rem;
+                background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#ff9800'};
+                color: white;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 1001;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // เพิ่มการตรวจสอบความปลอดภัยพื้นฐาน
+        function validateForm(formData) {
+            const errors = [];
+            
+            if (!formData.get('fullName') || formData.get('fullName').length < 2) {
+                errors.push('กรุณากรอกชื่อ-นามสกุลให้ถูกต้อง');
+            }
+            
+            if (!formData.get('phone') || !/^[0-9]{10}$/.test(formData.get('phone').replace(/[-\s]/g, ''))) {
+                errors.push('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
+            }
+            
+            if (!formData.get('email') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.get('email'))) {
+                errors.push('กรุณากรอกอีเมลให้ถูกต้อง');
+            }
+            
+            if (!formData.get('income') || parseInt(formData.get('income')) < 15000) {
+                errors.push('รายได้ต่อเดือนต้องไม่น้อยกว่า 15,000 บาท');
+            }
+            
+            return errors;
+        }
+        
+        // ปรับปรุงฟังก์ชันการส่งฟอร์ม
+        document.getElementById('applicationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const errors = validateForm(formData);
+            
+            if (errors.length > 0) {
+                alert('พบข้อผิดพลาด:\n' + errors.join('\n'));
+                return;
+            }
+            
+            const applicationData = {
+                id: 'APP' + Date.now(),
+                fullName: formData.get('fullName'),
+                phone: formData.get('phone'),
+                email: formData.get('email'),
+                idCard: formData.get('idCard'),
+                income: parseInt(formData.get('income')),
+                jobType: formData.get('jobType'),
+                loanAmount: parseInt(formData.get('loanAmount')),
+                loanTerm: parseInt(formData.get('loanTerm')),
+                date: new Date().toLocaleDateString('th-TH'),
+                status: 'pending'
+            };
+            
+            currentUser = applicationData;
+            
+            calculateLoanComparison(applicationData);
+            showSection('comparison');
+            
+            showNotification('ข้อมูลของคุณได้รับการบันทึกแล้ว กำลังคำนวณเงื่อนไขสินเชื่อที่เหมาะสม', 'success');
+        });
+    </script>
+</body>
+</html>

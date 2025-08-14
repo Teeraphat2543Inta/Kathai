@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}อัปโหลดเอกสาร - คัดให้{% endblock %}
+
+{% block extra_css %}
+<style>
+.upload-zone {
+    border: 2px dashed var(--kathai-border-gold);
+    border-radius: var(--kathai-border-radius-lg);
+    padding: 3rem 2rem;
+    text-align: center;
+    background-color: rgba(255, 71, 19, 0.02);
+    transition: var(--kathai-transition);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-zone:hover {
+    border-color: var(--kathai-gold-primary);
+    background-color: rgba(255, 71, 19, 0.05);
+    transform: translateY(-2px);
+}
+
+.upload-zone.dragover {
+    border-color: var(--kathai-gold-primary);
+    background-color: rgba(255, 71, 19, 0.08);
+    transform: scale(1.02);
+}
+
+.upload-icon {
+    font-size: 4rem;
+    color: var(--kathai-gold-primary);
+    margin-bottom: 1rem;
+    transition: var(--kathai-transition);
+}
+
+.upload-zone:hover .upload-icon {
+    transform: scale(1.1);
+}
+
+.file-input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.file-preview {
+    border: 1px solid var(--kathai-border-light);
+    border-radius: var(--kathai-border-radius-md);
+    padding: 1rem;
+    margin-top: 1rem;
+    background-color: var(--kathai-off-white);
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--kathai-border-light);
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+}
+
+.file-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+}
+
+.progress-wrapper {
+    margin-top: 0.5rem;
+}
+
+.requirements {
+    background-color: var(--kathai-off-white);
+    border-left: 4px solid var(--kathai-gold-primary);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.requirements ul {
+    margin-bottom: 0;
+}
+
+.form-floating label {
+    color: var(--kathai-text-grey);
+}
+
+.alert-upload {
+    border: none;
+    border-radius: var(--kathai-border-radius-md);
+    box-shadow: var(--kathai-shadow-sm);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-cloud-upload"></i> อัปโหลดเอกสาร</h2>
+                    <p class="text-muted">อัปโหลดเอกสารที่จำเป็นสำหรับการขอรีไฟแนนซ์</p>
+                </div>
+                <a href="{% url 'refinance:document_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> กลับไปรายการเอกสาร
+                </a>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-upload alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Requirements -->
+            <div class="requirements">
+                <h6><i class="bi bi-info-circle"></i> ข้อกำหนดการอัปโหลดเอกสาร</h6>
+                <ul class="small">
+                    <li>รองรับไฟล์ประเภท: PDF, JPG, JPEG, PNG</li>
+                    <li>ขนาดไฟล์สูงสุด: 10 MB ต่อไฟล์</li>
+                    <li>สามารถอัปโหลดได้ครั้งละหลายไฟล์</li>
+                    <li>ตั้งชื่อไฟล์ให้ชัดเจนเพื่อง่ายต่อการจัดการ</li>
+                </ul>
+            </div>
+
+            <!-- Upload Form -->
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+                
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Drag & Drop Zone -->
+                        <div class="upload-zone" id="uploadZone">
+                            <input type="file" name="files" multiple accept=".pdf,.jpg,.jpeg,.png" class="file-input" id="fileInput">
+                            <div class="upload-content">
+                                <i class="bi bi-cloud-upload upload-icon"></i>
+                                <h5>ลากและวางไฟล์ที่นี่</h5>
+                                <p class="text-muted">หรือ <strong>คลิกเพื่อเลือกไฟล์</strong></p>
+                                <p class="small text-muted">รองรับ PDF, JPG, PNG สูงสุด 10MB</p>
+                            </div>
+                        </div>
+
+                        <!-- File Preview Area -->
+                        <div id="filePreview" style="display: none;">
+                            <h6 class="mt-3">ไฟล์ที่เลือก:</h6>
+                            <div class="file-preview" id="fileList"></div>
+                        </div>
+
+                        <!-- Form Fields -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="title" name="title" placeholder="ชื่อเอกสาร" required>
+                                    <label for="title">ชื่อเอกสาร *</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="document_type" name="document_type" required>
+                                        <option value="">เลือกประเภทเอกสาร</option>
+                                        <option value="id_card">บัตรประชาชน</option>
+                                        <option value="house_registration">ทะเบียนบ้าน</option>
+                                        <option value="income_statement">หลักฐานรายได้</option>
+                                        <option value="bank_statement">สลิปเงินเดือน</option>
+                                        <option value="property_document">เอกสารสิทธิ์ทรัพย์สิน</option>
+                                        <option value="appraisal_report">รายงานการประเมิน</option>
+                                        <option value="other">อื่นๆ</option>
+                                    </select>
+                                    <label for="document_type">ประเภทเอกสาร *</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" id="description" name="description" style="height: 100px" placeholder="คำอธิบายเพิ่มเติม"></textarea>
+                            <label for="description">คำอธิบายเพิ่มเติม (ไม่บังคับ)</label>
+                        </div>
+
+                        <!-- Application Selection (if applicable) -->
+                        {% if loan_applications %}
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="loan_application" name="loan_application">
+                                <option value="">ไม่เชื่อมโยงกับคำขอใดๆ</option>
+                                {% for app in loan_applications %}
+                                <option value="{{ app.id }}">{{ app.property.name }} - {{ app.get_status_display }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="loan_application">เชื่อมโยงกับคำขอรีไฟแนนซ์ (ไม่บังคับ)</label>
+                        </div>
+                        {% endif %}
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'refinance:document_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> ยกเลิก
+                            </a>
+                            <button type="submit" class="btn btn-kathai" id="submitBtn" disabled>
+                                <i class="bi bi-cloud-upload"></i> อัปโหลดเอกสาร
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Progress Card (Initially Hidden) -->
+            <div class="card mt-3" id="progressCard" style="display: none;">
+                <div class="card-body">
+                    <h6><i class="bi bi-hourglass-split"></i> กำลังอัปโหลด...</h6>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%" id="progressBar"></div>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0">กรุณารอสักครู่...</p>
+                </div>
+            </div>
+
+            <!-- Document Types Info -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6><i class="bi bi-question-circle"></i> เอกสารที่จำเป็นสำหรับการรีไฟแนนซ์</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="small mb-0">
+                                        <li><strong>หลักฐานรายได้:</strong> สลิปเงินเดือน, หนังสือรับรองเงินเดือน</li>
+                                        <li><strong>บัตรประชาชน:</strong> สำเนาบัตรประชาชน (หน้า-หลัง)</li>
+                                        <li><strong>เอกสารทรัพย์สิน:</strong> โฉนดที่ดิน, สัญญาซื้อขาย</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="small mb-0">
+                                        <li><strong>สมุดบัญชีธนาคาร:</strong> สำเนา 6 เดือนย้อนหลัง</li>
+                                        <li><strong>หนังสือรับรองการทำงาน:</strong> จากนายจ้าง</li>
+                                        <li><strong>เอกสารภาษี:</strong> หนังสือรับรองการหักภาษี</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileList = document.getElementById('fileList');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const progressCard = document.getElementById('progressCard');
+    const progressBar = document.getElementById('progressBar');
+    
+    let selectedFiles = [];
+
+    // Drag and drop functionality
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        
+        const files = Array.from(e.dataTransfer.files);
+        handleFiles(files);
+    });
+
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        handleFiles(files);
+    });
+
+    function handleFiles(files) {
+        selectedFiles = [];
+        
+        files.forEach(file => {
+            if (isValidFile(file)) {
+                selectedFiles.push(file);
+            }
+        });
+
+        if (selectedFiles.length > 0) {
+            displayFiles();
+            submitBtn.disabled = false;
+        } else {
+            filePreview.style.display = 'none';
+            submitBtn.disabled = true;
+        }
+    }
+
+    function isValidFile(file) {
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+
+        if (!allowedTypes.includes(file.type)) {
+            alert(`ไฟล์ ${file.name} ไม่ใช่ประเภทที่รองรับ`);
+            return false;
+        }
+
+        if (file.size > maxSize) {
+            alert(`ไฟล์ ${file.name} มีขนาดใหญ่เกินไป (สูงสุด 10MB)`);
+            return false;
+        }
+
+        return true;
+    }
+
+    function displayFiles() {
+        fileList.innerHTML = '';
+        
+        selectedFiles.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            const fileIcon = getFileIcon(file.type);
+            const fileSize = formatFileSize(file.size);
+            
+            fileItem.innerHTML = `
+                <div class="file-info">
+                    <i class="bi ${fileIcon} file-icon"></i>
+                    <div>
+                        <strong>${file.name}</strong>
+                        <br>
+                        <small class="text-muted">${fileSize} • ${file.type}</small>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeFile(${index})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            
+            fileList.appendChild(fileItem);
+        });
+        
+        filePreview.style.display = 'block';
+    }
+
+    function getFileIcon(type) {
+        if (type === 'application/pdf') {
+            return 'bi-file-earmark-pdf text-danger';
+        } else if (type.startsWith('image/')) {
+            return 'bi-file-earmark-image text-primary';
+        }
+        return 'bi-file-earmark';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    window.removeFile = function(index) {
+        selectedFiles.splice(index, 1);
+        
+        if (selectedFiles.length > 0) {
+            displayFiles();
+        } else {
+            filePreview.style.display = 'none';
+            submitBtn.disabled = true;
+        }
+    };
+
+    // Form submission with progress
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (selectedFiles.length === 0) {
+            alert('กรุณาเลือกไฟล์ที่ต้องการอัปโหลด');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        formData.append('title', document.getElementById('title').value);
+        formData.append('document_type', document.getElementById('document_type').value);
+        formData.append('description', document.getElementById('description').value);
+        
+        const loanApp = document.getElementById('loan_application');
+        if (loanApp && loanApp.value) {
+            formData.append('loan_application', loanApp.value);
+        }
+
+        selectedFiles.forEach(file => {
+            formData.append('files', file);
+        });
+
+        // Show progress
+        progressCard.style.display = 'block';
+        submitBtn.disabled = true;
+
+        // Simulate upload progress (replace with actual upload)
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 30;
+            if (progress > 90) progress = 90;
+            
+            progressBar.style.width = progress + '%';
+            
+            if (progress >= 90) {
+                clearInterval(interval);
+                // Submit form normally
+                uploadForm.submit();
+            }
+        }, 200);
+    });
+
+    // Reset form function
+    window.resetForm = function() {
+        selectedFiles = [];
+        filePreview.style.display = 'none';
+        submitBtn.disabled = true;
+        progressCard.style.display = 'none';
+        uploadForm.reset();
+    };
+});
+</script>
+{% endblock %}

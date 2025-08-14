@@ -1,0 +1,520 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ property.name }} - รายละเอียดทรัพย์สิน - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'refinance:home' %}">หน้าแรก</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'refinance:property_list' %}">ทรัพย์สินของฉัน</a></li>
+            <li class="breadcrumb-item active">{{ property.name }}</li>
+        </ol>
+    </nav>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Property Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card property-header-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h2 class="mb-2">{{ property.name }}</h2>
+                                    <p class="text-muted mb-2">
+                                        <i class="bi bi-house"></i> {{ property.get_property_type_display }} • 
+                                        <i class="bi bi-geo-alt"></i> {{ property.province.name }}
+                                    </p>
+                                    <div class="property-badges">
+                                        <span class="badge bg-{{ property.property_type|lower }}">
+                                            {{ property.get_property_type_display }}
+                                        </span>
+                                        {% if property.has_existing_loan %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-credit-card"></i> มีสินเชื่ออยู่
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="property-value">
+                                        <h4 class="text-success mb-0">{{ property.estimated_value|floatformat:0 }}</h4>
+                                        <small class="text-muted">มูลค่าประเมิน (บาท)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="action-buttons">
+                                <a href="{% url 'refinance:property_update' property.pk %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> แก้ไข
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                    <i class="bi bi-trash"></i> ลบ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Property Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> รายละเอียดทรัพย์สิน</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <h6 class="detail-group-title">ข้อมูลทั่วไป</h6>
+                                <div class="detail-item">
+                                    <span class="label">ชื่อทรัพย์สิน:</span>
+                                    <span class="value">{{ property.name }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">ประเภท:</span>
+                                    <span class="value">{{ property.get_property_type_display }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">จังหวัด:</span>
+                                    <span class="value">{{ property.province.name }}</span>
+                                </div>
+                                {% if property.postal_code %}
+                                <div class="detail-item">
+                                    <span class="label">รหัสไปรษณีย์:</span>
+                                    <span class="value">{{ property.postal_code }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <h6 class="detail-group-title">มูลค่าและการซื้อ</h6>
+                                <div class="detail-item">
+                                    <span class="label">มูลค่าประเมิน:</span>
+                                    <span class="value text-success fw-bold">{{ property.estimated_value|floatformat:0 }} บาท</span>
+                                </div>
+                                {% if property.purchase_price %}
+                                <div class="detail-item">
+                                    <span class="label">ราคาซื้อ:</span>
+                                    <span class="value">{{ property.purchase_price|floatformat:0 }} บาท</span>
+                                </div>
+                                {% endif %}
+                                {% if property.purchase_date %}
+                                <div class="detail-item">
+                                    <span class="label">วันที่ซื้อ:</span>
+                                    <span class="value">{{ property.purchase_date|date:"d/m/Y" }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <h6 class="detail-group-title">ขนาดและพื้นที่</h6>
+                                {% if property.land_size %}
+                                <div class="detail-item">
+                                    <span class="label">ขนาดที่ดิน:</span>
+                                    <span class="value">{{ property.land_size }} ตร.ว.</span>
+                                </div>
+                                {% endif %}
+                                {% if property.building_size %}
+                                <div class="detail-item">
+                                    <span class="label">ขนาดอาคาร:</span>
+                                    <span class="value">{{ property.building_size }} ตร.ม.</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <h6 class="detail-group-title">สินเชื่อปัจจุบัน</h6>
+                                <div class="detail-item">
+                                    <span class="label">มีสินเชื่ออยู่:</span>
+                                    <span class="value">
+                                        {% if property.has_existing_loan %}
+                                            <span class="badge bg-warning text-dark">มี</span>
+                                        {% else %}
+                                            <span class="badge bg-success">ไม่มี</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% if property.has_existing_loan %}
+                                    {% if property.existing_loan_balance %}
+                                    <div class="detail-item">
+                                        <span class="label">ยอดคงเหลือ:</span>
+                                        <span class="value text-warning fw-bold">{{ property.existing_loan_balance|floatformat:0 }} บาท</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if property.existing_bank %}
+                                    <div class="detail-item">
+                                        <span class="label">ธนาคารปัจจุบัน:</span>
+                                        <span class="value">{{ property.existing_bank.name }}</span>
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="detail-group">
+                                <h6 class="detail-group-title">ที่อยู่</h6>
+                                <div class="address-display">
+                                    <i class="bi bi-geo-alt text-primary"></i>
+                                    <span>{{ property.address }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Applications -->
+            {% if property.loan_applications.exists %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-file-text"></i> คำขอรีไฟแนนซ์</h5>
+                    <span class="badge bg-primary">{{ property.loan_applications.count }} คำขอ</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>เลขที่คำขอ</th>
+                                    <th>วันที่สร้าง</th>
+                                    <th>จำนวนเงินกู้</th>
+                                    <th>สถานะ</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in property.loan_applications.all %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'refinance:loan_application_detail' application.pk %}" class="text-decoration-none">
+                                            {{ application.application_no }}
+                                        </a>
+                                    </td>
+                                    <td>{{ application.created_at|date:"d/m/Y" }}</td>
+                                    <td>{{ application.loan_amount|floatformat:0 }} บาท</td>
+                                    <td>
+                                        <span class="badge bg-{{ application.status|lower }}">
+                                            {{ application.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'refinance:loan_application_detail' application.pk %}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if application.status == 'draft' %}
+                                            <a href="{% url 'refinance:loan_application_update' application.pk %}" 
+                                               class="btn btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Stats -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-bar-chart"></i> สถิติด่วน</h6>
+                </div>
+                <div class="card-body">
+                    {% if property.has_existing_loan and property.existing_loan_balance %}
+                    <div class="stat-item">
+                        <span class="stat-label">LTV ปัจจุบัน</span>
+                        {% with ltv=property.existing_loan_balance|div:property.estimated_value|mul:100 %}
+                        <span class="stat-value text-warning">{{ ltv|floatformat:1 }}%</span>
+                        {% endwith %}
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Equity</span>
+                        {% with equity=property.estimated_value|sub:property.existing_loan_balance %}
+                        <span class="stat-value text-success">{{ equity|floatformat:0 }} บาท</span>
+                        {% endwith %}
+                    </div>
+                    {% endif %}
+                    <div class="stat-item">
+                        <span class="stat-label">คำขอรีไฟแนนซ์</span>
+                        <span class="stat-value">{{ property.loan_applications.count }} คำขอ</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">วันที่เพิ่มข้อมูล</span>
+                        <span class="stat-value">{{ property.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-lightning"></i> การดำเนินการ</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'refinance:loan_application_create' %}?property={{ property.id }}" 
+                           class="btn btn-kathai">
+                            <i class="bi bi-plus-circle"></i> สร้างคำขอรีไฟแนนซ์
+                        </a>
+                        <a href="{% url 'refinance:loan_comparison_wizard' %}" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-calculator"></i> เปรียบเทียบสินเชื่อ
+                        </a>
+                        <a href="{% url 'refinance:property_update' property.pk %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-pencil"></i> แก้ไขข้อมูลทรัพย์สิน
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Refinance Potential -->
+            {% if property.has_existing_loan and property.existing_loan_balance %}
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-graph-up-arrow"></i> ศักยภาพการรีไฟแนนซ์</h6>
+                </div>
+                <div class="card-body">
+                    {% with ltv=property.existing_loan_balance|div:property.estimated_value|mul:100 %}
+                    {% if ltv <= 80 %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i>
+                        <strong>แนะนำ:</strong> LTV {{ ltv|floatformat:1 }}% เหมาะสำหรับรีไฟแนนซ์
+                    </div>
+                    {% elif ltv <= 90 %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>ปานกลาง:</strong> LTV {{ ltv|floatformat:1 }}% ยังทำรีไฟแนนซ์ได้
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>จำกัด:</strong> LTV {{ ltv|floatformat:1 }}% ตัวเลือกจำกัด
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            ประเมินคร่าวๆ โดยดูจาก LTV ปัจจุบัน สำหรับการประเมินที่แม่นยำควรปรึกษาผู้เชี่ยวชาญ
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">ยืนยันการลบทรัพย์สิน</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>คุณแน่ใจหรือไม่ที่จะลบทรัพย์สิน <strong>"{{ property.name }}"</strong>?</p>
+                    {% if property.loan_applications.exists %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        ทรัพย์สินนี้มีคำขอรีไฟแนนซ์ที่เชื่อมโยงอยู่ {{ property.loan_applications.count }} คำขอ
+                    </div>
+                    {% endif %}
+                    <p class="text-muted">การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <form method="post" action="{% url 'refinance:property_delete' property.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">ลบทรัพย์สิน</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.property-header-card {
+    border: none;
+    box-shadow: var(--kathai-shadow-md);
+    border-radius: var(--kathai-border-radius-lg);
+    background: linear-gradient(135deg, rgba(255, 71, 19, 0.03) 0%, rgba(245, 179, 53, 0.03) 100%);
+}
+
+.property-value {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(25, 135, 84, 0.1);
+    border-radius: 8px;
+}
+
+.property-badges .badge {
+    margin-right: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.bg-house { background-color: #198754 !important; }
+.bg-townhouse { background-color: #0d6efd !important; }
+.bg-condo { background-color: #6f42c1 !important; }
+.bg-apartment { background-color: #fd7e14 !important; }
+.bg-commercial { background-color: #dc3545 !important; }
+.bg-land { background-color: #6c757d !important; }
+
+.detail-group {
+    margin-bottom: 1.5rem;
+}
+
+.detail-group-title {
+    color: var(--kathai-gold-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--kathai-gold-primary);
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+}
+
+.detail-item .label {
+    font-weight: 500;
+    color: var(--kathai-text-grey);
+    flex: 1;
+}
+
+.detail-item .value {
+    font-weight: 600;
+    color: var(--kathai-dark-blue);
+    text-align: right;
+    flex: 1;
+}
+
+.address-display {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: var(--kathai-off-white);
+    border-radius: 8px;
+    border-left: 4px solid var(--kathai-gold-primary);
+}
+
+.address-display i {
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--kathai-border-light);
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    color: var(--kathai-text-grey);
+    font-size: 0.9rem;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: var(--kathai-dark-blue);
+}
+
+.action-buttons .btn {
+    margin-left: 0.5rem;
+}
+
+.table th {
+    background-color: var(--kathai-off-white);
+    border-bottom: 2px solid var(--kathai-border-light);
+    font-weight: 600;
+    color: var(--kathai-dark-blue);
+}
+
+.bg-draft { background-color: #6c757d !important; }
+.bg-submitted { background-color: #0dcaf0 !important; }
+.bg-under_review { background-color: #ffc107 !important; }
+.bg-approved { background-color: #198754 !important; }
+.bg-rejected { background-color: #dc3545 !important; }
+.bg-cancelled { background-color: #6c757d !important; }
+
+@media (max-width: 768px) {
+    .property-header-card .row {
+        text-align: center;
+    }
+    
+    .property-header-card .col-md-4 {
+        margin-top: 1rem;
+    }
+    
+    .action-buttons {
+        text-align: center;
+    }
+    
+    .action-buttons .btn {
+        margin: 0.25rem;
+    }
+    
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .detail-item .value {
+        text-align: left;
+    }
+}
+</style>
+{% endblock %}

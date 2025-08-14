@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %} {# *** เพิ่มบรรทัดนี้สำหรับ filter 'intcomma' เพื่อให้ตัวเลขมีคอมม่า #}
+
+{% block title %}ทรัพย์สินของฉัน - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-house"></i> ทรัพย์สินของฉัน</h2>
+        <a href="{% url 'refinance:property_create' %}" class="btn btn-kathai">
+            <i class="bi bi-plus-circle"></i> เพิ่มทรัพย์สิน
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        {% if properties %}
+            {% for property in properties %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="card h-100 property-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-geo-alt text-primary"></i>
+                            {{ property.property_type|capfirst }}
+                        </h6>
+                        <span class="badge bg-{{ property.status|lower }}">
+                            {{ property.get_status_display|default:"ไม่ระบุ" }}
+                        </span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ property.name }}</h5>
+                        
+                        <div class="property-details mb-3">
+                            <div class="detail-item">
+                                <i class="bi bi-geo-alt-fill text-muted"></i>
+                                <span>{{ property.address|truncatechars:50 }}</span>
+                            </div>
+                            
+                            {% if property.size %}
+                            <div class="detail-item">
+                                <i class="bi bi-arrows-fullscreen text-muted"></i>
+                                <span>{{ property.size }} ตร.ม.</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if property.purchase_price %}
+                            <div class="detail-item">
+                                <i class="bi bi-currency-dollar text-muted"></i>
+                                <span>{{ property.purchase_price|floatformat:0|intcomma }} บาท</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if property.current_loan_balance %}
+                            <div class="detail-item">
+                                <i class="bi bi-credit-card text-muted"></i>
+                                <span>คงค้าง: {{ property.current_loan_balance|floatformat:0|intcomma }} บาท</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if property.loan_applications.exists %}
+                        <div class="mb-3">
+                            <h6 class="small text-muted">คำขอรีไฟแนนซ์:</h6>
+                            {% for app in property.loan_applications.all|slice:":2" %}
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small>{{ app.created_at|date:"d/m/Y" }}</small>
+                                <span class="badge badge-sm bg-{{ app.status|lower }}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                            {% if property.loan_applications.count > 2 %}
+                            <small class="text-muted">และอีก {{ property.loan_applications.count|add:"-2" }} คำขอ</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="btn-group w-100">
+                            <a href="{% url 'refinance:property_detail' property.pk %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i> ดูรายละเอียด
+                            </a>
+                            <a href="{% url 'refinance:property_update' property.pk %}" 
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-pencil"></i> แก้ไข
+                            </a>
+                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ property.id }}">
+                                <i class="bi bi-trash"></i> ลบ
+                            </button>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <a href="{% url 'refinance:loan_application_create' %}?property={{ property.id }}" 
+                               class="btn btn-kathai btn-sm w-100">
+                                <i class="bi bi-plus"></i> สร้างคำขอรีไฟแนนซ์
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deleteModal{{ property.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">ยืนยันการลบทรัพย์สิน</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>คุณแน่ใจหรือไม่ที่จะลบทรัพย์สิน <strong>"{{ property.name }}"</strong>?</p>
+                                {% if property.loan_applications.exists %}
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    ทรัพย์สินนี้มีคำขอรีไฟแนนซ์ที่เชื่อมโยงอยู่ {{ property.loan_applications.count }} คำขอ
+                                </div>
+                                {% endif %}
+                                <p class="text-muted">การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                                <form method="post" action="{% url 'refinance:property_delete' property.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">ลบทรัพย์สิน</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if is_paginated %}
+            <div class="col-12">
+                <nav aria-label="Property pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">หน้าแรก</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">ก่อนหน้า</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                หน้า {{ page_obj.number }} จาก {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">ถัดไป</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">หน้าสุดท้าย</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-house-x text-muted" style="font-size: 5rem;"></i>
+                    <h3 class="text-muted mt-3">ยังไม่มีทรัพย์สิน</h3>
+                    <p class="text-muted">เริ่มต้นด้วยการเพิ่มทรัพย์สินแรกของคุณ</p>
+                    <a href="{% url 'refinance:property_create' %}" class="btn btn-kathai mt-3">
+                        <i class="bi bi-plus-circle"></i> เพิ่มทรัพย์สินแรก
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6><i class="bi bi-lightbulb"></i> เคล็ดลับ</h6>
+                    <ul class="mb-0 small">
+                        <li>ใส่ข้อมูลทรัพย์สินให้ครบถ้วนเพื่อการประเมินที่แม่นยำ</li>
+                        <li>อัปเดตมูลค่าทรัพย์สินเป็นประจำ</li>
+                        <li>เก็บเอกสารทรัพย์สินให้พร้อมสำหรับการยื่นคำขอ</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6><i class="bi bi-question-circle"></i> ต้องการความช่วยเหลือ?</h6>
+                    <p class="mb-2 small">มีคำถามเกี่ยวกับการจัดการทรัพย์สิน?</p>
+                    <a href="{% url 'refinance:contact_us' %}" class="btn btn-outline-primary btn-sm">ติดต่อเรา</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* CSS ที่มีอยู่ของคุณ */
+.property-card {
+    transition: var(--kathai-transition);
+    border: 1px solid var(--kathai-border-light);
+}
+
+.property-card:hover {
+    box-shadow: var(--kathai-shadow-md);
+    transform: translateY(-4px);
+    border-color: var(--kathai-border-gold);
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.detail-item i {
+    width: 20px;
+    margin-right: 8px;
+}
+
+.badge-sm {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.bg-pending {
+    background-color: #ffc107 !important;
+}
+
+.bg-approved {
+    background-color: #198754 !important;
+}
+
+.bg-rejected {
+    background-color: #dc3545 !important;
+}
+
+.bg-draft {
+    background-color: #6c757d !important;
+}
+
+.bg-active {
+    background-color: #0d6efd !important;
+}
+
+.card-footer .btn-group .btn {
+    border-radius: 0;
+}
+
+.card-footer .btn-group .btn:first-child {
+    border-top-left-radius: var(--kathai-border-radius-md);
+    border-bottom-left-radius: var(--kathai-border-radius-md);
+}
+
+.card-footer .btn-group .btn:last-child {
+    border-top-right-radius: var(--kathai-border-radius-md);
+    border-bottom-right-radius: var(--kathai-border-radius-md);
+}
+
+/* *** CSS ที่เพิ่ม/แก้ไขสำหรับ Stat Cards *** */
+.stat-card-kathai {
+    border: none;
+    border-radius: var(--kathai-border-radius-md); /* ใช้ border-radius ของธีม */
+    overflow: hidden; 
+    box-shadow: var(--kathai-shadow-sm); /* ใช้เงาของธีม */
+    transition: var(--kathai-transition); /* ใช้ transition ของธีม */
+}
+
+.stat-card-kathai:hover {
+    box-shadow: var(--kathai-shadow-md);
+    transform: translateY(-2px);
+}
+
+/* Custom Kathai-themed background colors สำหรับ Stat Cards */
+/* ใช้ค่าสีจาก :root ใน base.html เพื่อความสอดคล้องกัน */
+.bg-kathai-primary {
+    background-color: var(--kathai-red-primary) !important;
+}
+
+.bg-kathai-success {
+    background-color: var(--highlight-green) !important;
+}
+
+.bg-kathai-warning {
+    background-color: var(--kathai-gold-primary) !important;
+}
+
+.bg-kathai-info {
+    background-color: var(--highlight-blue) !important;
+}
+
+/* ปรับระยะห่างสำหรับ col ในส่วน stat เพื่อความสวยงาม */
+.row.mt-4 > .col-md-3 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+.row.mt-4 > .col-md-3:first-child {
+    padding-left: calc(var(--bs-gutter-x) * .5); /* ใช้ค่า default ของ Bootstrap gutter */
+}
+.row.mt-4 > .col-md-3:last-child {
+    padding-right: calc(var(--bs-gutter-x) * .5); /* ใช้ค่า default ของ Bootstrap gutter */
+}
+
+.stat-card-kathai .card-body p {
+    line-height: 1.2; /* ปรับ line-height เพื่อให้ text ดูไม่แน่นไป */
+}
+</style>
+{% endblock %}

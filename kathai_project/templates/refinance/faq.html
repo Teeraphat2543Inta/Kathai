@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}คำถามที่พบบ่อย (FAQ) - คัดให้ (KATHAI){% endblock %}
+
+{% block content %}
+<section class="faq-section py-5 bg-light-bg">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center section-heading">
+                <h1 class="fw-bold display-4">คำถามที่พบบ่อย (FAQ)</h1>
+                <p class="lead text-muted">ข้อมูลสำคัญเกี่ยวกับการรีไฟแนนซ์ที่คุณควรรู้</p>
+            </div>
+        </div>
+        <div class="row g-4 mt-4">
+            
+            {# FAQ Item 1: ค่าใช้จ่ายในการรีไฟแนนซ์ #}
+            <div class="col-12">
+                <div class="card p-4 shadow-sm">
+                    <h4 class="fw-bold text-dark-blue mb-3">ค่าใช้จ่ายในการรีไฟแนนซ์ มีอะไรบ้าง?</h4>
+                    <p class="mb-0">
+                        ปัจจุบันการรีไฟแนนซ์จะมีค่าใช้จ่ายที่แตกต่างกันไปตามแต่ละผลิตภัณฑ์ ซึ่งจะเป็นไปตามกฎหมายกำหนด ซึ่งจะไม่ใช่ค่าใช้จ่ายที่สูงมาก ส่วนใหญ่จะเป็นค่าใช้จ่ายในการดำเนินการต่างๆ
+                    </p>
+                    <p class="mb-0">
+                        ในปัจจุบันด้วยการแข่งขันที่ค่อนข้างสูงของธนาคาร และสถาบันการเงินต่างๆ รวมถึงความเข้มงวดในการควบคุมทำให้ค่าใช้จ่ายในส่วนนี้จะไม่ค่อยมีการเรียกเก็บแล้ว
+                    </p>
+                    <p class="mt-2 mb-0">
+                        สามารถอ่านเพิ่มเติมได้ทาง <a href="#" class="text-primary text-decoration-underline">ค่าใช้จ่ายในการ Refinance คุ้มกับดอกเบี้ยที่ลดไหม</a>
+                    </p>
+                </div>
+            </div>
+
+            {# FAQ Item 2: ข้อดี/ข้อเสียของการทำรีไฟแนนซ์ #}
+            <div class="col-12">
+                <div class="card p-4 shadow-sm">
+                    <h4 class="fw-bold text-dark-blue mb-3">ข้อดี/ข้อเสีย ของการทำรีไฟแนนซ์</h4>
+                    <p class="text-muted">
+                        จริงๆ แล้วการรีไฟแนนซ์ก็จะมีข้อดีข้อเสียแตกต่างกันไปตามแต่ละสินเชื่อ โดยภาพรวมแล้วจะเป็นดังนี้
+                    </p>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-success"><i class="bi bi-check-circle-fill me-2"></i> ข้อดีของการรีไฟแนนซ์</h5>
+                            <ul class="list-unstyled mt-3">
+                                <li class="d-flex align-items-start mb-2">
+                                    <i class="bi bi-check-circle-fill text-success flex-shrink-0 me-2" style="font-size: 1.2rem;"></i>
+                                    <span><strong>ช่วยลดดอกเบี้ย:</strong> เพราะการรีไฟแนนซ์คือการย้ายจากธนาคารเดิมไปธนาคารใหม่ ทำให้ได้รับข้อเสนอพิเศษด้านอัตราดอกเบี้ยที่ถูกลง</span>
+                                </li>
+                                <li class="d-flex align-items-start mb-2">
+                                    <i class="bi bi-check-circle-fill text-success flex-shrink-0 me-2" style="font-size: 1.2rem;"></i>
+                                    <span><strong>ช่วยลดยอดผ่อนต่อเดือน:</strong> ดอกเบี้ยที่ถูกลงส่งผลให้ยอดผ่อนลดลง รวมถึงสามารถขอขยายระยะเวลาผ่อนให้ยาวขึ้นได้</span>
+                                </li>
+                                <li class="d-flex align-items-start mb-2">
+                                    <i class="bi bi-check-circle-fill text-success flex-shrink-0 me-2" style="font-size: 1.2rem;"></i>
+                                    <span><strong>ช่วยเพิ่มสภาพคล่องด้วยเงินก้อน:</strong> หากต้องการใช้เงินก้อน ก็สามารถแจ้งกับธนาคารใหม่เพื่อขอนำวงเงินออกมาใช้ได้ ซึ่งมีอัตราดอกเบี้ยต่ำ</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-danger"><i class="bi bi-x-circle-fill me-2"></i> ข้อเสียของการรีไฟแนนซ์</h5>
+                            <ul class="list-unstyled mt-3">
+                                <li class="d-flex align-items-start mb-2">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger flex-shrink-0 me-2" style="font-size: 1.2rem;"></i>
+                                    <span><strong>การเตรียมเอกสารข้อมูลสำหรับรีไฟแนนซ์:</strong> เนื่องจากเป็นการทำสินเชื่อที่ถูกต้องตามกฎหมาย จึงจำเป็นต้องเตรียมเอกสารหลายอย่าง ทั้งเอกสารส่วนบุคคล เอกสารแสดงรายได้ และเอกสารหลักประกัน</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# FAQ Item 3: สามารถทำการรีไฟแนนซ์อะไรได้บ้าง? #}
+            <div class="col-12">
+                <div class="card p-4 shadow-sm">
+                    <h4 class="fw-bold text-dark-blue mb-3">สามารถทำการรีไฟแนนซ์อะไรได้บ้าง?</h4>
+                    <p class="text-muted">
+                        ธนาคาร และสถาบันการเงินที่ไม่ใช่ธนาคาร (non-bank) สามารถทำรีไฟแนนซ์ได้หลากหลายประเภท ได้แก่
+                    </p>
+                    <ol class="list-group list-group-numbered mt-3">
+                        <li class="list-group-item d-flex align-items-start border-0 px-0">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">รีไฟแนนซ์บ้าน</div>
+                                ช่วยประหยัดดอกเบี้ยได้เป็นล้าน สามารถทำได้ทุก 3 ปี และยังช่วยให้ยอดผ่อนต่อเดือนลดลง ผ่อนบ้านหมดเร็วขึ้น หรือหากต้องการใช้วงเงินเพิ่ม ก็สามารถรับเงินก้อนในอัตราดอกเบี้ยต่ำได้
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-start border-0 px-0">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">รีไฟแนนซ์รถ</div>
+                                ช่วยขยายระยะเวลาในการผ่อน รวมถึงรับเงินก้อนเสริมสภาพคล่องทางการเงิน โดยใช้รถยนต์เป็นหลักประกัน และยังสามารถใช้งานรถยนต์ได้ตามปกติ
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-start border-0 px-0">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">รีไฟแนนซ์บัตรเครดิต</div>
+                                รวมทุกภาระหนี้ในระบบ ทั้งบัตรเครดิต บัตรกดเงินสด สินเชื่อส่วนบุคคล จากที่ต้องจ่ายแยกหลายๆ ที่ นำมารวมกันเป็นการจ่ายที่เดียวกับธนาคารใหม่ที่รับรีไฟแนนซ์ ลดยอดผ่อนแต่ละเดือน เพิ่มสภาพคล่องทางการเงิน และอาจได้ข้อเสนอดอกเบี้ยที่ถูกลงด้วย
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

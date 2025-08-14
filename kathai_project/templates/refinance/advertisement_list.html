@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}โปรโมชั่นทั้งหมด - คัดให้ (KATHAI){% endblock %}
+
+{% block content %}
+<section class="py-5 bg-light-bg">
+    <div class="container">
+        <div class="row section-heading mb-4">
+            <div class="col-12 text-center">
+                <h1 class="fw-bold text-dark-blue">โปรโมชั่นและข่าวสารทั้งหมด</h1>
+                <p class="lead text-muted">อัปเดตข้อเสนอและข่าวสารล่าสุดเพื่อประโยชน์สูงสุดของคุณ</p>
+            </div>
+        </div>
+
+        {% if advertisements %}
+        <div class="row g-4 justify-content-center">
+            {% for ad in advertisements %}
+            <div class="col-md-6 col-lg-4 d-flex"> {# d-flex เพื่อให้ card สูงเท่ากัน #}
+                <div class="card h-100 shadow-sm border-0 animate__fade-in-up" style="animation-delay: 0.1s;"> {# แก้ไขที่นี่: ใช้ค่าคงที่แทนการหาร #} {# เพิ่ม animation-delay แบบไล่ระดับ #}
+                    {% if ad.image %}
+                    <img src="{{ ad.image.url }}" class="card-img-top" alt="{{ ad.title }}">
+                    {% else %}
+                    <img src="{% static 'img/placeholder_ad.png' %}" class="card-img-top" alt="Placeholder Ad Image">
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-dark-blue">{{ ad.title }}</h5>
+                        <p class="card-text text-muted flex-grow-1">{{ ad.description }}</p> {# ไม่ต้อง truncate เพราะแสดงทั้งหมด #}
+                        <a href="{{ ad.link }}" class="btn btn-outline-primary btn-sm mt-3 stretched-link" target="_blank" rel="noopener noreferrer">
+                            ดูรายละเอียดเพิ่มเติม <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-12 text-center py-5">
+                <p class="lead text-muted">ยังไม่มีโปรโมชั่นหรือข่าวสารในขณะนี้ โปรดกลับมาตรวจสอบภายหลัง</p>
+                <a href="{% url 'home' %}" class="btn btn-kathai mt-3">กลับสู่หน้าหลัก</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

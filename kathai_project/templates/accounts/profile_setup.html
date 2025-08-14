@@ -1,0 +1,44 @@
+{% extends 'base.html' %} {# ดึงโครงสร้างหลักจาก base.html #}
+{% load crispy_forms_tags %} {# โหลดแท็ก crispy forms เพื่อใช้งาน #}
+{% load static %} {# โหลด static เพื่อใช้สำหรับรูปภาพ #}
+
+{% block title %}ตั้งค่าโปรไฟล์ผู้ใช้งาน - KATHAI{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-9 col-lg-7">
+                <div class="card shadow p-4 p-md-5">
+                    <div class="card-header bg-transparent border-0 text-center mb-4">
+                        <h2 class="fw-bold text-dark-blue">ตั้งค่าโปรไฟล์ผู้ใช้งาน</h2>
+                        <p class="lead text-muted">กรุณากรอกข้อมูลส่วนตัวของคุณเพื่อเริ่มใช้งาน KATHAI ได้อย่างเต็มประสิทธิภาพ</p>
+                    </div>
+
+                    {# แสดงข้อความจาก messages framework #}
+                    {% if messages %}
+                        <div class="mb-4">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" novalidate> {# สำคัญ: เพิ่ม enctype="multipart/form-data" สำหรับการอัปโหลดไฟล์ #}
+                        {% csrf_token %}
+                        
+
+                        {# ใช้ Crispy Forms tag เพื่อแสดงฟอร์มทั้งหมดแบบสวยงาม #}
+                        {{ form|crispy }} 
+                        
+                        <button type="submit" class="btn btn-kathai btn-lg w-100 mt-4">บันทึกข้อมูลโปรไฟล์</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}คำขอรีไฟแนนซ์ - คัดให้{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {# ส่วนหัวข้อและปุ่ม - ปรับปรุงตรงนี้ #}
+    <div class="d-flex flex-column flex-md-row align-items-md-center mb-4 gap-md-3">
+        {# หัวข้อ #}
+        <h2 class="mb-2 mb-md-0 text-center text-md-start">
+            <i class="bi bi-file-text"></i> คำขอรีไฟแนนซ์ของฉัน
+        </h2>
+        {# ปุ่ม - เพิ่มคลาส btn-custom-width #}
+        <a href="{% url 'refinance:loan_application_create' %}" class="btn btn-kathai w-100 w-md-auto mt-2 mt-md-0 btn-custom-width">
+            <i class="bi bi-plus-circle"></i> สร้างคำขอใหม่
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" class="d-flex gap-2">
+                <select name="status" class="form-select">
+                    <option value="">ทุกสถานะ</option>
+                    <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>ร่าง</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>รอดำเนินการ</option>
+                    <option value="under_review" {% if request.GET.status == 'under_review' %}selected{% endif %}>กำลังพิจารณา</option>
+                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>อนุมัติ</option>
+                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>ปฏิเสธ</option>
+                </select>
+                <input type="text" name="search" class="form-control" placeholder="ค้นหาตามชื่อทรัพย์สิน..." value="{{ request.GET.search }}">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+                {% if request.GET.status or request.GET.search %}
+                <a href="{% url 'refinance:loan_application_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x"></i> ล้าง
+                </a>
+                {% endif %}
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <small class="text-muted">
+                แสดง {{ applications.count }} จาก {{ total_count|default:applications.count }} คำขอ
+            </small>
+        </div>
+    </div>
+
+    <div class="row">
+        {% if applications %}
+            {% for application in applications %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="card h-100 application-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-calendar"></i> {{ application.created_at|date:"d M Y" }}
+                        </small>
+                        <span class="badge bg-{{ application.status|lower }} status-badge">
+                            {{ application.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-house"></i> {{ application.property.name }}
+                        </h5>
+                        
+                        <div class="application-details mb-3">
+                            <div class="detail-row">
+                                <span class="label">ทรัพย์สิน:</span>
+                                <span class="value">{{ application.property.property_type|capfirst }}</span>
+                            </div>
+                            
+                            {% if application.requested_amount %}
+                            <div class="detail-row">
+                                <span class="label">จำนวนเงินกู้:</span>
+                                <span class="value">{{ application.requested_amount|floatformat:0 }} บาท</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if application.property.current_loan_balance %}
+                            <div class="detail-row">
+                                <span class="label">หนี้เดิม:</span>
+                                <span class="value">{{ application.property.current_loan_balance|floatformat:0 }} บาท</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="detail-row">
+                                <span class="label">สถานะ:</span>
+                                <span class="value">
+                                    <span class="status-text status-{{ application.status }}">
+                                        {{ application.get_status_display }}
+                                    </span>
+                                </span>
+                            </div>
+                            
+                            {% if application.updated_at != application.created_at %}
+                            <div class="detail-row">
+                                <span class="label">อัปเดตล่าสุด:</span>
+                                <span class="value">{{ application.updated_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="progress-indicator mb-3">
+                            <div class="progress" style="height: 6px;">
+                                {% if application.status == 'draft' %}
+                                    <div class="progress-bar bg-secondary" style="width: 10%"></div>
+                                {% elif application.status == 'pending' %}
+                                    <div class="progress-bar bg-warning" style="width: 25%"></div>
+                                {% elif application.status == 'under_review' %}
+                                    <div class="progress-bar bg-info" style="width: 50%"></div>
+                                {% elif application.status == 'approved' %}
+                                    <div class="progress-bar bg-success" style="width: 100%"></div>
+                                {% elif application.status == 'rejected' %}
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                {% if application.status == 'draft' %}
+                                    ร่าง - ยังไม่ได้ส่ง
+                                {% elif application.status == 'pending' %}
+                                    รอการพิจารณา
+                                {% elif application.status == 'under_review' %}
+                                    กำลังตรวจสอบ
+                                {% elif application.status == 'approved' %}
+                                    อนุมัติแล้ว
+                                {% elif application.status == 'rejected' %}
+                                    ไม่อนุมัติ
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        {% if application.documents.exists %}
+                        <div class="documents-summary mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-paperclip"></i> 
+                                เอกสารแนบ {{ application.documents.count }} ไฟล์
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex gap-2 mb-2">
+                            <a href="{% url 'refinance:loan_application_detail' application.pk %}" 
+                               class="btn btn-outline-primary btn-sm flex-fill">
+                                <i class="bi bi-eye"></i> ดูรายละเอียด
+                            </a>
+                            
+                            {% if application.status == 'draft' %}
+                            <a href="{% url 'refinance:loan_application_update' application.pk %}" 
+                               class="btn btn-outline-secondary btn-sm flex-fill">
+                                <i class="bi bi-pencil"></i> แก้ไข
+                            </a>
+                            {% endif %}
+                        </div>
+                        
+                        {% if application.status == 'draft' %}
+                        <div class="d-flex gap-2">
+                            <form method="post" action="{% url 'refinance:loan_application_submit' application.pk %}" class="flex-fill">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm w-100" 
+                                        onclick="return confirm('คุณแน่ใจหรือไม่ที่จะส่งคำขอนี้?')">
+                                    <i class="bi bi-send"></i> ส่งคำขอ
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ application.id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        {% elif application.status == 'pending' or application.status == 'submitted' %}
+                        <button class="btn btn-outline-info btn-sm w-100" disabled>
+                            <i class="bi bi-clock"></i> รอการติดต่อกลับ
+                        </button>
+                        {% elif application.status == 'under_review' %}
+                        <button class="btn btn-outline-warning btn-sm w-100" disabled>
+                            <i class="bi bi-hourglass-split"></i> กำลังพิจารณา
+                        </button>
+                        {% elif application.status == 'approved' %}
+                        <a href="{% url 'refinance:loan_application_detail' application.pk %}" 
+                           class="btn btn-success btn-sm w-100">
+                            <i class="bi bi-check-circle"></i> ดูผลการอนุมัติ
+                        </a>
+                        {% elif application.status == 'rejected' %}
+                        <a href="{% url 'refinance:loan_application_create' %}" 
+                           class="btn btn-outline-primary btn-sm w-100">
+                            <i class="bi bi-arrow-repeat"></i> สร้างคำขอใหม่
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if application.status == 'draft' %}
+                <div class="modal fade" id="deleteModal{{ application.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">ยืนยันการลบคำขอ</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>คุณแน่ใจหรือไม่ที่จะลบคำขอรีไฟแนนซ์สำหรับ <strong>"{{ application.property.name }}"</strong>?</p>
+                                <p class="text-muted">การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                                <form method="post" action="{% url 'refinance:loan_application_delete' application.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">ลบคำขอ</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if is_paginated %}
+            <div class="col-12">
+                <nav aria-label="Application pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">หน้าแรก</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">ก่อนหน้า</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                หน้า {{ page_obj.number }} จาก {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">ถัดไป</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">หน้าสุดท้าย</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-file-text-x text-muted" style="font-size: 5rem;"></i>
+                    <h3 class="text-muted mt-3">
+                        {% if request.GET.status or request.GET.search %}
+                            ไม่พบคำขอที่ตรงกับเงื่อนไข
+                        {% else %}
+                            ยังไม่มีคำขอรีไฟแนนซ์
+                        {% endif %}
+                    </h3>
+                    <p class="text-muted">
+                        {% if request.GET.status or request.GET.search %}
+                            ลองเปลี่ยนเงื่อนไขการค้นหาหรือดูคำขอทั้งหมด
+                        {% else %}
+                            เริ่มต้นประหยัดดอกเบี้ยด้วยการสร้างคำขอแรกของคุณ
+                        {% endif %}
+                    </p>
+                    {% if request.GET.status or request.GET.search %}
+                    <a href="{% url 'refinance:loan_application_list' %}" class="btn btn-outline-primary mt-3">
+                        <i class="bi bi-arrow-left"></i> ดูคำขอทั้งหมด
+                    </a>
+                    {% else %}
+                    <a href="{% url 'refinance:loan_application_create' %}" class="btn btn-kathai mt-3">
+                        <i class="bi bi-plus-circle"></i> สร้างคำขอแรก
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    </div>
+
+<style>
+/* CSS ที่มีอยู่ของคุณ */
+.application-card {
+    transition: var(--kathai-transition);
+    border: 1px solid var(--kathai-border-light);
+}
+
+.application-card:hover {
+    box-shadow: var(--kathai-shadow-md);
+    transform: translateY(-4px);
+    border-color: var(--kathai-border-gold);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.detail-row .label {
+    font-weight: 500;
+    color: var(--kathai-text-grey);
+}
+
+.detail-row .value {
+    text-align: right;
+    color: var(--kathai-dark-blue);
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.status-text {
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.status-draft { color: #6c757d; }
+.status-pending { color: #ffc107; }
+.status-under_review { color: #0dcaf0; }
+.status-approved { color: #198754; }
+.status-rejected { color: #dc3545; }
+
+.progress-indicator .progress {
+    border-radius: 10px;
+}
+
+.documents-summary {
+    padding: 0.5rem;
+    background-color: rgba(13, 202, 240, 0.1);
+    border-radius: 4px;
+}
+
+/* เพิ่ม CSS สำหรับปุ่ม "สร้างคำขอใหม่" ตรงนี้ */
+@media (min-width: 768px) { /* สำหรับหน้าจอขนาดกลาง (md) ขึ้นไป */
+    .btn-custom-width {
+        max-width: 200px; /* กำหนดความกว้างสูงสุดของปุ่ม */
+        /* ถ้าต้องการให้ปุ่มกึ่งกลางเมื่อความกว้างน้อยกว่า max-width */
+        /* display: block; */
+        /* margin-left: auto; */
+        /* margin-right: auto; */
+    }
+}
+
+.bg-draft { background-color: #6c757d !important; }
+.bg-pending { background-color: #ffc107 !important; }
+.bg-under_review { background-color: #0dcaf0 !important; }
+.bg-approved { background-color: #198754 !important; }
+.bg-rejected { background-color: #dc3545 !important; }
+</style>
+{% endblock %}
