@@ -15,37 +15,38 @@ Other: Git
 1. การโคลน Repository
 เปิด Terminal หรือ Command Prompt ขึ้นมา จากนั้นใช้คำสั่ง git clone เพื่อดาวน์โหลดโค้ดโปรเจกต์จาก GitHub:
 
-Bash
+
 
 git clone https://github.com/Teeraphat2543Inta/Kathai.git
+
 2. เข้าสู่ไดเรกทอรีโปรเจกต์
 ใช้คำสั่ง cd เพื่อย้ายเข้าไปในโฟลเดอร์ของโปรเจกต์:
 
-Bash
 
 cd Kathai
+
 3. สร้างและเปิดใช้งาน Virtual Environment
 เพื่อแยกแพ็กเกจของโปรเจกต์นี้ออกจากแพ็กเกจอื่นๆ ในเครื่องของคุณ:
 
-Bash
 
 python -m venv venv
+
 บน Windows:
 
-Bash
 
 venv\Scripts\activate
+
 บน macOS และ Linux:
 
-Bash
-
 source venv/bin/activate
+
 4. ติดตั้งแพ็กเกจที่จำเป็น
 ติดตั้งแพ็กเกจ Python ทั้งหมดที่ระบุในไฟล์ requirements.txt:
 
 Bash
 
 pip install -r requirements.txt
+
 5. ตั้งค่าฐานข้อมูล
 รันคำสั่ง migrate เพื่อสร้างตารางฐานข้อมูลตาม Models ที่กำหนดไว้ใน Django:
 
