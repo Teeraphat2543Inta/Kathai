@@ -33,7 +33,7 @@ git clone https://github.com/Teeraphat2543Inta/Kathai.git
 cd Kathai
 
 
-สร้างและเปิดใช้งาน Virtual Environment
+**สร้างและเปิดใช้งาน Virtual Environment**
 
 # สร้าง venv
 python -m venv venv
