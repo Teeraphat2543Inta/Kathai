@@ -145,12 +145,12 @@ class LoanApplicationForm(forms.ModelForm):
         }
         widgets = {
             'property': forms.Select(attrs={'class': 'form-select', 'id': 'id_property'}),
-            'loan_amount': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_loan_amount'}),
             'loan_term': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_loan_term'}),
             'purpose': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_purpose'}),
-            'monthly_income': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_monthly_income'}),
-            'monthly_expense': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_monthly_expense'}),
-            'other_debts': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_other_debts'}),
+            'loan_amount': forms.TextInput(attrs={'class': 'form-control number-format', 'data-type': 'currency'}),
+            'monthly_income': forms.TextInput(attrs={'class': 'form-control number-format', 'data-type': 'currency'}),
+            'monthly_expense': forms.TextInput(attrs={'class': 'form-control number-format', 'data-type': 'currency'}),
+            'other_debts': forms.TextInput(attrs={'class': 'form-control number-format', 'data-type': 'currency'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'id': 'id_notes'}),
         }
 
@@ -184,9 +184,10 @@ class LoanComparisonStep1Form(forms.Form):
         decimal_places=2,
         label='ราคาบ้าน/คอนโดที่ซื้อ (บาท)',
         min_value=Decimal('0.01'),
-        widget=forms.NumberInput(attrs={
+        widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': '5,000,000'
+            'placeholder': '5,000,000',
+            'data-type': 'currency'
         })
     )
 
@@ -195,9 +196,10 @@ class LoanComparisonStep1Form(forms.Form):
         decimal_places=2,
         label='ยอดหนี้บ้านคงเหลือ (ไม่รวมยอดหนี้อื่นๆ) บาท',
         min_value=Decimal('0.01'),
-        widget=forms.NumberInput(attrs={
+        widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': '3,000,000'
+            'placeholder': '3,000,000',
+            'data-type': 'currency'
         })
     )
 
@@ -207,9 +209,10 @@ class LoanComparisonStep1Form(forms.Form):
         label='ผ่อนต่อเดือน (หลังครบ 3 ปี ที่ธนาคารกำหนดไว้) บาท',
         required=False,
         min_value=Decimal('0.00'),
-        widget=forms.NumberInput(attrs={
+        widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': '25,000'
+            'placeholder': '25,000',
+            'data-type': 'currency'
         })
     )
 
@@ -244,16 +247,6 @@ class LoanComparisonStep1Form(forms.Form):
 
 class LoanComparisonStep2Form(forms.Form):
     """ฟอร์มขั้นตอนที่ 2: ข้อมูลผู้กู้และอาชีพ"""
-    monthly_income = forms.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        label='รายได้รวมต่อเดือน (ไม่รวมโบนัส) บาท',
-        min_value=Decimal('0.01'),
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'placeholder': '80,000'
-        })
-    )
 
     occupation = forms.ChoiceField(
         choices=OCCUPATION_CHOICES,
@@ -440,6 +433,84 @@ class PromotionFilterForm(forms.Form):
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
     )
 
+class PromotionForm(forms.ModelForm):
+    class Meta:
+        model = Promotion
+        # เอาทุกฟิลด์ยกเว้น bank และ priority
+        fields = [
+            'title', 'description', 'promotion_type', 'min_loan_amount', 'max_loan_amount',
+            'special_rate', 'special_rate_period', 'start_date', 'end_date',
+            'is_active', 'is_sponsored', 'banner_image', 'terms_conditions'
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'promotion_type': forms.Select(attrs={'class': 'form-select'}),
+            'min_loan_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'max_loan_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'special_rate': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'special_rate_period': forms.NumberInput(attrs={'class': 'form-control'}),
+            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}, format='%Y-%m-%d'),
+            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}, format='%Y-%m-%d'),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_sponsored': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'banner_image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'terms_conditions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # ใส่ค่า initial ให้ฟิลด์วันที่จาก instance
+        if self.instance and self.instance.pk:
+            if self.instance.start_date:
+                self.fields['start_date'].initial = self.instance.start_date.strftime('%Y-%m-%d')
+            if self.instance.end_date:
+                self.fields['end_date'].initial = self.instance.end_date.strftime('%Y-%m-%d')
+
+class LoanProductForm(forms.ModelForm):
+    class Meta:
+        model = LoanProduct
+        # เลือกฟิลด์เองโดยเอา bank และ display_order ออก
+        fields = [
+            "name",
+            "product_type",
+            "description",
+            "interest_rate",
+            "interest_rate_type",
+            "min_loan_amount",
+            "max_loan_amount",
+            "max_ltv",
+            "max_term_years",
+            "processing_fee",
+            "appraisal_fee",
+            "min_income",
+            "min_age",
+            "max_age",
+            "is_active",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "product_type": forms.Select(attrs={"class": "form-select"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "interest_rate": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "interest_rate_type": forms.Select(attrs={"class": "form-select"}),
+            "min_loan_amount": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "max_loan_amount": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "max_ltv": forms.NumberInput(attrs={"class": "form-control"}),
+            "max_term_years": forms.NumberInput(attrs={"class": "form-control"}),
+            "processing_fee": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "appraisal_fee": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "min_income": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "min_age": forms.NumberInput(attrs={"class": "form-control"}),
+            "max_age": forms.NumberInput(attrs={"class": "form-control"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # ลบ label suffix
+        for field in self.fields.values():
+            field.label_suffix = ""
 
 class QuickComparisonForm(forms.Form):
     """ฟอร์มเปรียบเทียบแบบเร็ว"""

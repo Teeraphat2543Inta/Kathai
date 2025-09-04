@@ -12,33 +12,13 @@
         </div>
     </div>
 
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
-
     <div class="row mb-4">
         <div class="col-md-8">
             <form method="get" class="d-flex gap-2">
-                <select name="bank_type" class="form-select">
-                    <option value="">ประเภทธนาคารทั้งหมด</option>
-                    <option value="government" {% if request.GET.bank_type == 'government' %}selected{% endif %}>ธนาคารรัฐ</option>
-                    <option value="private" {% if request.GET.bank_type == 'private' %}selected{% endif %}>ธนาคารเอกชน</option>
-                    <option value="foreign" {% if request.GET.bank_type == 'foreign' %}selected{% endif %}>ธนาคารต่างประเทศ</option>
-                </select>
                 <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อธนาคาร..." value="{{ request.GET.search }}">
                 <button type="submit" class="btn btn-outline-primary">
                     <i class="bi bi-search"></i>
                 </button>
-                {% if request.GET.bank_type or request.GET.search %}
-                <a href="{% url 'refinance:bank_list' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x"></i> ล้าง
-                </a>
-                {% endif %}
             </form>
         </div>
     </div>
@@ -113,10 +93,6 @@
 
                     <div class="card-footer bg-transparent">
                         <div class="d-flex gap-2">
-                            <a href="{% url 'refinance:bank_detail' bank.pk %}"
-                               class="btn btn-outline-primary btn-sm flex-fill">
-                                <i class="bi bi-eye"></i> ดูรายละเอียด
-                            </a>
                             {% if bank.website %}
                             <a href="{{ bank.website }}" target="_blank"
                                class="btn btn-outline-secondary btn-sm">

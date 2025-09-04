@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
@@ -15,47 +16,58 @@
         <h1 class="title mb-1">ผลการเปรียบเทียบสินเชื่อรีไฟแนนซ์</h1>
         <p class="subtitle">เรียงลำดับข้อเสนอสินเชื่อที่เหมาะกับเงื่อนไขของคุณ</p>
       </div>
-      <div class="mini-stats d-flex gap-3">
+      <div class="mini-stats d-flex flex-wrap gap-3">
         <div class="mini-stat">
           <div class="mini-label"><i class="bi bi-bank"></i> ข้อเสนอที่พบ</div>
           <div class="mini-value text-primary">{{ total_products_found|default:0 }}</div>
         </div>
         <div class="mini-stat">
-          <div class="mini-label"><i class="bi bi-currency-dollar"></i> LTV</div>
-          <div class="mini-value {% if ltv_ratio > 80 %}text-danger{% else %}text-success{% endif %}">{{ ltv_ratio|floatformat:2 }}%</div>
+          <div class="mini-label" data-bs-toggle="tooltip" title="LTV (Loan-to-Value) คือ อัตราส่วนมูลค่าสินเชื่อต่อมูลค่าหลักประกัน">
+            <i class="bi bi-currency-dollar"></i> LTV
+          </div>
+          <div class="mini-value {% if ltv_ratio > 80 %}text-danger{% else %}text-success{% endif %}">
+            {{ ltv_ratio|floatformat:2 }}%
+          </div>
         </div>
         <div class="mini-stat">
-          <div class="mini-label"><i class="bi bi-person-check"></i> DSR</div>
-          <div class="mini-value {% if dsr_ratio > 70 %}text-danger{% else %}text-success{% endif %}">{{ dsr_ratio|floatformat:2 }}%</div>
+          <div class="mini-label" data-bs-toggle="tooltip" title="DSR (Debt Service Ratio) คือ อัตราส่วนภาระหนี้ต่อรายได้">
+            <i class="bi bi-person-check"></i> DSR
+          </div>
+          <div class="mini-value {% if dsr_ratio > 70 %}text-danger{% else %}text-success{% endif %}">
+            {{ dsr_ratio|floatformat:2 }}%
+          </div>
         </div>
       </div>
     </div>
   </div>
-
   <!-- ข้อมูลที่กรอก -->
   <div class="card card-ghost mb-4">
     <div class="card-body p-3 p-md-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
         <h5 class="section-title mb-0"><i class="bi bi-info-circle me-2"></i>ข้อมูลที่คุณกรอก</h5>
-        <a class="btn btn-sm btn-outline-secondary" href="{% url 'refinance:loan_comparison_wizard' %}">
-          แก้ไขข้อมูล <i class="bi bi-pencil-square ms-1"></i>
-        </a>
+        <button type="button" class="btn btn-sm btn-outline-secondary align-self-end align-self-md-center" 
+                data-bs-toggle="modal" 
+                data-bs-target="#editInputDataModal">
+          <span class="d-none d-sm-inline">แก้ไขข้อมูล</span>
+          <span class="d-sm-none">แก้ไข</span>
+          <i class="bi bi-pencil-square ms-1"></i>
+        </button>
       </div>
       <div class="row g-3 g-md-4">
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
           <div class="summary-block">
             <div class="block-title">ข้อมูลทรัพย์สิน</div>
-            <div class="item"><span>ราคาทรัพย์สิน</span><strong>{{ input_data.property_price|intcomma }} บาท</strong></div>
-            <div class="item"><span>ยอดหนี้คงเหลือ</span><strong>{{ input_data.current_loan_balance|intcomma }} บาท</strong></div>
+            <div class="item"><span>ราคาทรัพย์สิน</span><strong>{{ property_price|intcomma }} บาท</strong></div>
+            <div class="item"><span>ยอดหนี้คงเหลือ</span><strong>{{ current_loan_balance|intcomma }} บาท</strong></div>
             <div class="item"><span>ประเภททรัพย์สิน</span><strong>{{ user_property_type }}</strong></div>
             <div class="item"><span>จังหวัด</span><strong>{{ user_province }}</strong></div>
           </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
           <div class="summary-block">
             <div class="block-title">ข้อมูลผู้กู้</div>
             <div class="item"><span>อาชีพ</span><strong>{{ user_occupation }}</strong></div>
-            <div class="item"><span>รายได้ต่อเดือน</span><strong>{{ input_data.monthly_income|intcomma }} บาท</strong></div>
+            <div class="item"><span>รายได้สุทธิ</span><strong>{{ monthly_income|intcomma }} บาท</strong></div>
             <div class="item"><span>ธนาคารปัจจุบัน</span><strong>{{ user_current_bank }}</strong></div>
             <div class="item"><span>ระยะเวลาผ่อนคงเหลือ</span><strong>{{ user_remaining_years }} ปี</strong></div>
             <div class="item"><span>ต้องการเงินกู้เพิ่ม</span><strong>{{ user_need_extra_loan }}</strong></div>
@@ -80,16 +92,36 @@
 
     <!-- ปุ่มด้านบน -->
     <div class="text-center mb-3">
-      <button type="submit" class="btn btn-primary btn-lg px-4" id="compareButtonTop" disabled>
-        <i class="bi bi-columns-gap me-2"></i> เปรียบเทียบที่เลือก (<span class="selected-count">0</span>)
-      </button>
-      <small class="text-muted d-block mt-1">เลือก 2–5 รายการเพื่อเปรียบเทียบ{% if not user.is_authenticated %} • <span class="text-danger"><i class="bi bi-lock-fill me-1"></i>เข้าสู่ระบบเพื่อใช้งาน</span>{% endif %}</small>
+      {% if user.is_authenticated %} 
+      <button type="submit" class="btn btn-primary btn-lg px-3 px-md-4" id="compareButtonTop" disabled> 
+        <i class="bi bi-columns-gap me-2"></i> 
+        <span class="d-none d-sm-inline">เปรียบเทียบที่เลือก</span>
+        <span class="d-sm-none">เปรียบเทียบ</span>
+        (<span class="selected-count">0</span>) 
+      </button> 
+      {% else %} 
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg px-3 px-md-4 d-inline-flex align-items-center justify-content-center"> 
+        <i class="bi bi-columns-gap me-2"></i> 
+        <span class="d-none d-sm-inline">เปรียบเทียบที่เลือก</span>
+        <span class="d-sm-none">เปรียบเทียบ</span>
+        (<span class="selected-count">0</span>) 
+      </a> 
+      {% endif %}
+      <small class="text-muted d-block mt-1">
+        เลือก 2–5 รายการเพื่อเปรียบเทียบ
+        {% if not user.is_authenticated %} 
+        <br class="d-sm-none">
+        <span class="text-danger d-inline-block mt-1">
+          <i class="bi bi-lock-fill me-1"></i>เข้าสู่ระบบเพื่อใช้งาน
+        </span>
+        {% endif %}
+      </small>
     </div>
 
     <div class="row g-3 g-md-4">
       {% if comparison_data %}
         {% for item in comparison_data %}
-        <div class="col-md-6 col-lg-4">
+        <div class="col-12 col-md-6 col-lg-4">
           <div class="compare-card h-100">
             <div class="compare-card__head">
               <div class="d-flex align-items-center justify-content-between">
@@ -105,7 +137,13 @@
                          {% if not user.is_authenticated %}disabled data-bs-toggle="tooltip" data-bs-placement="top" title="เข้าสู่ระบบเพื่อเปรียบเทียบ"{% endif %}>
                 </div>
               </div>
-              <div class="product-name text-primary">{{ item.product_name }}</div>
+              <div class="product-name text-primary">
+                {% if user.is_authenticated %}
+                  {{ item.product_name }}
+                {% else %}
+                  xxxxx
+                {% endif %}
+              </div>
             </div>
 
             <div class="compare-card__body">
@@ -113,7 +151,10 @@
               <div class="pill-stats">
                 <div class="pill">
                   <div class="pill-label">ผ่อน/เดือน</div>
-                  <div class="pill-value text-primary">{{ item.monthly_payment|intcomma }} <small>บาท</small></div>
+                  <div class="pill-value text-primary">
+                    <span class="d-block d-sm-inline">{{ item.monthly_payment|intcomma }}</span>
+                    <small class="d-block d-sm-inline">บาท</small>
+                  </div>
                 </div>
                 <div class="pill">
                   <div class="pill-label">ดอกเฉลี่ย 3 ปี</div>
@@ -121,17 +162,20 @@
                 </div>
                 <div class="pill">
                   <div class="pill-label">ค่าธรรมเนียมรวม</div>
-                  <div class="pill-value">{{ item.total_fees|intcomma|default:"-" }} <small>บาท</small></div>
+                  <div class="pill-value">
+                    <span class="d-block d-sm-inline">{{ item.total_fees|intcomma|default:"-" }}</span>
+                    <small class="d-block d-sm-inline">บาท</small>
+                  </div>
                 </div>
               </div>
 
               <!-- รายละเอียดหลัก -->
               <ul class="kv-list mt-3">
                 {% if user.is_authenticated %}
-                  <li><i class="bi bi-percent"></i> อัตราดอกเบี้ยเฉลี่ย 3 ปีแรก <strong>{{ item.avg_3_year_rate }}%</strong></li>
-                  <li><i class="bi bi-graph-up"></i> ดอกเบี้ยตลอดสัญญา <strong>{{ item.total_interest|intcomma }}</strong> บาท</li>
-                  <li><i class="bi bi-tags"></i> ค่าธรรมเนียมรวม <strong>{{ item.total_fees|intcomma }}</strong> บาท</li>
-                  <li><i class="bi bi-wallet2"></i> ประหยัดต่อเดือน
+                  <li><i class="bi bi-percent"></i> <span class="kv-label">อัตราดอกเบี้ยเฉลี่ย 3 ปีแรก</span> <strong>{{ item.avg_3_year_rate }}%</strong></li>
+                  <li><i class="bi bi-graph-up"></i> <span class="kv-label">ดอกเบี้ยตลอดสัญญา</span> <strong>{{ item.total_interest|intcomma }}</strong> บาท</li>
+                  <li><i class="bi bi-tags"></i> <span class="kv-label">ค่าธรรมเนียมรวม</span> <strong>{{ item.total_fees|intcomma }}</strong> บาท</li>
+                  <li><i class="bi bi-wallet2"></i> <span class="kv-label">ประหยัดต่อเดือน</span>
                     <strong class="{% if input_data.current_monthly_payment and item.monthly_payment < input_data.current_monthly_payment %}text-success{% endif %}">
                       {% if input_data.current_monthly_payment and item.monthly_payment < input_data.current_monthly_payment %}
                         {{ input_data.current_monthly_payment|sub:item.monthly_payment|intcomma }} บาท
@@ -141,31 +185,34 @@
                     </strong>
                   </li>
                 {% else %}
-                  <li class="text-muted"><i class="bi bi-percent"></i> อัตราดอกเบี้ยเฉลี่ย 3 ปีแรก <strong>โปรดเข้าสู่ระบบ</strong></li>
-                  <li class="text-muted"><i class="bi bi-graph-up"></i> ดอกเบี้ยตลอดสัญญา <strong>โปรดเข้าสู่ระบบ</strong></li>
-                  <li class="text-muted"><i class="bi bi-tags"></i> ค่าธรรมเนียมรวม <strong>โปรดเข้าสู่ระบบ</strong></li>
-                  <li class="text-muted"><i class="bi bi-wallet2"></i> ประหยัดต่อเดือน <strong>โปรดเข้าสู่ระบบ</strong></li>
+                  <li class="text-muted"><i class="bi bi-percent"></i> <span class="kv-label">อัตราดอกเบี้ยเฉลี่ย 3 ปีแรก</span> <strong>โปรดเข้าสู่ระบบ</strong></li>
+                  <li class="text-muted"><i class="bi bi-graph-up"></i> <span class="kv-label">ดอกเบี้ยตลอดสัญญา</span> <strong>โปรดเข้าสู่ระบบ</strong></li>
+                  <li class="text-muted"><i class="bi bi-tags"></i> <span class="kv-label">ค่าธรรมเนียมรวม</span> <strong>โปรดเข้าสู่ระบบ</strong></li>
+                  <li class="text-muted"><i class="bi bi-wallet2"></i> <span class="kv-label">ประหยัดต่อเดือน</span> <strong>โปรดเข้าสู่ระบบ</strong></li>
                 {% endif %}
-                <li><i class="bi bi-star"></i> โปรโมชั่น
-                  <span class="text-info">{{ item.promotion_title|default:"ไม่มีโปรโมชั่นพิเศษ" }}</span>
+                <li><i class="bi bi-star"></i> <span class="kv-label">โปรโมชั่น</span>
+                  <span class="text-info">
+                    {% if user.is_authenticated %}
+                      {{ item.promotion_title|default:"ไม่มีโปรโมชั่นพิเศษ" }}
+                    {% else %}
+                      xxxxx
+                    {% endif %}
+                  </span>
                 </li>
-                <li><i class="bi bi-clock-history"></i> ระยะเวลาสูงสุด <strong>{{ item.max_term }}</strong> ปี</li>
+                <li><i class="bi bi-clock-history"></i> <span class="kv-label">ระยะเวลาสูงสุด</span> <strong>{{ item.max_term }}</strong> ปี</li>
               </ul>
             </div>
 
             <div class="compare-card__foot">
               {% if user.is_authenticated %}
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#productDetailModal-{{ forloop.counter }}">
-                  <i class="bi bi-search me-1"></i> รายละเอียด
+                <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-bs-toggle="modal" data-bs-target="#productDetailModal-{{ forloop.counter }}">
+                  <i class="bi bi-search me-1"></i> <span class="d-none d-sm-inline">รายละเอียด</span><span class="d-sm-none">รายละเอียด</span>
                 </button>
-                <a href="{% url 'refinance:apply_loan' item.product.id %}" class="btn btn-kathai btn-sm">
-                  <i class="bi bi-send-fill me-1"></i> สมัครเลย
+                <a href="{% url 'refinance:apply_loan' item.product.id %}" class="btn btn-kathai btn-sm flex-fill ms-2">
+                  <i class="bi bi-send-fill me-1"></i> <span class="d-none d-sm-inline">สมัครเลย</span><span class="d-sm-none">สมัคร</span>
                 </a>
               {% else %}
-                <button type="button" class="btn btn-outline-secondary btn-sm" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="เข้าสู่ระบบเพื่อดูรายละเอียด">
-                  <i class="bi bi-search me-1"></i> รายละเอียด
-                </button>
-                <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-outline-primary btn-sm">
+                <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-outline-primary btn-sm w-100">
                   <i class="bi bi-box-arrow-in-right me-1"></i> เข้าสู่ระบบ
                 </a>
               {% endif %}
@@ -173,162 +220,6 @@
           </div>
         </div>
 
-        <!-- Modal รายละเอียด (เดิม) -->
-        <div class="modal fade" id="productDetailModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="productDetailModalLabel-{{ forloop.counter }}" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg">
-              <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="productDetailModalLabel-{{ forloop.counter }}">
-                  {{ item.bank_name }} - {{ item.product_name }}
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body p-4">
-
-                <div class="row text-center mb-4">
-                  <div class="col-md-4 detail-summary-box">
-                    <p class="mb-1 text-muted small">ผ่อนต่อเดือน</p>
-                    <h4 class="text-primary fw-bold">{{ item.monthly_payment|intcomma }} บาท</h4>
-                  </div>
-                  <div class="col-md-4 detail-summary-box">
-                    <p class="mb-1 text-muted small">ประหยัดดอกเบี้ย 3 ปีแรก</p>
-                    <h4 class="text-success fw-bold">
-                      {% if item.total_interest_saved_3_years %}
-                        {{ item.total_interest_saved_3_years|intcomma }} บาท
-                      {% else %}N/A{% endif %}
-                    </h4>
-                  </div>
-                  <div class="col-md-4 detail-summary-box">
-                    <p class="mb-1 text-muted small">ดอกเบี้ยพิเศษ 3 ปีแรก</p>
-                    <h4 class="text-primary fw-bold">{{ item.avg_3_year_rate }}%</h4>
-                  </div>
-                </div>
-
-                <h6 class="text-primary fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>อัตราดอกเบี้ยแต่ละปี</h6>
-                <div class="table-responsive mb-2">
-                  <table class="table table-bordered table-striped text-center detail-table">
-                    <thead class="table-light">
-                      <tr><th>ปีที่</th><th>อัตราดอกเบี้ย</th><th>(เทียบกับ M)</th></tr>
-                    </thead>
-                    <tbody>
-                      <tr><td>1</td><td>{{ item.first_year_rate }}%</td><td>(M - {{ item.mrr_spread_first_year|floatformat:3 }}%)</td></tr>
-                      <tr><td>2</td><td>{{ item.second_year_rate }}%</td><td>(M - {{ item.mrr_spread_second_year|floatformat:3 }}%)</td></tr>
-                      <tr><td>3</td><td>{{ item.third_year_rate|default:item.regular_rate }}%</td><td>(M - {{ item.mrr_spread_third_year|default:item.mrr_spread|floatformat:3 }}%)</td></tr>
-                      <tr><td>ปีที่ 4 - {{ item.max_term }}</td><td>{{ item.regular_rate }}%</td><td>(M - {{ item.mrr_spread|floatformat:3 }}%)</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-                <p class="text-muted small text-end">M (MRR/MLR/MHR) ปัจจุบัน: {{ item.current_mrr }}%</p>
-
-                <hr class="my-4">
-
-                <h6 class="text-primary fw-bold mb-3"><i class="bi bi-cash-coin me-2"></i>ค่าใช้จ่าย & เอกสาร</h6>
-                <ul class="list-unstyled detail-list mb-2">
-                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ค่าจดจำนอง:</strong>
-                    {% if item.mortgage_registration_fee == 'ฟรี' or item.mortgage_registration_fee == 0 %}
-                      <span class="text-success">ฟรี</span>
-                    {% elif item.mortgage_registration_fee %}
-                      <span class="text-dark">{{ item.mortgage_registration_fee|intcomma }} บาท</span>
-                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
-                    <span class="text-muted small ms-2">(~1% ของวงเงิน)</span>
-                  </li>
-                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ค่าอากรแสตมป์:</strong>
-                    {% if item.stamp_duty_fee == 'ฟรี' or item.stamp_duty_fee == 0 %}
-                      <span class="text-success">ฟรี</span>
-                    {% elif item.stamp_duty_fee %}
-                      <span class="text-dark">{{ item.stamp_duty_fee|intcomma }} บาท</span>
-                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
-                    <span class="text-muted small ms-2">(~0.05% ของวงเงิน)</span>
-                  </li>
-                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ค่าประเมินราคา:</strong>
-                    {% if item.appraisal_fee_amount == 'ฟรี' or item.appraisal_fee_amount == 0 %}
-                      <span class="text-success">ฟรี</span>
-                    {% elif item.appraisal_fee_amount %}
-                      <span class="text-dark">{{ item.appraisal_fee_amount|intcomma }} บาท</span>
-                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
-                  </li>
-                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ค่าจัดการสินเชื่อ:</strong>
-                    {% if item.processing_fee_amount == 'ฟรี' or item.processing_fee_amount == 0 %}
-                      <span class="text-success">ฟรี</span>
-                    {% elif item.processing_fee_amount %}
-                      <span class="text-dark">{{ item.processing_fee_amount|intcomma }} บาท</span>
-                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
-                  </li>
-                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>MRTA:</strong>
-                    {% if item.mrta_insurance_fee == 'ฟรี' or item.mrta_insurance_fee == 0 %}
-                      <span class="text-success">ฟรี</span>
-                    {% elif item.mrta_insurance_fee %}
-                      <span class="text-dark">{{ item.mrta_insurance_fee|intcomma }} บาท</span>
-                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
-                  </li>
-                  <li><i class="bi bi-dot me-2 text-muted"></i><strong>ประกันอัคคีภัย:</strong>
-                    {% if item.fire_insurance_fee == 'ฟรี' or item.fire_insurance_fee == 0 %}
-                      <span class="text-success">ฟรี</span>
-                    {% elif item.fire_insurance_fee %}
-                      <span class="text-dark">{{ item.fire_insurance_fee|intcomma }} บาท</span>
-                    {% else %}<span class="text-muted">[ธนาคารแจ้งหลังอนุมัติ]</span>{% endif %}
-                  </li>
-                </ul>
-                <p class="mb-0 fw-bold ms-1">
-                  <i class="bi bi-check-circle-fill text-success me-2"></i> รวมค่าใช้จ่ายโดยประมาณ:
-                  <span class="text-primary">{{ item.total_fees|intcomma }} บาท</span>
-                </p>
-
-                {% if item.required_documents %}
-                <h6 class="text-primary fw-bold mt-4 mb-2"><i class="bi bi-file-earmark-text-fill me-2"></i>เอกสารที่ต้องเตรียม</h6>
-                <ul class="list-unstyled ms-2">
-                  {% for doc in item.required_documents %}
-                  <li><i class="bi bi-file-earmark me-2 text-info"></i>{{ doc }}</li>
-                  {% endfor %}
-                </ul>
-                {% endif %}
-
-                {% if item.document_download_url %}
-                  <a href="{{ item.document_download_url }}" class="btn btn-outline-info btn-sm" target="_blank">
-                    <i class="bi bi-download me-1"></i> ดาวน์โหลดเอกสาร
-                  </a>
-                {% endif %}
-
-                <p class="small text-muted mt-4">
-                  <i class="bi bi-info-circle-fill me-1 text-primary"></i>
-                  ค่าใช้จ่ายเป็นประมาณการจริงอาจเปลี่ยนแปลงตามนโยบายธนาคาร
-                </p>
-
-                <hr class="my-4">
-
-                <h6 class="text-primary fw-bold mb-2"><i class="bi bi-plus-circle-fill me-2"></i>วงเงินกู้เพิ่ม</h6>
-                <ul class="list-unstyled detail-list mb-0">
-                  <li><i class="bi bi-arrow-right-short me-2"></i>กู้เพิ่มได้สูงสุด:
-                    <strong class="text-success">
-                      {% if item.additional_loan_ltv_max %}{{ item.additional_loan_ltv_max }}% ของราคาประเมิน{% else %}ไม่ระบุ/โปรดสอบถาม{% endif %}
-                    </strong>
-                  </li>
-                  <li><i class="bi bi-arrow-right-short me-2"></i>ดอกเบี้ย 3 ปีแรก (วงเงินเพิ่ม):
-                    <strong>{% if item.additional_loan_avg_3_year_rate %}{{ item.additional_loan_avg_3_year_rate }}%{% else %}ไม่ระบุ/โปรดสอบถาม{% endif %}</strong>
-                  </li>
-                  <li><i class="bi bi-arrow-right-short me-2"></i>ดอกเบี้ยตลอดอายุสัญญา (วงเงินเพิ่ม):
-                    <strong>{% if item.additional_loan_avg_lifetime_rate %}{{ item.additional_loan_avg_lifetime_rate }}%{% else %}ไม่ระบุ/โปรดสอบถาม{% endif %}</strong>
-                  </li>
-                </ul>
-
-                <hr class="my-4">
-
-                <h6 class="text-warning fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>หมายเหตุ</h6>
-                <ul class="small text-muted note-list">
-                  <li><i class="bi bi-chevron-right me-2"></i>กู้เท่าที่จำเป็นและชำระคืนไหว</li>
-                  <li><i class="bi bi-chevron-right me-2"></i>อัตราลอยตัวอาจเปลี่ยนแปลงตามประกาศของธนาคาร</li>
-                  <li><i class="bi bi-chevron-right me-2"></i>สิทธิ์และเงื่อนไขเป็นไปตามที่ธนาคารกำหนด</li>
-                </ul>
-              </div>
-              <div class="modal-footer bg-light">
-                <a href="{% url 'refinance:apply_loan' item.product.id %}" class="btn btn-kathai">
-                  <i class="bi bi-send-fill me-1"></i> สมัครเลย
-                </a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-              </div>
-            </div>
-          </div>
-        </div>
         {% endfor %}
       {% else %}
         <div class="col-12">
@@ -347,16 +238,38 @@
       <div class="dock-content">
         <div class="dock-text">
           <i class="bi bi-columns-gap me-2"></i> เลือกไว้ <strong class="selected-count">0</strong> รายการ
-          <span class="text-muted ms-2">เลือก 2–5 รายการเพื่อเปรียบเทียบ</span>
+          <span class="text-muted ms-2 d-none d-sm-inline">เลือก 2–5 รายการเพื่อเปรียบเทียบ</span>
         </div>
         <div class="dock-actions">
           <button type="submit" class="btn btn-primary" id="compareButtonDock" disabled>
-            เปรียบเทียบตอนนี้
+            <span class="d-none d-sm-inline">เปรียบเทียบตอนนี้</span>
+            <span class="d-sm-none">เปรียบเทียบ</span>
           </button>
         </div>
       </div>
     </div>
   </form>
+
+  <!-- Modal -->
+  <div class="modal fade" id="editInputDataModal" tabindex="-1" aria-labelledby="editInputDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-warning text-white">
+          <h5 class="modal-title" id="editInputDataModalLabel">
+            <i class="bi bi-pencil-square me-2"></i> แก้ไขข้อมูลที่กรอก
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="editFormContainer">
+            <div class="text-center p-3">
+              <div class="spinner-border" role="status"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
 {% endblock %}
@@ -391,6 +304,419 @@ document.addEventListener('DOMContentLoaded', function () {
   const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
   tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+    const editModal = document.getElementById("editInputDataModal");
+    const formContainer = document.getElementById("editFormContainer");
+
+    function getCookie(name) {
+        let cookieValue = null;
+        document.cookie.split(';').forEach(cookie => {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        });
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    editModal.addEventListener("show.bs.modal", function () {
+        formContainer.innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"></div></div>';
+
+        fetch("{% url 'refinance:loan_comparison_edit' %}", {
+            method: 'GET',
+            headers: { "X-Requested-With": "XMLHttpRequest", "X-CSRFToken": csrftoken }
+        })
+        .then(res => res.json())
+        .then(data => {
+            formContainer.innerHTML = data.form_html || "<div class='alert alert-danger'>เกิดข้อผิดพลาด</div>";
+
+            // bind submit ใหม่หลัง load form
+            const form = formContainer.querySelector("form");
+            form.addEventListener("submit", function(e){
+                e.preventDefault();
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: { "X-Requested-With": "XMLHttpRequest", "X-CSRFToken": csrftoken }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success){
+                        bootstrap.Modal.getInstance(editModal).hide();
+                        setTimeout(() => {
+                            if(data.redirect_url){
+                                window.location.href = data.redirect_url;
+                            } else {
+                                window.location.reload();
+                            }
+                        }, 300);
+                    } else {
+                        formContainer.innerHTML = data.errors_html || "<div class='alert alert-danger'>เกิดข้อผิดพลาด</div>";
+                        // bind submit ใหม่อีกครั้ง
+                        formContainer.querySelector("form").addEventListener("submit", arguments.callee);
+                    }
+                })
+                .catch(err => console.error(err));
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            formContainer.innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาดในการโหลดฟอร์ม</div>';
+        });
+    });
+});
+
+class BulletproofCurrencyFormatter {
+  constructor(options = {}) {
+    this.processedElements = new WeakSet();
+    this.processedForms = new WeakSet();
+    this.retryAttempts = options.retryAttempts || 3;
+    this.retryDelay = options.retryDelay || 100;
+    this.debug = options.debug || false;
+    
+    this.selector = [
+      "input[data-type='currency']",
+      "input.currency",
+      "input[name='property_price']",
+      "input[name='current_loan_balance']",
+      "input[name='monthly_income']",
+      "input[name='current_monthly_payment']",
+    ].join(',');
+
+    // Set up mutation observer for dynamic content
+    this.setupMutationObserver();
+    
+    // Set up periodic check as fallback
+    this.setupPeriodicCheck();
+  }
+
+  log(...args) {
+    if (this.debug) {
+      console.log('[CurrencyFormatter]', ...args);
+    }
+  }
+
+  formatValue(raw) {
+    try {
+      const s = (raw ?? '').toString().replace(/,/g, '').trim();
+      if (s === '' || isNaN(s)) return '';
+      const num = Number(s);
+      if (!isFinite(num)) return '';
+      return num.toLocaleString('en-US');
+    } catch (e) {
+      this.log('Error formatting value:', raw, e);
+      return raw; // Return original if formatting fails
+    }
+  }
+
+  attachToElement(input, attempt = 1) {
+    try {
+      if (!input || !input.tagName || this.processedElements.has(input)) {
+        return;
+      }
+
+      // Verify element is still in DOM
+      if (!document.contains(input)) {
+        this.log('Element not in DOM, skipping:', input);
+        return;
+      }
+
+      this.processedElements.add(input);
+      this.log('Processing element:', input.name || input.id || input.className);
+
+      // Format existing value with retry
+      if (input.value) {
+        const formatted = this.formatValue(input.value);
+        if (formatted !== input.value) {
+          input.value = formatted;
+          this.log('Formatted initial value:', input.value);
+        }
+      }
+
+      // Create handlers with error protection
+      const inputHandler = (e) => {
+        try {
+          const v = e.target.value.replace(/,/g, '');
+          const formatted = (v && !isNaN(v)) ? Number(v).toLocaleString('en-US') : '';
+          e.target.value = formatted;
+        } catch (error) {
+          this.log('Error in input handler:', error);
+        }
+      };
+
+      const blurHandler = (e) => {
+        try {
+          const v = e.target.value.replace(/,/g, '');
+          const formatted = (v && !isNaN(v)) ? Number(v).toLocaleString('en-US') : '';
+          e.target.value = formatted;
+        } catch (error) {
+          this.log('Error in blur handler:', error);
+        }
+      };
+      
+      input.addEventListener('input', inputHandler);
+      input.addEventListener('blur', blurHandler);
+
+      // Handle form submission - remove commas before submit
+      const form = input.form || input.closest('form');
+      if (form && !this.processedForms.has(form)) {
+        this.processedForms.add(form);
+        
+        // Add submit event listener with high priority (capture phase)
+        form.addEventListener('submit', (e) => {
+          this.log('Form submitting, removing commas...');
+          try {
+            const currencyInputs = form.querySelectorAll(this.selector);
+            currencyInputs.forEach(el => {
+              if (el.value && el.value.includes(',')) {
+                const originalValue = el.value;
+                el.value = el.value.replace(/,/g, '');
+                this.log(`Cleaned: ${originalValue} → ${el.value}`);
+              }
+            });
+          } catch (error) {
+            this.log('Error cleaning values before submit:', error);
+          }
+        }, true); // Use capture phase for higher priority
+        
+        this.log('Added form submit handler to:', form.id || 'unnamed form');
+      }
+
+    } catch (error) {
+      this.log('Error attaching to element:', error);
+      
+      // Retry with delay if attempts remaining
+      if (attempt < this.retryAttempts) {
+        setTimeout(() => {
+          this.attachToElement(input, attempt + 1);
+        }, this.retryDelay * attempt);
+      }
+    }
+  }
+
+  attachToContainer(container, attempt = 1) {
+    try {
+      if (!container) {
+        this.log('Container is null/undefined');
+        return;
+      }
+      
+      this.log('Scanning container for currency inputs:', container.tagName, container.id);
+      
+      const inputs = container.querySelectorAll(this.selector);
+      this.log('Found inputs:', inputs.length);
+      
+      if (inputs.length === 0 && attempt < this.retryAttempts) {
+        // Retry if no inputs found (content might still be loading)
+        setTimeout(() => {
+          this.attachToContainer(container, attempt + 1);
+        }, this.retryDelay * attempt);
+        return;
+      }
+      
+      inputs.forEach(input => this.attachToElement(input));
+      
+    } catch (error) {
+      this.log('Error in attachToContainer:', error);
+      
+      if (attempt < this.retryAttempts) {
+        setTimeout(() => {
+          this.attachToContainer(container, attempt + 1);
+        }, this.retryDelay * attempt);
+      }
+    }
+  }
+
+  // Watch for dynamically added content
+  setupMutationObserver() {
+    if (typeof MutationObserver === 'undefined') {
+      this.log('MutationObserver not supported');
+      return;
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check if the node itself matches
+            if (node.matches && node.matches(this.selector)) {
+              setTimeout(() => this.attachToElement(node), 10);
+            }
+            // Check for matching descendants
+            if (node.querySelectorAll) {
+              const inputs = node.querySelectorAll(this.selector);
+              inputs.forEach(input => {
+                setTimeout(() => this.attachToElement(input), 10);
+              });
+            }
+          }
+        });
+      });
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    this.log('MutationObserver set up');
+  }
+
+  // Fallback periodic check
+  setupPeriodicCheck() {
+    setInterval(() => {
+      try {
+        const unprocessedInputs = Array.from(document.querySelectorAll(this.selector))
+          .filter(input => !this.processedElements.has(input));
+        
+        if (unprocessedInputs.length > 0) {
+          this.log('Found unprocessed inputs:', unprocessedInputs.length);
+          unprocessedInputs.forEach(input => this.attachToElement(input));
+        }
+      } catch (error) {
+        this.log('Error in periodic check:', error);
+      }
+    }, 2000); // Check every 2 seconds
+  }
+
+  // Manual reinitialization method
+  reinitialize() {
+    this.log('Reinitializing formatter');
+    this.attachToContainer(document);
+  }
+
+  // Clean up method
+  destroy() {
+    this.processedElements = new WeakSet();
+    this.processedForms = new WeakSet();
+  }
+
+  // Verify all inputs are formatted
+  verifyFormatting() {
+    const inputs = document.querySelectorAll(this.selector);
+    const unformatted = Array.from(inputs).filter(input => {
+      if (!input.value) return false;
+      const hasCommas = input.value.includes(',');
+      const isNumeric = !isNaN(input.value.replace(/,/g, ''));
+      return !hasCommas && isNumeric && input.value.replace(/,/g, '') !== '';
+    });
+    
+    this.log('Verification - Total inputs:', inputs.length, 'Unformatted:', unformatted.length);
+    return unformatted;
+  }
+}
+
+// Usage with maximum reliability:
+const currencyFormatter = new BulletproofCurrencyFormatter({
+  debug: true, // Enable for debugging
+  retryAttempts: 5,
+  retryDelay: 200
+});
+
+// Multiple initialization strategies
+document.addEventListener('DOMContentLoaded', () => {
+  currencyFormatter.attachToContainer(document);
+});
+
+// Fallback for cases where DOMContentLoaded already fired
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    currencyFormatter.attachToContainer(document);
+  });
+} else {
+  currencyFormatter.attachToContainer(document);
+}
+
+// Additional fallback
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    currencyFormatter.attachToContainer(document);
+  }, 100);
+});
+
+// For modal content - enhanced submit handling
+function wireEditForm(container, csrftoken, editModal) {
+  const form = container.querySelector('form');
+  if (!form) return;
+
+  // Apply currency formatting with multiple strategies
+  currencyFormatter.attachToContainer(container);
+  
+  // Additional verification after a short delay
+  setTimeout(() => {
+    const unformatted = currencyFormatter.verifyFormatting();
+    if (unformatted.length > 0) {
+      console.warn('Some inputs remain unformatted, retrying...');
+      currencyFormatter.reinitialize();
+    }
+  }, 500);
+
+  // Enhanced form submission with comma removal guarantee
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Force remove commas before creating FormData
+    const currencyInputs = form.querySelectorAll(currencyFormatter.selector);
+    currencyInputs.forEach(input => {
+      if (input.value && input.value.includes(',')) {
+        console.log(`Removing commas from ${input.name}: ${input.value} → ${input.value.replace(/,/g, '')}`);
+        input.value = input.value.replace(/,/g, '');
+      }
+    });
+    
+    const formData = new FormData(form);
+    
+    // Double-check FormData values (for debugging)
+    for (let [key, value] of formData.entries()) {
+      if (typeof value === 'string' && value.includes(',')) {
+        console.warn(`Found comma in FormData for ${key}: ${value}`);
+        formData.set(key, value.replace(/,/g, ''));
+      }
+    }
+
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: { 
+        'X-Requested-With': 'XMLHttpRequest', 
+        'X-CSRFToken': csrftoken 
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const modalInstance = bootstrap.Modal.getInstance(editModal);
+        if (modalInstance) modalInstance.hide();
+        setTimeout(() => window.location.reload(), 300);
+      } else {
+        container.innerHTML = data.errors_html || "<div class='alert alert-danger'>เกิดข้อผิดพลาด</div>";
+        // Re-wire the new form
+        wireEditForm(container, csrftoken, editModal);
+      }
+    })
+    .catch(err => {
+      console.error('Form submission error:', err);
+    });
+  });
+}
+
+// Expose global method for manual fixing if needed
+window.fixCurrencyFormatting = () => {
+  currencyFormatter.reinitialize();
+  setTimeout(() => {
+    const unformatted = currencyFormatter.verifyFormatting();
+    if (unformatted.length > 0) {
+      console.warn('Manual fix incomplete. Unformatted inputs:', unformatted);
+    } else {
+      console.log('All currency inputs are properly formatted');
+    }
+  }, 100);
+};
+
 </script>
 {% endblock %}
 

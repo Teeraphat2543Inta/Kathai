@@ -13,8 +13,9 @@ import logging
 from django.urls import reverse  # <-- เพิ่มบรรทัดนี้เข้ามา
 from .models import Advertisement
 from formtools.wizard.views import SessionWizardView
-from .models import Property, ActivityLog, Province, Bank, LoanProduct, LoanApplication, Document # เพิ่ม Province และ Models อื่นๆ ที่คุณใช้ใน Views
-from .forms import PropertyForm
+from .models import Province, Bank, LoanProduct, Promotion, FeeType, Fee, Property, LoanApplication, ApplicationBank, Document, SystemSetting, InterestRateHistory, Advertisement, Article # เพิ่ม Province และ Models อื่นๆ ที่คุณใช้ใน Views
+from .forms import PropertyForm, PromotionForm, LoanProductForm
+from django.contrib.admin.views.decorators import staff_member_required
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,17 @@ from .forms import PropertyForm
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db.models import Q
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from django.utils import timezone
+from accounts.models import UserProfile, ActivityLog
+from django.contrib.auth.models import User
+from django.apps import apps
+from datetime import datetime
+from django.db import models
+from django.utils.dateparse import parse_date, parse_datetime
+from django.contrib.humanize.templatetags.humanize import intcomma
+from django.http import HttpResponseForbidden
+from django.forms import modelform_factory
 
 # ---- Helpers to read bank contact fields safely ----
 def _get_bank_phone(bank):
@@ -145,21 +155,212 @@ def get_property_details_api(request, property_id):
         logger.error(f"Error in get_property_details_api: {e}")
         return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
 
-# ต้อง import models ที่เกี่ยวข้อง
+@login_required
 def loan_comparison_results_view(request):
-    """
-    Renders the loan comparison results page.
-    You might want to add logic here later to fetch and pass comparison data.
-    """
-    # For now, we'll just render the template.
-    # In a real application, you would typically fetch and process data here
-    # to populate the loan_comparison_results.html template.
-    context = {
-        # 'results_data': some_data_from_database,
-        # 'input_data': some_user_input_summary,
-    }
-    return render(request, 'refinance/loan_comparison_results.html', context)
+    input_data = request.session.get("wizard_loan_data", {})
+    if not input_data:
+        return render(request, "refinance/loan_comparison_results.html", {
+            "error": "ไม่พบข้อมูล กรุณากรอกใหม่",
+        })
 
+    # ฟังก์ชันแปลงเป็น Decimal
+    def to_decimal(value):
+        try:
+            return Decimal(str(value).replace(",", "").strip())
+        except Exception:
+            return Decimal('0.00')
+
+    property_price = to_decimal(input_data.get("property_price"))
+    loan_balance = to_decimal(input_data.get("current_loan_balance"))
+    current_monthly_payment = to_decimal(input_data.get("current_monthly_payment"))
+
+    remaining_years = int(input_data.get("remaining_years", 20))
+
+    # --- ดึงรายได้และค่าใช้จ่ายจากฐานข้อมูล ---
+    net_income = Decimal("0")
+    # --- ดึงรายได้และค่าใช้จ่ายจากฐานข้อมูล ---
+    profile = getattr(request.user, "userprofile", None)
+    if profile is None or not profile.monthly_income or profile.monthly_income == 0:
+        messages.warning(request, "กรุณากรอกข้อมูลรายได้และค่าใช้จ่ายก่อนทำการเปรียบเทียบ")
+        return redirect('accounts:profile_edit')
+
+    raw_income = to_decimal(profile.monthly_income)
+    expenses = to_decimal(profile.monthly_expenses)
+    net_income = max(Decimal("0"), raw_income - expenses)
+
+    if net_income == 0:
+        messages.warning(request, "รายได้สุทธิไม่สามารถเป็น 0 ได้ กรุณากรอกข้อมูลรายได้/ค่าใช้จ่าย")
+        return redirect('accounts:profile_edit')
+
+    # ตัดทศนิยมออกให้เหลือจำนวนเต็ม
+    net_income = net_income.to_integral_value(rounding=ROUND_DOWN)
+
+    # LTV และ DSR
+    ltv_ratio = (loan_balance / property_price * 100).quantize(Decimal('0.01')) if property_price > 0 else Decimal('0.00')
+    dsr_ratio = (current_monthly_payment / net_income * 100).quantize(Decimal('0.01')) if net_income > 0 else Decimal('0.00')
+
+    # Query ผลิตภัณฑ์จริง
+    products = LoanProduct.objects.filter(
+        is_active=True,
+        product_type='refinance',
+        min_loan_amount__lte=loan_balance,
+        max_loan_amount__gte=loan_balance,
+        max_ltv__gte=ltv_ratio,
+        min_income__lte=net_income,
+        max_term_years__gte=remaining_years
+    ).select_related('bank').order_by('interest_rate')[:]
+
+    # ฟังก์ชันคำนวณ monthly payment
+    def calculate_monthly_payment(principal, annual_rate, months):
+        if months <= 0:
+            return Decimal('0.00')
+        monthly_rate = annual_rate / 100 / 12
+        if monthly_rate > 0:
+            p = principal * (monthly_rate * (1 + monthly_rate) ** months) / ((1 + monthly_rate) ** months - 1)
+        else:
+            p = principal / months
+        return Decimal(str(p)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    comparison_data = []
+    for product in products:
+        loan_term_months = min(remaining_years, product.max_term_years) * 12
+        monthly_payment_calc = calculate_monthly_payment(loan_balance, product.interest_rate, loan_term_months)
+
+        comparison_data.append({
+            "product": product,
+            "bank_name": product.bank.name,
+            "product_name": product.name,
+            "interest_rate": product.interest_rate,
+            "monthly_payment": monthly_payment_calc,
+        })
+
+    total_products_found = products.count()
+
+    # Mapping สำหรับ display
+    user_property_type = dict(PROPERTY_TYPE_CHOICES).get(input_data.get("property_type"), "ไม่ระบุ")
+
+    user_province = "ไม่ระบุ"
+    if input_data.get("province"):
+        province = Province.objects.filter(id=input_data["province"]).first()
+        if province:
+            user_province = province.name
+
+    user_current_bank = "ไม่ระบุ"
+    if input_data.get("current_bank"):
+        bank = Bank.objects.filter(id=input_data["current_bank"]).first()
+        if bank:
+            user_current_bank = f"{bank.name} ({bank.code})" if getattr(bank, "code", None) else bank.name
+
+    user_need_extra_loan = "ต้องการ" if input_data.get("need_extra_loan") == "yes" else "ไม่ต้องการ"
+
+    context = {
+        "comparison_data": comparison_data,
+        "total_products_found": total_products_found,
+        "has_results": len(comparison_data) > 0,
+
+        "user_property_type": user_property_type,
+        "user_province": user_province,
+        "user_current_bank": user_current_bank,
+        "user_occupation": input_data.get("occupation", "ไม่ระบุ"),
+        "user_remaining_years": remaining_years,
+        "user_need_extra_loan": user_need_extra_loan,
+
+        "property_price": property_price,
+        "current_loan_balance": loan_balance,
+        "monthly_income": net_income,        # ใช้รายได้สุทธิจาก DB
+        "monthly_payment": current_monthly_payment,
+        "ltv_ratio": ltv_ratio,
+        "dsr_ratio": dsr_ratio,
+    }
+
+    return render(request, "refinance/loan_comparison_results.html", context)
+
+def decimal_to_primitive(d):
+    """แปลง Decimal และ Model instance เป็น primitive type (float/int/str) recursively"""
+    if isinstance(d, dict):
+        return {k: decimal_to_primitive(v) for k, v in d.items()}
+    elif isinstance(d, list):
+        return [decimal_to_primitive(i) for i in d]
+    elif isinstance(d, Decimal):
+        return float(d)
+    elif hasattr(d, 'pk'):  # Django model instance
+        return d.pk
+    return d
+
+@login_required
+def loan_comparison_edit_view(request):
+    wizard_data = request.session.get('wizard_loan_data', {})
+
+    # --- เตรียม initial (id/instance) ---
+    initial = wizard_data.copy()
+
+    # province → Province instance
+    if wizard_data.get("province"):
+        try:
+            province = Province.objects.filter(id=wizard_data["province"]).first()
+            if province:
+                initial["province"] = province
+        except Exception:
+            pass
+
+    # current_bank → Bank instance
+    if wizard_data.get("current_bank"):
+        try:
+            bank = Bank.objects.filter(id=wizard_data["current_bank"], is_active=True).first()
+            if bank:
+                initial["current_bank"] = bank
+        except Exception:
+            pass
+
+    if request.method == "POST":
+        step1 = LoanComparisonStep1Form(request.POST, initial=initial)
+        step2 = LoanComparisonStep2Form(request.POST, initial=initial)
+
+        if step1.is_valid() and step2.is_valid():
+            data = {**step1.cleaned_data, **step2.cleaned_data}
+
+            # --- แปลงเป็น primitive และเก็บ id/instance สำหรับแสดง ---
+            session_payload = {
+                'property_price': str(data.get('property_price', '0')),
+                'monthly_income': str(data.get('monthly_income', '0')),
+                'current_loan_balance': str(data.get('current_loan_balance', '0')),
+                'current_monthly_payment': str(data.get('current_monthly_payment', '0')),
+                'remaining_years': data.get('remaining_years'),
+                'property_type': str(data.get('property_type')),
+                'occupation': str(data.get('occupation', '')),
+                'province': data['province'].id if data.get('province') else None,
+                'province_name': data['province'].name if data.get('province') else 'ไม่ระบุ',
+                'current_bank': data['current_bank'].id if data.get('current_bank') else None,
+                'current_bank_name': f"{data['current_bank'].name} ({data['current_bank'].code})" if data.get('current_bank') else 'ไม่ระบุ',
+                'need_extra_loan': data.get('need_extra_loan', ''),
+            }
+
+            request.session['wizard_loan_data'] = session_payload
+            request.session.modified = True
+
+            return JsonResponse({
+                "success": True,
+                "saved_data": session_payload,
+                "redirect_url": reverse("refinance:loan_comparison_results"),
+            })
+
+        # ถ้า form ไม่ valid
+        html = render(request, "refinance/loan_comparison_edit_form.html", {
+            "step1_form": step1,
+            "step2_form": step2,
+        }).content.decode("utf-8")
+        return JsonResponse({"success": False, "errors_html": html})
+
+    else:  # GET
+        step1 = LoanComparisonStep1Form(initial=initial)
+        step2 = LoanComparisonStep2Form(initial=initial)
+
+        html = render(request, "refinance/loan_comparison_edit_form.html", {
+            "step1_form": step1,
+            "step2_form": step2,
+        }).content.decode("utf-8")
+        return JsonResponse({"form_html": html})
+    
 from urllib.parse import urlencode # ต้อง import อันนี้ด้วย
 # ตรวจสอบให้แน่ใจว่าได้ import models ที่เกี่ยวข้องแล้ว
 # เช่น:
@@ -495,11 +696,25 @@ def home(request):
         })
 class LoanComparisonWizard(SessionWizardView):
     """
-    Loan Comparison Wizard with real database integration (no mock)
-    - Persist wizard inputs into session
-    - Compute comparison using REAL DB data
-    - Compute savings vs. user's current monthly payment (if provided)
+    Wizard เปรียบเทียบดอกเบี้ย
     """
+
+    def dispatch(self, request, *args, **kwargs):
+        # ตรวจสอบรายได้/ค่าใช้จ่ายก่อนเข้าฟอร์ม
+        profile = getattr(request.user, "userprofile", None)
+        if profile is None or not profile.monthly_income or profile.monthly_income == 0:
+            messages.warning(request, "กรุณากรอกข้อมูลรายได้และค่าใช้จ่ายก่อนทำการเปรียบเทียบ")
+            return redirect('accounts:profile_edit')
+
+        # ถ้า net_income = 0 ก็ไปแก้ profile
+        raw_income = Decimal(str(profile.monthly_income))
+        expenses   = Decimal(str(profile.monthly_expenses or 0))
+        net_income = max(Decimal("0"), raw_income - expenses)
+        if net_income == 0:
+            messages.warning(request, "รายได้สุทธิไม่สามารถเป็น 0 ได้ กรุณากรอกข้อมูลรายได้/ค่าใช้จ่าย")
+            return redirect('accounts:profile_edit')
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_template_names(self):
         current_step = self.steps.current
@@ -570,11 +785,7 @@ class LoanComparisonWizard(SessionWizardView):
             return redirect('refinance:loan_comparison_wizard')
 
     def done(self, form_list, **kwargs):
-        """
-        Enhanced done method with REAL database data + persist wizard inputs into session
-        """
         all_data = {}
-
         for i, form in enumerate(form_list):
             if form.is_valid():
                 all_data.update(form.cleaned_data)
@@ -583,39 +794,52 @@ class LoanComparisonWizard(SessionWizardView):
                 return redirect('refinance:loan_comparison_wizard')
 
         # ตรวจฟิลด์จำเป็น
-        required_fields = ['property_price', 'current_loan_balance', 'monthly_income']
+        required_fields = ['property_price', 'current_loan_balance']
         missing = [f for f in required_fields if f not in all_data or not all_data[f]]
         if missing:
             messages.error(self.request, f"ข้อมูลไม่ครบถ้วน: {', '.join(missing)}")
             return redirect('refinance:loan_comparison_wizard')
 
-        # แปลงเป็น Decimal/Int อย่างปลอดภัย
+        # แปลงเป็น Decimal
         try:
             property_price = Decimal(str(all_data['property_price']))
             loan_balance   = Decimal(str(all_data['current_loan_balance']))
-            income         = Decimal(str(all_data['monthly_income']))
         except (InvalidOperation, ValueError):
             messages.error(self.request, "รูปแบบตัวเลขไม่ถูกต้อง")
             return redirect('refinance:loan_comparison_wizard')
 
+        # ใช้ monthly_income และ monthly_expenses จาก DB
+        net_income = Decimal("0")
+        try:
+            profile = getattr(self.request.user, "userprofile", None)
+            if profile:
+                raw_income = Decimal(str(profile.monthly_income or 0))
+                expenses   = Decimal(str(profile.monthly_expenses or 0))
+                net_income = max(Decimal("0"), raw_income - expenses)
+                # ตัดทศนิยมออกให้เหลือจำนวนเต็ม
+                net_income = net_income.to_integral_value(rounding=ROUND_DOWN)
+        except Exception as e:
+            logger.warning(f"Cannot fetch income/expenses from userprofile: {e}")
+
+        # แปลง remaining_years เป็น int
         remaining_years = all_data.get('remaining_years', 20)
         try:
             remaining_years_int = 35 if str(remaining_years) == '30+' else int(remaining_years)
         except Exception:
             remaining_years_int = 20
 
-        # --- เก็บลง session เพื่อใช้ต่อ (results/summary/apply_loan) ---
+        # เก็บ session
         try:
             session_payload = {
                 'property_price': str(property_price),
                 'current_loan_balance': str(loan_balance),
-                'monthly_income': str(income),
+                'monthly_income': str(net_income),
                 'remaining_years': remaining_years_int,
                 'current_monthly_payment': str(all_data.get('current_monthly_payment') or 0),
                 'property_type': str(all_data.get('property_type', '')),
-                'province': str(all_data.get('province', '')),
+                'province': all_data.get('province').id if all_data.get('province') else None,
                 'occupation': str(all_data.get('occupation', '')),
-                'current_bank': str(all_data.get('current_bank', '')),
+                'current_bank': all_data.get('current_bank').id if all_data.get('current_bank') else None,
                 'need_extra_loan': str(all_data.get('need_extra_loan', '')),
             }
             for k in ('loan_amount', 'loan_term', 'purpose', 'property_id'):
@@ -630,21 +854,8 @@ class LoanComparisonWizard(SessionWizardView):
         except Exception as e:
             logger.warning(f"Cannot persist wizard_loan_data: {e}")
 
-        # baseline (ค่างวดเดิม) - จากฟอร์มหรือจาก session
-        baseline_payment = None
-        try:
-            if all_data.get('current_monthly_payment'):
-                baseline_payment = Decimal(str(all_data['current_monthly_payment']))
-        except (InvalidOperation, ValueError):
-            baseline_payment = None
-
-        if baseline_payment is None:
-            sess = self.request.session.get('wizard_loan_data', {})
-            if sess and sess.get('current_monthly_payment'):
-                try:
-                    baseline_payment = Decimal(str(sess['current_monthly_payment']))
-                except (InvalidOperation, ValueError):
-                    baseline_payment = None
+        # baseline (ค่างวดเดิม)
+        baseline_payment = Decimal(str(all_data.get('current_monthly_payment') or 0))
 
         # LTV
         ltv = (loan_balance / property_price * 100) if property_price > 0 else Decimal('0')
@@ -656,7 +867,7 @@ class LoanComparisonWizard(SessionWizardView):
             min_loan_amount__lte=loan_balance,
             max_loan_amount__gte=loan_balance,
             max_ltv__gte=ltv,
-            min_income__lte=income,
+            min_income__lte=net_income,
             max_term_years__gte=remaining_years_int
         ).select_related('bank').prefetch_related(
             'bank__promotions',
@@ -681,7 +892,6 @@ class LoanComparisonWizard(SessionWizardView):
                 loan_term_years  = min(remaining_years_int, product.max_term_years)
                 loan_term_months = loan_term_years * 12
 
-                # โปรโมชั่น active ของธนาคาร (เงื่อนไขตามจริง)
                 active_promo = product.bank.promotions.filter(
                     is_active=True,
                     start_date__lte=timezone.now().date(),
@@ -699,14 +909,13 @@ class LoanComparisonWizard(SessionWizardView):
                 else:
                     first_year_rate = second_year_rate = regular_rate = product.interest_rate
 
-                monthly_payment     = calculate_monthly_payment(loan_balance, regular_rate,       loan_term_months)
-                first_year_payment  = calculate_monthly_payment(loan_balance, first_year_rate,   loan_term_months)
-                second_year_payment = calculate_monthly_payment(loan_balance, second_year_rate,  loan_term_months)
+                monthly_payment     = calculate_monthly_payment(loan_balance, regular_rate, loan_term_months)
+                first_year_payment  = calculate_monthly_payment(loan_balance, first_year_rate, loan_term_months)
+                second_year_payment = calculate_monthly_payment(loan_balance, second_year_rate, loan_term_months)
 
                 avg_3_year_rate   = (first_year_rate + second_year_rate + regular_rate) / 3
                 avg_lifetime_rate = regular_rate
 
-                # ค่าธรรมเนียมจาก DB
                 processing_fee_amount = (loan_balance * product.processing_fee / 100).quantize(Decimal('0.01')) if product.processing_fee else Decimal('0.00')
                 appraisal_fee_amount  = product.appraisal_fee or Decimal('0.00')
 
@@ -719,18 +928,16 @@ class LoanComparisonWizard(SessionWizardView):
                                                 if fee.fee_type.fee_type == 'percentage' else fee.amount)
                         elif fee.fee_type.code not in ['processing_fee', 'appraisal_fee']:
                             other_fees += ((loan_balance * fee.amount / 100).quantize(Decimal('0.01'))
-                                           if fee.fee_type.fee_type == 'percentage' else fee.amount)
+                                        if fee.fee_type.fee_type == 'percentage' else fee.amount)
                 except Exception:
-                    # fallback ปลอดภัย
                     pass
 
                 total_fees     = processing_fee_amount + appraisal_fee_amount + legal_fee_amount + other_fees
                 total_payment  = monthly_payment * loan_term_months
                 total_interest = total_payment - loan_balance
 
-                # savings เทียบ baseline (ถ้ามี)
                 savings_amount = Decimal('0.00')
-                if baseline_payment is not None and baseline_payment > monthly_payment:
+                if baseline_payment > monthly_payment:
                     savings_amount = ((baseline_payment - monthly_payment) * loan_term_months).quantize(Decimal('0.01'))
 
                 promotion_title      = active_promo.title if active_promo else ""
@@ -783,18 +990,24 @@ class LoanComparisonWizard(SessionWizardView):
 
                     'savings_amount': savings_amount,
                 })
-            except Exception as e:
-                # ข้าม product ที่คำนวณไม่ได้ เพื่อไม่ให้ทั้งหน้าล้ม
+            except Exception:
                 continue
 
-        # เรียงตามค่าผ่อนน้อยสุด และตัดเหลือ 5
         comparison_data.sort(key=lambda x: x['monthly_payment'])
         all_found_products_count = len(comparison_data)
         comparison_data = comparison_data[:5]
 
-        dsr_ratio = (comparison_data[0]['monthly_payment'] / income * 100).quantize(Decimal('0.01')) if comparison_data and income > 0 else Decimal('0.00')
+        current_monthly_payment = all_data.get("current_monthly_payment", Decimal("0"))
+
+        if net_income > 0:
+            dsr_ratio = (current_monthly_payment / net_income * 100).quantize(Decimal("0.01"))
+        else:
+            dsr_ratio = Decimal("0.00")
 
         context = {
+            'property_price': str(property_price),
+            'current_loan_balance': str(loan_balance),
+            'monthly_income': str(net_income),   # เพิ่มรายได้สุทธิ
             'comparison_data': comparison_data,
             'input_data': all_data,
             'results': comparison_data,
@@ -810,6 +1023,7 @@ class LoanComparisonWizard(SessionWizardView):
             'user_need_extra_loan': 'ต้องการ' if all_data.get('need_extra_loan') == 'yes' else 'ไม่ต้องการ',
         }
         return render(self.request, 'refinance/loan_comparison_results.html', context)
+
 
 def refinance_comparison_form(request):
     """
@@ -1068,7 +1282,7 @@ def property_update(request, pk):
         else:
             form = PropertyForm(instance=property_instance)
         
-        return render(request, 'refinance/property_form.html', {'form': form})
+        return render(request, 'refinance/property_update.html', {'form': form})
         
     except Property.DoesNotExist:
         messages.error(request, "ไม่พบทรัพย์สินที่ต้องการแก้ไข")
@@ -1245,8 +1459,11 @@ def loan_application_create(request):
     pre_selected_loan_product_id = None
     preselected_bank_ids = []
 
+    # ดึง UserProfile ของผู้ใช้ก่อน
+    user_profile = get_object_or_404(UserProfile, user=request.user)
+
     if request.method == 'GET':
-        # รับค่า initial ทั่วไป
+        # รับค่า initial ทั่วไปจาก query string
         for field in ['loan_amount', 'loan_term', 'purpose', 'property_id']:
             value = request.GET.get(field)
             if not value:
@@ -1260,6 +1477,12 @@ def loan_application_create(request):
             else:
                 initial_data[field] = value
 
+        # ✅ เพิ่มค่าเริ่มต้นรายได้และรายจ่ายจาก UserProfile
+        if user_profile.monthly_income is not None:
+            initial_data['monthly_income'] = int(user_profile.monthly_income)
+        if user_profile.monthly_expenses is not None:
+            initial_data['monthly_expense'] = int(user_profile.monthly_expenses)
+
         # ธนาคารที่เลือกจากหน้าก่อนหน้า (ถ้ามี)
         bank_id = request.GET.get('bank_id')
         if bank_id:
@@ -1269,15 +1492,16 @@ def loan_application_create(request):
             except Bank.DoesNotExist:
                 pass
 
+
         # loan_product ที่เลือกจากหน้าก่อนหน้า (ถ้ามี)
         pre_selected_loan_product_id = request.GET.get('loan_product_id')
         if pre_selected_loan_product_id:
             try:
                 lp = LoanProduct.objects.get(pk=pre_selected_loan_product_id, is_active=True)
                 if getattr(lp, 'suggested_loan_amount', None):
-                    initial_data['loan_amount'] = lp.suggested_loan_amount
+                    initial_data['loan_amount'] = int(lp.suggested_loan_amount)
                 if getattr(lp, 'suggested_loan_term', None):
-                    initial_data['loan_term'] = lp.suggested_loan_term
+                    initial_data['loan_term'] = int(lp.suggested_loan_term)
             except LoanProduct.DoesNotExist:
                 pass
 
@@ -2302,3 +2526,530 @@ def _serialize_recommended_products(property_obj=None, limit=6):
             'features': [],  # ถ้ามีฟิลด์ features ค่อยเติม
         })
     return json.dumps(items, ensure_ascii=False)
+
+@login_required
+def admin_dashboard_view(request):
+    # ✅ เช็คสิทธิ์ก่อน
+    if not request.user.is_staff:
+        return HttpResponseForbidden("คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+
+    refinance_models = apps.get_app_config('refinance').get_models()
+    refinance_model_list = [
+        {"name": model._meta.model_name, "label": model._meta.verbose_name_plural}
+        for model in refinance_models
+    ]
+
+    accounts_models = apps.get_app_config('accounts').get_models()
+    accounts_model_list = [
+        {"name": model._meta.model_name, "label": model._meta.verbose_name_plural}
+        for model in accounts_models
+    ]
+
+    context = {
+        "refinance_models": refinance_model_list,
+        "accounts_models": accounts_model_list,
+    }
+    return render(request, "refinance/admin_dashboard.html", context)
+
+@login_required
+def manage_table_view(request, model_name):
+    if model_name.lower() in ["userprofile"]:
+        app_label = "accounts"
+    else:
+        app_label = "refinance"
+
+    model = apps.get_model(app_label, model_name)
+    objects = model.objects.all().order_by('id')  # เรียงตาม id จากน้อยไปมาก
+
+    exclude_fields = ['id', 'password', 'last_login', 'is_superuser', 'is_staff', 
+                      'is_active', 'date_joined', 'groups', 'user_permissions']
+    fields = [field.name for field in model._meta.fields if field.name not in exclude_fields]
+
+    return render(request, "refinance/admin_manage_table.html", {
+        "objects": objects,
+        "model_name": model_name,
+        "fields": fields,
+        "model_name_for_form": model_name,  # ใช้แทน obj._meta.model_name
+    })
+
+
+@login_required
+def generic_object_add_view(request, model_name):
+    """
+    เพิ่ม object ใหม่ สำหรับทุก model ใน refinance หรือ accounts
+    """
+    # เลือก app_label ตาม model
+    if model_name.lower() in ["userprofile", "activitylog"]:
+        app_label = "accounts"
+    else:
+        app_label = "refinance"
+
+    Model = apps.get_model(app_label, model_name)
+    if Model is None:
+        messages.error(request, f"ไม่พบ model {model_name}")
+        return redirect('refinance:admin_dashboard')
+
+    # ดึง fields ยกเว้น id, user, auto_now, auto_now_add
+    fields = []
+    readonly_fields = []
+    for f in Model._meta.get_fields():
+        if f.concrete:
+            if f.name in ("id",):
+                continue
+            if getattr(f, "auto_now", False) or getattr(f, "auto_now_add", False):
+                readonly_fields.append({
+                    "name": f.name,
+                    "type": f.get_internal_type()
+                })
+            else:
+                field_info = {
+                    "name": f.name,
+                    "type": f.get_internal_type(),
+                    "is_relation": f.is_relation,
+                    "choices": getattr(f, "choices", None),
+                }
+                if f.is_relation and hasattr(f, "related_model") and f.related_model:
+                    # foreign key → ดึง object list มาให้เลือก
+                    field_info["related_model"] = f.related_model
+                    field_info["related_objects"] = f.related_model.objects.all()
+                fields.append(field_info)
+
+    # สร้าง object เปล่า (ยังไม่บันทึก)
+    obj = Model()
+
+    if request.method == "POST":
+        for field in fields:
+            field_obj = Model._meta.get_field(field["name"])
+
+            # สำหรับไฟล์ / รูปภาพ
+            if isinstance(field_obj, (models.FileField, models.ImageField)):
+                value = request.FILES.get(field["name"])
+                if value:
+                    setattr(obj, field["name"], value)
+                continue  # ข้ามไปไม่ต้องแปลง type
+
+            # ดึงค่าจาก POST
+            value = request.POST.get(field["name"])
+
+            # แปลงค่าตามชนิด
+            if field["is_relation"]:
+                if value in [None, "", "None"]:
+                    value = None
+                else:
+                    try:
+                        value = field_obj.related_model.objects.get(pk=value)
+                    except field_obj.related_model.DoesNotExist:
+                        value = None
+            elif isinstance(field_obj, models.DateField) and not isinstance(field_obj, models.DateTimeField):
+                if value in [None, "", "None"]:
+                    value = None
+                else:
+                    try:
+                        value = datetime.strptime(value, "%Y-%m-%d").date()
+                    except ValueError:
+                        value = None
+            elif isinstance(field_obj, models.DateTimeField):
+                if value in [None, "", "None"]:
+                    value = None
+                else:
+                    try:
+                        value = datetime.strptime(value, "%Y-%m-%dT%H:%M")
+                    except ValueError:
+                        value = None
+            elif isinstance(field_obj, (models.DecimalField, models.FloatField)):
+                if value in [None, "", "None"]:
+                    value = 0.0
+                else:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        value = 0.0
+            elif isinstance(field_obj, models.IntegerField):
+                if value in [None, "", "None"]:
+                    value = 0
+                else:
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        value = 0
+
+            setattr(obj, field["name"], value)
+
+        # บันทึก object ใหม่
+        obj.save()
+        messages.success(request, f"เพิ่ม {model_name} เรียบร้อยแล้ว")
+        return redirect('refinance:admin_manage_table', model_name=model_name)
+
+    return render(request, "refinance/admin_object_create.html", {
+        "object": obj,
+        "model_name": model_name,
+        "fields": fields,
+        "readonly_fields": readonly_fields,
+        "form_title": f"เพิ่ม {model_name}",
+        "model_name_for_form": model_name,
+    })
+
+
+# --- Generic Object Detail/Edit ---
+@login_required
+def generic_object_detail_view(request, model_name, object_id):
+    if model_name.lower() in ["userprofile", "activitylog"]:
+        app_label = "accounts"
+    else:
+        app_label = "refinance"
+
+    Model = apps.get_model(app_label, model_name)
+    obj = get_object_or_404(Model, id=object_id)
+
+    # ดึง fields concrete ยกเว้น id, auto_now, auto_now_add
+    fields = []
+    readonly_fields = []
+    for f in Model._meta.get_fields():
+        if f.concrete:
+            if f.name in ("id",):
+                continue
+            if getattr(f, "auto_now", False) or getattr(f, "auto_now_add", False):
+                readonly_fields.append({
+                    "name": f.name,
+                    "type": f.get_internal_type(),
+                })
+            else:
+                field_info = {
+                    "name": f.name,
+                    "type": f.get_internal_type(),
+                    "is_fk": isinstance(f, models.ForeignKey),
+                    "choices": None,
+                    "current": getattr(obj, f.name, None),
+                }
+                if isinstance(f, models.ForeignKey):
+                    related_model = f.related_model
+                    field_info["choices"] = list(related_model.objects.all())
+                    if getattr(obj, f.name, None):
+                        field_info["current"] = getattr(obj, f.name).pk
+                fields.append(field_info)
+
+    if request.method == "POST":
+        for field in fields:
+            field_obj = Model._meta.get_field(field["name"])
+
+            # Handle file fields
+            if isinstance(field_obj, (models.ImageField, models.FileField)):
+                uploaded_file = request.FILES.get(field["name"])
+                if uploaded_file:
+                    setattr(obj, field["name"], uploaded_file)
+                continue  # skip other type conversion
+
+            # Otherwise, get value from POST
+            value = request.POST.get(field["name"])
+
+            # ForeignKey conversion
+            if isinstance(field_obj, models.ForeignKey):
+                if value not in [None, "", "None"]:
+                    try:
+                        value = field_obj.related_model.objects.get(pk=value)
+                    except field_obj.related_model.DoesNotExist:
+                        value = None
+                else:
+                    value = None
+
+            # Date and DateTime conversion
+            elif isinstance(field_obj, models.DateField):
+                if value not in [None, "", "None"]:
+                    try:
+                        value = datetime.strptime(value, "%Y-%m-%d").date()
+                    except ValueError:
+                        value = None
+                else:
+                    value = None
+            elif isinstance(field_obj, models.DateTimeField):
+                if value not in [None, "", "None"]:
+                    try:
+                        value = datetime.strptime(value, "%Y-%m-%dT%H:%M")
+                    except ValueError:
+                        value = None
+                else:
+                    value = None
+
+            # Numeric conversion
+            elif isinstance(field_obj, (models.DecimalField, models.FloatField)):
+                try:
+                    value = float(value) if value not in [None, "", "None"] else 0.0
+                except ValueError:
+                    value = 0.0
+            elif isinstance(field_obj, models.IntegerField):
+                try:
+                    value = int(value) if value not in [None, "", "None"] else 0
+                except ValueError:
+                    value = 0
+
+            # Assign value
+            setattr(obj, field["name"], value)
+
+        obj.save()
+        return redirect('refinance:admin_manage_table', model_name=model_name)
+
+    return render(request, "refinance/admin_object_detail.html", {
+        "object": obj,
+        "model_name": model_name,
+        "fields": fields,
+        "readonly_fields": readonly_fields,
+    })
+
+
+@login_required
+def generic_object_delete(request, model_name, object_id):
+    model = apps.get_model('refinance', model_name)
+    if model is None:
+        messages.error(request, f"ไม่พบ model {model_name}")
+        return redirect('refinance:admin_dashboard')
+
+    obj = get_object_or_404(model, id=object_id)
+    obj.delete()
+    messages.success(request, f"ลบ {model_name} (ID: {object_id}) เรียบร้อยแล้ว")
+    return redirect('refinance:admin_manage_table', model_name=model_name)
+
+@login_required
+def bank_dashboard(request):
+    # ตรวจสอบ role จาก UserProfile
+    if not hasattr(request.user, "userprofile") or not request.user.userprofile.role.startswith("bank"):
+        return HttpResponseForbidden("คุณไม่มีสิทธิ์เข้าหน้านี้")
+    
+    # ดึง code ของธนาคารจาก role (bank_KTB → KTB)
+    role = request.user.userprofile.role
+    bank_code = role[5:]  # ตัด "bank_"
+    
+    # ดึงข้อมูลธนาคารจาก code
+    bank = get_object_or_404(Bank, code=bank_code)
+
+    # ดึงโปรโมชั่นทั้งหมดของธนาคารนี้
+    promotions = Promotion.objects.filter(bank=bank).order_by('-created_at')
+
+    # ดึง loan product ทั้งหมดของธนาคารนี้
+    loan_products = LoanProduct.objects.filter(bank=bank).order_by('-created_at')
+
+    context = {
+        "bank": bank,
+        "promotions": promotions,
+        "loanproducts": loan_products,
+    }
+    return render(request, "refinance/bank_dashboard.html", context)
+
+
+@login_required
+def bank_object_detail_view(request, bank_id):
+    """
+    แสดงและแก้ไขข้อมูลธนาคารโดยเฉพาะ
+    """
+    if not hasattr(request.user, "userprofile") or not request.user.userprofile.role.startswith("bank"):
+        return HttpResponseForbidden("คุณไม่มีสิทธิ์เข้าหน้านี้")
+
+    Bank = apps.get_model("refinance", "Bank")
+    bank = get_object_or_404(Bank, id=bank_id)
+
+    # Mapping field -> ชื่อภาษาไทย
+    field_labels = {
+        "name": "ชื่อธนาคาร",
+        "code": "รหัสธนาคาร",
+        "bank_type": "ประเภทธนาคาร",
+        "logo": "โลโก้",
+        "website": "เว็บไซต์",
+        "contact_phone": "เบอร์ติดต่อ",
+        "contact_email": "อีเมลติดต่อ",
+        "description": "รายละเอียด",
+        "is_active": "ใช้งาน",
+        "display_order": "ลำดับการแสดง",
+        "brand_color": "สีแบรนด์",
+        "is_featured": "แนะนำพิเศษ",
+        "marketing_message": "ข้อความการตลาด",
+        "created_at": "วันที่สร้าง",
+        "updated_at": "วันที่แก้ไข",
+    }
+
+    # ดึง fields concrete (exclude id, auto_now, auto_now_add)
+    fields = []
+    readonly_fields = []
+    for f in Bank._meta.get_fields():
+        if f.concrete:
+            if f.name in ("id", "display_order"):
+                continue
+            label = field_labels.get(f.name, f.name)
+            field_info = {"name": f.name, "type": f.get_internal_type(), "label": label}
+            if getattr(f, "auto_now", False) or getattr(f, "auto_now_add", False):
+                readonly_fields.append(field_info)
+            else:
+                fields.append(field_info)
+
+    if request.method == "POST":
+        for field in fields:
+            field_obj = Bank._meta.get_field(field["name"])
+
+            if isinstance(field_obj, models.ImageField):
+                value = request.FILES.get(field["name"])
+                if value:  # อัปเดตเฉพาะถ้ามีไฟล์ใหม่
+                    setattr(bank, field["name"], value)
+                continue  # ข้ามไปไม่ต้องทำ type conversion
+            else:
+                value = request.POST.get(field["name"])
+
+            # แปลง type
+            if isinstance(field_obj, models.DateField):
+                value = datetime.strptime(value, "%Y-%m-%d").date() if value else None
+            elif isinstance(field_obj, models.DateTimeField):
+                value = datetime.strptime(value, "%Y-%m-%dT%H:%M") if value else None
+            elif isinstance(field_obj, (models.DecimalField, models.FloatField)):
+                value = float(value) if value else 0.0
+            elif isinstance(field_obj, models.IntegerField):
+                value = int(value) if value else 0
+
+            setattr(bank, field["name"], value)
+
+        bank.save()
+        return redirect('refinance:bank_dashboard')
+
+    # สร้าง header_title
+    header_title = f"{bank.name} ({bank.code})"
+
+    return render(request, "refinance/bank_object_detail.html", {
+        "bank": bank,
+        "fields": fields,
+        "readonly_fields": readonly_fields,
+        "header_title": header_title,
+    })
+
+@login_required
+def bank_promotion_add(request, bank_id):
+    # ตรวจสอบ role
+    if not hasattr(request.user, "userprofile") or not request.user.userprofile.role.startswith("bank"):
+        return HttpResponseForbidden("คุณไม่มีสิทธิ์เข้าหน้านี้")
+
+    # ดึง bank จาก bank_id
+    bank = Bank.objects.get(id=bank_id)
+
+    if request.method == "POST":
+        form = PromotionForm(request.POST, request.FILES)
+        if form.is_valid():
+            promotion = form.save(commit=False)
+            promotion.bank = bank  # กำหนด bank
+            promotion.save()
+            return redirect("refinance:bank_dashboard")  # เปลี่ยนเป็นหน้าโปรโมชั่นหรือแดชบอร์ดที่ต้องการ
+    else:
+        form = PromotionForm()
+
+    context = {
+        "form": form,
+        "header_title": "โปรโมชั่นใหม่",
+        "bank": bank,
+    }
+    return render(request, "refinance/bank_promotion_create.html", context)
+
+@login_required
+def bank_promotion_update(request, pk):
+    # ตรวจสอบ role ว่าเป็น bank หรือ admin
+    if not hasattr(request.user, "userprofile") or not request.user.userprofile.role.startswith("bank"):
+        return HttpResponseForbidden("คุณไม่มีสิทธิ์เข้าหน้านี้")
+    
+    promo = get_object_or_404(Promotion, pk=pk)
+
+    if request.method == "POST":
+        form = PromotionForm(request.POST, request.FILES, instance=promo)
+        if form.is_valid():
+            form.save()
+            return redirect("refinance:bank_dashboard")  # เปลี่ยนตามหน้าที่ต้องการ
+    else:
+        form = PromotionForm(instance=promo)
+
+    context = {
+        "form": form,
+        "header_title": "แก้ไขโปรโมชั่น",
+    }
+    return render(request, "refinance/bank_promotion_update.html", context)
+
+@login_required
+def bank_promotion_delete(request, pk):
+    # ดึงโปรโมชั่นจากฐานข้อมูล
+    promo = get_object_or_404(Promotion, pk=pk)
+    
+    # ตรวจสอบว่า user เป็นธนาคารเจ้าของโปรโมชั่นหรือ admin
+    user = request.user
+    if hasattr(user, "userprofile") and user.userprofile.role.startswith("bank"):
+        bank_code = user.userprofile.role[5:]  # ตัด "bank_"
+        if promo.bank.code != bank_code:
+            return HttpResponseForbidden("คุณไม่มีสิทธิ์ลบโปรโมชั่นนี้")
+    # สำหรับ admin ไม่ต้องเช็คก็ได้
+
+    if request.method == "POST":
+        promo.delete()
+        # กลับไปที่ dashboard หรือหน้าเดิม
+        return redirect('refinance:bank_dashboard')  # เปลี่ยนตาม URL ของ dashboard
+
+    # ถ้าเข้าหน้านี้แบบ GET
+    return HttpResponseForbidden("ไม่สามารถเข้าหน้านี้โดยตรง")
+
+@login_required
+def bank_loanproduct_add(request, bank_id):
+    # ตรวจสอบ role
+    if not hasattr(request.user, "userprofile") or not request.user.userprofile.role.startswith("bank"):
+        return HttpResponseForbidden("คุณไม่มีสิทธิ์เข้าหน้านี้")
+
+    # ดึง bank จาก bank_id
+    bank = get_object_or_404(Bank, id=bank_id)
+
+    if request.method == "POST":
+        form = LoanProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            loan_product = form.save(commit=False)
+            loan_product.bank = bank  # กำหนด bank
+            loan_product.save()
+            return redirect("refinance:bank_dashboard")  # กลับไปหน้า dashboard
+    else:
+        form = LoanProductForm()
+
+    context = {
+        "form": form,
+        "header_title": "ผลิตภัณฑ์สินเชื่อใหม่",
+        "bank": bank,
+    }
+    return render(request, "refinance/bank_loanproduct_create.html", context)
+
+
+@login_required
+def bank_loanproduct_update(request, pk):
+    # ตรวจสอบ role
+    if not hasattr(request.user, "userprofile") or not request.user.userprofile.role.startswith("bank"):
+        return HttpResponseForbidden("คุณไม่มีสิทธิ์เข้าหน้านี้")
+    
+    loan_product = get_object_or_404(LoanProduct, pk=pk)
+
+    if request.method == "POST":
+        form = LoanProductForm(request.POST, request.FILES, instance=loan_product)
+        if form.is_valid():
+            form.save()
+            return redirect("refinance:bank_dashboard")
+    else:
+        form = LoanProductForm(instance=loan_product)
+
+    context = {
+        "form": form,
+        "header_title": "แก้ไขผลิตภัณฑ์สินเชื่อ",
+        "bank": loan_product.bank,
+    }
+    return render(request, "refinance/bank_loanproduct_update.html", context)
+
+
+@login_required
+def bank_loanproduct_delete(request, pk):
+    loan_product = get_object_or_404(LoanProduct, pk=pk)
+    
+    # ตรวจสอบว่า user เป็นธนาคารเจ้าของ loan product หรือ admin
+    user = request.user
+    if hasattr(user, "userprofile") and user.userprofile.role.startswith("bank"):
+        bank_code = user.userprofile.role[5:]  # ตัด "bank_"
+        if loan_product.bank.code != bank_code:
+            return HttpResponseForbidden("คุณไม่มีสิทธิ์ลบสินเชื่อนี้")
+    # admin ไม่ต้องเช็ค
+
+    if request.method == "POST":
+        loan_product.delete()
+        return redirect('refinance:bank_dashboard')
+
+    return HttpResponseForbidden("ไม่สามารถเข้าหน้านี้โดยตรง")

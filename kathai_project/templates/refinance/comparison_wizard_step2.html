@@ -358,5 +358,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("input[data-type='currency']").forEach(function (input) {
+        input.addEventListener("input", function (e) {
+        let value = e.target.value.replace(/,/g, "");   // ลบ , เดิมออก
+        if (!isNaN(value) && value.length > 0) {
+            e.target.value = Number(value).toLocaleString("en-US"); // ใส่ comma
+        } else {
+            e.target.value = "";
+        }
+        });
+
+        // ป้องกันตอน submit ไม่ให้ส่งค่ามี comma ไป DB
+        input.form.addEventListener("submit", function () {
+        input.value = input.value.replace(/,/g, "");
+        });
+    });
+    });
 </script>
 {% endblock %}

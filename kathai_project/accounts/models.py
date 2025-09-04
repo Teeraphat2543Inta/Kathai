@@ -2,7 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
-from django.db.models.fields.json import JSONField # <--- ตรวจสอบให้แน่ใจว่ามีบรรทัดนี้
+# from django.db.models.fields.json import JSONField # <--- ตรวจสอบให้แน่ใจว่ามีบรรทัดนี้
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -15,6 +15,11 @@ class UserProfile(models.Model):
         ('freelance', 'อิสระ/ฟรีแลนซ์'),
         ('investment', 'การลงทุน'),
         ('other', 'อื่นๆ'),
+    ]
+
+    ROLE_CHOICES = [
+        ('user', 'ผู้ใช้ทั่วไป'),
+        ('bank', 'ธนาคาร'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -31,6 +36,14 @@ class UserProfile(models.Model):
     # เพิ่มฟิลด์สำหรับเก็บสถานะการยอมรับข้อตกลง
     terms_accepted = models.BooleanField(default=False, verbose_name='ยอมรับข้อตกลงและเงื่อนไข')
 
+    # ✅ เพิ่มฟิลด์ role
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='user',
+        verbose_name='สิทธิ์ผู้ใช้'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -44,12 +57,35 @@ class UserProfile(models.Model):
         if full_name:
             return f"{full_name}'s Profile"
         return f"{self.user.username}'s Profile"
+    
+    def profile_status(self):
+        required_fields = [
+            self.phone_number,
+            self.citizen_id,
+            self.date_of_birth,
+            self.address,
+            self.income_source,
+            self.monthly_income,
+            self.monthly_expenses,
+        ]
+        if all(required_fields):
+            return 'สมบูรณ์'
+        elif any(required_fields):
+            return 'ข้อมูลบางส่วน'
+        return 'ยังไม่มีข้อมูล'
+
 
 # โมเดล ActivityLog ที่เพิ่มเข้ามาใหม่ (สำคัญสำหรับการบันทึก Log)
 # โมเดล ActivityLog ที่ปรับปรุงใหม่
 class ActivityLog(models.Model):
-    # เพิ่ม related_name='accounts_activities' เพื่อไม่ให้ชนกับโมเดลอื่น
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='accounts_activities', verbose_name="ผู้ใช้งาน", null=True, blank=True)
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='accounts_activities', 
+        verbose_name="ผู้ใช้งาน", 
+        null=True, 
+        blank=True
+    )
     activity_type = models.CharField(max_length=50, verbose_name="ประเภทกิจกรรม")
     description = models.CharField(max_length=255, verbose_name="คำอธิบายกิจกรรม")
     url = models.URLField(max_length=500, blank=True, null=True, verbose_name="URL ที่เข้าถึง")
@@ -57,7 +93,7 @@ class ActivityLog(models.Model):
     ip_address = models.GenericIPAddressField(blank=True, null=True, verbose_name="IP Address")
     user_agent = models.CharField(max_length=500, blank=True, null=True, verbose_name="User Agent")
     session_key = models.CharField(max_length=40, blank=True, null=True, verbose_name="Session Key")
-    extra_data = JSONField(blank=True, null=True, verbose_name="ข้อมูลเพิ่มเติม")
+    extra_data = models.JSONField(blank=True, null=True, verbose_name="ข้อมูลเพิ่มเติม")  # ✅ ใช้แบบนี้
 
     class Meta:
         verbose_name = "บันทึกการใช้งาน"
@@ -67,3 +103,4 @@ class ActivityLog(models.Model):
     def __str__(self):
         user_str = self.user.username if self.user else 'Anonymous'
         return f"{user_str} - {self.activity_type} - {self.description} at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+

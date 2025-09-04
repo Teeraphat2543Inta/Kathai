@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 {% load static %}
 
 {% block title %}{{ property.name }} - รายละเอียดทรัพย์สิน - คัดให้{% endblock %}
@@ -13,15 +14,6 @@
             <li class="breadcrumb-item active">{{ property.name }}</li>
         </ol>
     </nav>
-
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
 
     <!-- Property Header -->
     <div class="row mb-4">
@@ -50,7 +42,7 @@
                                 </div>
                                 <div class="text-end">
                                     <div class="property-value">
-                                        <h4 class="text-success mb-0">{{ property.estimated_value|floatformat:0 }}</h4>
+                                        <h4 class="text-success mb-0">{{ property.estimated_value|floatformat:0|intcomma }}</h4>
                                         <small class="text-muted">มูลค่าประเมิน (บาท)</small>
                                     </div>
                                 </div>
@@ -72,16 +64,17 @@
         </div>
     </div>
 
+    <!-- Main Content -->
     <div class="row">
-        <!-- Main Content -->
         <div class="col-lg-8">
-            <!-- Property Details -->
+            <!-- Property Details Card -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5><i class="bi bi-info-circle"></i> รายละเอียดทรัพย์สิน</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
+                        <!-- Left Column -->
                         <div class="col-md-6">
                             <div class="detail-group">
                                 <h6 class="detail-group-title">ข้อมูลทั่วไป</h6>
@@ -105,17 +98,19 @@
                                 {% endif %}
                             </div>
                         </div>
+
+                        <!-- Right Column -->
                         <div class="col-md-6">
                             <div class="detail-group">
                                 <h6 class="detail-group-title">มูลค่าและการซื้อ</h6>
                                 <div class="detail-item">
                                     <span class="label">มูลค่าประเมิน:</span>
-                                    <span class="value text-success fw-bold">{{ property.estimated_value|floatformat:0 }} บาท</span>
+                                    <span class="value text-success fw-bold">{{ property.estimated_value|floatformat:0|intcomma }} บาท</span>
                                 </div>
                                 {% if property.purchase_price %}
                                 <div class="detail-item">
                                     <span class="label">ราคาซื้อ:</span>
-                                    <span class="value">{{ property.purchase_price|floatformat:0 }} บาท</span>
+                                    <span class="value">{{ property.purchase_price|floatformat:0|intcomma }} บาท</span>
                                 </div>
                                 {% endif %}
                                 {% if property.purchase_date %}
@@ -128,6 +123,7 @@
                         </div>
                     </div>
 
+                    <!-- Size & Loan Info -->
                     <div class="row mt-4">
                         <div class="col-md-6">
                             <div class="detail-group">
@@ -135,17 +131,18 @@
                                 {% if property.land_size %}
                                 <div class="detail-item">
                                     <span class="label">ขนาดที่ดิน:</span>
-                                    <span class="value">{{ property.land_size }} ตร.ว.</span>
+                                    <span class="value">{{ property.land_size|intcomma }} ตร.ว.</span>
                                 </div>
                                 {% endif %}
                                 {% if property.building_size %}
                                 <div class="detail-item">
                                     <span class="label">ขนาดอาคาร:</span>
-                                    <span class="value">{{ property.building_size }} ตร.ม.</span>
+                                    <span class="value">{{ property.building_size|intcomma }} ตร.ม.</span>
                                 </div>
                                 {% endif %}
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="detail-group">
                                 <h6 class="detail-group-title">สินเชื่อปัจจุบัน</h6>
@@ -163,7 +160,7 @@
                                     {% if property.existing_loan_balance %}
                                     <div class="detail-item">
                                         <span class="label">ยอดคงเหลือ:</span>
-                                        <span class="value text-warning fw-bold">{{ property.existing_loan_balance|floatformat:0 }} บาท</span>
+                                        <span class="value text-warning fw-bold">{{ property.existing_loan_balance|floatformat:0|intcomma }} บาท</span>
                                     </div>
                                     {% endif %}
                                     {% if property.existing_bank %}
@@ -177,6 +174,7 @@
                         </div>
                     </div>
 
+                    <!-- Address -->
                     <div class="row mt-4">
                         <div class="col-12">
                             <div class="detail-group">
@@ -257,18 +255,16 @@
                     <h6><i class="bi bi-bar-chart"></i> สถิติด่วน</h6>
                 </div>
                 <div class="card-body">
-                    {% if property.has_existing_loan and property.existing_loan_balance %}
+                    {% if ltv %}
                     <div class="stat-item">
                         <span class="stat-label">LTV ปัจจุบัน</span>
-                        {% with ltv=property.existing_loan_balance|div:property.estimated_value|mul:100 %}
                         <span class="stat-value text-warning">{{ ltv|floatformat:1 }}%</span>
-                        {% endwith %}
                     </div>
+                    {% endif %}
+                    {% if equity %}
                     <div class="stat-item">
                         <span class="stat-label">Equity</span>
-                        {% with equity=property.estimated_value|sub:property.existing_loan_balance %}
                         <span class="stat-value text-success">{{ equity|floatformat:0 }} บาท</span>
-                        {% endwith %}
                     </div>
                     {% endif %}
                     <div class="stat-item">
@@ -306,13 +302,12 @@
             </div>
 
             <!-- Refinance Potential -->
-            {% if property.has_existing_loan and property.existing_loan_balance %}
+            {% if ltv %}
             <div class="card">
                 <div class="card-header">
                     <h6><i class="bi bi-graph-up-arrow"></i> ศักยภาพการรีไฟแนนซ์</h6>
                 </div>
                 <div class="card-body">
-                    {% with ltv=property.existing_loan_balance|div:property.estimated_value|mul:100 %}
                     {% if ltv <= 80 %}
                     <div class="alert alert-success">
                         <i class="bi bi-check-circle"></i>
@@ -329,7 +324,6 @@
                         <strong>จำกัด:</strong> LTV {{ ltv|floatformat:1 }}% ตัวเลือกจำกัด
                     </div>
                     {% endif %}
-                    {% endwith %}
                     
                     <div class="mt-3">
                         <small class="text-muted">
@@ -342,7 +336,7 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -355,7 +349,7 @@
                     {% if property.loan_applications.exists %}
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle"></i>
-                        ทรัพย์สินนี้มีคำขอรีไฟแนนซ์ที่เชื่อมโยงอยู่ {{ property.loan_applications.count }} คำขอ
+                        ทรัพย์สินนี้มีคำขอรีไฟแนนซ์ {{ property.loan_applications.count }} คำขอ
                     </div>
                     {% endif %}
                     <p class="text-muted">การกระทำนี้ไม่สามารถย้อนกลับได้</p>
@@ -371,6 +365,7 @@
         </div>
     </div>
 </div>
+
 
 <style>
 .property-header-card {

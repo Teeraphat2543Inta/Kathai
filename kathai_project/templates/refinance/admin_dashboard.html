@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}แอดมินแดชบอร์ด{% endblock %}
+
+{% block content %}
+<div class="card card-ghost p-4 mx-auto" style="max-width: 1200px;">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-center mb-4">
+    <h2 class="title mb-0">แอดมินแดชบอร์ด</h2>
+  </div>
+
+  <!-- Refinance section -->
+  <div class="mb-5">
+    <h3 class="subtitle mb-3">Refinance</h3>
+    <div class="row g-3">
+      {% for model in refinance_models %}
+        <div class="col-12 col-md-6">
+          <a href="{% url 'refinance:admin_manage_table' model.name %}" class="text-decoration-none">
+            <div class="border rounded p-3 h-100 d-flex flex-column justify-content-center align-items-center hover-shadow" style="background-color: #f8f9fa; transition: 0.2s;">
+              <h5 class="mb-2 text-dark">{{ model.label }}</h5>
+              <i class="bi bi-pencil-square fs-3 text-warning"></i>
+            </div>
+          </a>
+        </div>
+      {% empty %}
+        <p class="text-muted">ไม่มีตารางใน refinance</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Accounts section -->
+  <div>
+    <h3 class="subtitle mb-3">Accounts</h3>
+    <div class="row g-3">
+      {% for model in accounts_models %}
+        <div class="col-12 col-md-6">
+          <a href="{% url 'refinance:admin_manage_table' model.name %}" class="text-decoration-none">
+            <div class="border rounded p-3 h-100 d-flex flex-column justify-content-center align-items-center hover-shadow" style="background-color: #f8f9fa; transition: 0.2s;">
+              <h5 class="mb-2 text-dark">{{ model.label }}</h5>
+              <i class="bi bi-pencil-square fs-3 text-warning"></i>
+            </div>
+          </a>
+        </div>
+      {% empty %}
+        <p class="text-muted">ไม่มีตารางใน accounts</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* เพิ่ม effect hover ให้กล่อง */
+.hover-shadow:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    background-color: #e9ecef;
+}
+</style>
+
+{% endblock %}

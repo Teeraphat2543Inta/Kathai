@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}เพิ่มทรัพย์สินใหม่ - KATHAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container { /* ใช้ class นี้เพื่อให้สอดคล้องกับธีมใหม่ */
+        max-width: 800px;
+        margin: 3rem auto;
+        padding: 2.5rem;
+        background-color: var(--kathai-white); /* ใช้สีขาวจาก root */
+        border-radius: var(--kathai-border-radius); /* ใช้ขอบมนจาก root */
+        box-shadow: var(--kathai-shadow); /* ใช้เงาจาก root */
+    }
+    .form-header-custom {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+    .form-header-custom h2 {
+        color: var(--kathai-primary);
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .form-header-custom p {
+        color: var(--kathai-text-light);
+        font-size: 1.1rem;
+    }
+    .btn-kathai-submit {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header-custom">
+        <h2>เพิ่มข้อมูลทรัพย์สินใหม่</h2>
+        <p>กรุณากรอกรายละเอียดเกี่ยวกับทรัพย์สินที่คุณต้องการรีไฟแนนซ์</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-kathai btn-kathai-submit mt-4">บันทึกทรัพย์สิน</button>
+        <a href="{% url 'refinance:property_list' %}" class="btn btn-outline-secondary w-100 mt-3">กลับไปหน้ารายการทรัพย์สิน</a>
+    </form>
+</div>
+{% endblock %}

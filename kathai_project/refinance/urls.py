@@ -16,7 +16,7 @@ urlpatterns = [
     # เพิ่ม aliases สำหรับ template ที่อาจใช้ชื่ออื่น
     path('properties/new/', views.property_create, name='property_add'),
     path('properties/create/', views.property_create, name='property_new'),
-    path('property/add/', views.property_add, name='property_add'),
+    path('new-property/add/', views.property_add, name='property_add'),
     path('faq/', views.faq_view, name='faq'),
     path('articles/', views.article_list_view, name='article_list'),
     path('articles/<slug:slug>/', views.article_detail_view, name='article_detail'),
@@ -78,6 +78,8 @@ urlpatterns = [
     # อย่าลืมเปลี่ยน 'views.your_loan_comparison_results_view' ให้เป็นชื่อฟังก์ชัน/คลาส View จริงๆ ของคุณ
     # ที่ใช้สำหรับแสดงผลหน้า 'loan_comparison_results.html'
     path('loan-comparison-results/', views.loan_comparison_results_view, name='loan_comparison_results'),
+    path('loan-comparison-edit/', views.loan_comparison_edit_view, name='loan_comparison_edit'),
+
     # ------------------------------------------------------------------
 
     # --- URLs สำหรับหน้าแดชบอร์ด ---
@@ -110,8 +112,21 @@ urlpatterns = [
     path('api/properties/<int:property_id>/', views.get_property_details_api, name='api_get_property_details'),
     path('api/loan_products_by_property/<int:property_id>/', views.get_loan_products_by_property_api, name='api_get_loan_products_by_property'),
     path('promotions/', views.advertisement_list_view, name='advertisement_list'),
-   
+    path('admin_dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    path("manage/<str:model_name>/", views.manage_table_view, name="admin_manage_table"),
 
-    
-    
+    path("banker-dashboard/", views.bank_dashboard, name="bank_dashboard"),
+    path("banker-edit/<int:bank_id>/", views.bank_object_detail_view, name="bank_object_detail"),
+    path('bank-promotion/add/<int:bank_id>/', views.bank_promotion_add, name='bank_promotion_add'),
+    path('bank-promotion/<int:pk>/edit/', views.bank_promotion_update, name='bank_promotion_update'),
+    path('bank-promotion/<int:pk>/delete/', views.bank_promotion_delete, name='bank_promotion_delete'),
+    path('bank-loanproduct/add/<int:bank_id>/', views.bank_loanproduct_add, name='bank_loanproduct_add'),
+    path('bank-loanproduct/<int:pk>/edit/', views.bank_loanproduct_update, name='bank_loanproduct_update'),
+    path('bank-loanproduct/<int:pk>/delete/', views.bank_loanproduct_delete, name='bank_loanproduct_delete'),
+
+    # ----- เพิ่ม URLs สำหรับ detail/edit หน้าแก้ไข object -----
+    path('<str:model_name>/add/', views.generic_object_add_view, name='generic_object_add'),
+    path('<str:model_name>/<int:object_id>/', views.generic_object_detail_view, name='generic_object_detail'),
+    path("<str:model_name>/<int:object_id>/delete/", views.generic_object_delete, name="generic_object_delete"),
+
 ]

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
 {% load humanize %}
@@ -91,6 +92,7 @@
           </div>
         </div>
 
+        
         <!-- ========== STEP 2 ========== -->
         <div id="step2">
           <div class="card mb-4">
@@ -98,42 +100,50 @@
             <div class="card-body">
               <div class="row">
                 <div class="col-md-6">
-                  <div class="form-floating mb-3">
-                    {{ form.loan_amount|add_class:"form-control" }}
-                    <label for="{{ form.loan_amount.id_for_label }}">จำนวนเงินกู้ที่ต้องการ (บาท)</label>
-                    {% if form.loan_amount.errors %}<div class="invalid-feedback">{{ form.loan_amount.errors.0 }}</div>{% endif %}
-                  </div>
+                    <div class="form-floating mb-3">
+                        {{ form.loan_amount|add_class:"form-control number-format"|attr:"type:text"|attr:"inputmode:decimal"|attr:"autocomplete:off" }}
+                        <label for="{{ form.loan_amount.id_for_label }}">จำนวนเงินกู้ที่ต้องการ (บาท)</label>
+                        {% if form.loan_amount.errors %}
+                            <div class="invalid-feedback">{{ form.loan_amount.errors.0 }}</div>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="form-floating mb-3">
-                    {{ form.loan_term|add_class:"form-control" }}
-                    <label for="{{ form.loan_term.id_for_label }}">ระยะเวลากู้ (ปี)</label>
-                    {% if form.loan_term.errors %}<div class="invalid-feedback">{{ form.loan_term.errors.0 }}</div>{% endif %}
-                  </div>
+                    <div class="form-floating mb-3">
+                        {{ form.loan_term|add_class:"form-control number-format"|attr:"type:text"|attr:"inputmode:decimal"|attr:"autocomplete:off" }}
+                        <label for="{{ form.loan_term.id_for_label }}">ระยะเวลากู้ (ปี)</label>
+                        {% if form.loan_term.errors %}
+                            <div class="invalid-feedback">{{ form.loan_term.errors.0 }}</div>
+                        {% endif %}
+                    </div>
                 </div>
-              </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        {{ form.monthly_income|add_class:"form-control number-format"|attr:"type:text"|attr:"inputmode:decimal"|attr:"autocomplete:off" }}
+                        <label for="{{ form.monthly_income.id_for_label }}">รายได้ต่อเดือน (บาท)</label>
+                        {% if form.monthly_income.errors %}
+                            <div class="invalid-feedback">{{ form.monthly_income.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        {{ form.monthly_expense|add_class:"form-control number-format"|attr:"type:text"|attr:"inputmode:decimal"|attr:"autocomplete:off" }}
+                        <label for="{{ form.monthly_expense.id_for_label }}">รายจ่ายต่อเดือน (บาท)</label>
+                        {% if form.monthly_expense.errors %}
+                            <div class="invalid-feedback">{{ form.monthly_expense.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
 
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-floating mb-3">
-                    {{ form.monthly_income|add_class:"form-control" }}
-                    <label for="{{ form.monthly_income.id_for_label }}">รายได้ต่อเดือน (บาท)</label>
-                    {% if form.monthly_income.errors %}<div class="invalid-feedback">{{ form.monthly_income.errors.0 }}</div>{% endif %}
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-floating mb-3">
-                    {{ form.monthly_expense|add_class:"form-control" }}
-                    <label for="{{ form.monthly_expense.id_for_label }}">รายจ่ายต่อเดือน (บาท)</label>
-                    {% if form.monthly_expense.errors %}<div class="invalid-feedback">{{ form.monthly_expense.errors.0 }}</div>{% endif %}
-                  </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-floating mb-3">
-                    {{ form.other_debts|add_class:"form-control" }}
+                    {{ form.other_debts|add_class:"form-control number-format" }}
                     <label for="{{ form.other_debts.id_for_label }}">หนี้สินอื่น (บาท)</label>
                     {% if form.other_debts.errors %}<div class="invalid-feedback">{{ form.other_debts.errors.0 }}</div>{% endif %}
                   </div>
@@ -150,15 +160,34 @@
               <div class="financial-summary mt-3" id="financialSummary">
                 <h6>สรุปข้อมูลทางการเงิน</h6>
                 <div class="row">
-                  <div class="col-md-4"><div class="summary-item"><span class="label">รายได้สุทธิ:</span><span class="value" id="netIncome">-</span></div></div>
-                  <div class="col-md-4"><div class="summary-item"><span class="label">อัตราส่วน DSR:</span><span class="value" id="dsrRatio">-</span></div></div>
-                  <div class="col-md-4"><div class="summary-item"><span class="label">อัตราส่วน LTV:</span><span class="value" id="ltvRatio">-</span></div></div>
+                  <div class="col-md-4">
+                    <div class="summary-item">
+                      <span class="label">รายได้สุทธิ:</span>
+                      <span class="value" id="netIncome">-</span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="summary-item">
+                      <span class="label">อัตราส่วน DSR:</span>
+                      <span class="value" id="dsrRatio">-</span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="summary-item">
+                      <span class="label">อัตราส่วน LTV:</span>
+                      <span class="value" id="ltvRatio">-</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div class="d-flex justify-content-between mt-3">
-                <button type="button" class="btn btn-outline-secondary" onclick="goStep(1)"><i class="bi bi-arrow-left"></i> ย้อนกลับ</button>
-                <button type="button" class="btn btn-kathai" onclick="goStep(3)">ถัดไป <i class="bi bi-arrow-right"></i></button>
+                <button type="button" class="btn btn-outline-secondary" onclick="goStep(1)">
+                  <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                </button>
+                <button type="button" class="btn btn-kathai" onclick="goStep(3)">
+                  ถัดไป <i class="bi bi-arrow-right"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -426,6 +455,64 @@
 </style>
 
 <script>
+(function () {
+  function formatCurrency(raw) {
+    // แปลงเป็นสตริงและเก็บเฉพาะตัวเลขกับจุดทศนิยม
+    let s = String(raw).replace(/[^\d.]/g, "");
+
+    // กันจุดหลายจุด เหลือแค่จุดแรก
+    const firstDot = s.indexOf(".");
+    if (firstDot !== -1) {
+      s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, "");
+    }
+
+    const parts = s.split(".");
+    let intPart = parts[0] || "";
+    const decPart = parts[1] || "";
+
+    // ตัด 0 นำหน้าถ้ามีหลายตัว (เหลือ 0 ตัวเดียวได้)
+    intPart = intPart.replace(/^0+(?=\d)/, "");
+
+    // ใส่คอมมาในส่วนจำนวนเต็ม
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    return decPart ? `${intPart}.${decPart}` : intPart;
+  }
+
+  const inputs = document.querySelectorAll('input.number-format, input[data-type="currency"]');
+
+  inputs.forEach((input) => {
+    // บังคับให้เป็น text เพื่อให้ใส่ comma ได้
+    if (input.type === "number") input.setAttribute("type", "text");
+    if (!input.hasAttribute("inputmode")) input.setAttribute("inputmode", "decimal");
+
+    // จัดรูปแบบครั้งแรกถ้ามีค่า initial
+    if (input.value) {
+      input.value = formatCurrency(input.value);
+    }
+
+    input.addEventListener("input", function (e) {
+      const start = input.selectionStart;
+      const before = input.value;
+
+      const formatted = formatCurrency(before);
+      input.value = formatted;
+
+      // พยายามรักษาตำแหน่งเคอร์เซอร์อย่างหยาบ ๆ
+      const diff = formatted.length - before.length;
+      const pos = (start || 0) + diff;
+      input.setSelectionRange(pos, pos);
+    });
+
+    // ลบคอมมาก่อน submit
+    if (input.form) {
+      input.form.addEventListener("submit", function () {
+        input.value = input.value.replace(/,/g, "");
+      });
+    }
+  });
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
   autoFillFormData();
   initializeFormValidation();
@@ -539,7 +626,7 @@ function setupBankSelectionUI(){
   if(!container) return;
   container.addEventListener('change', function(e){
     if(e.target && e.target.type==='checkbox'){
-      if(e.target.checked){ scrollToChosenSummary(); }
+      if(e.target.checked){}
       renderChosenSummary();
     }
   });
@@ -595,12 +682,6 @@ function uncheckBank(val){
   if(inp){ inp.checked = false; renderChosenSummary(); }
 }
 
-function scrollToChosenSummary(){
-  const el = document.getElementById('chosenSummary');
-  if(!el) return;
-  el.scrollIntoView({behavior:'smooth', block:'center'});
-}
-
 function hydrateRecommendedProducts(){
   const dataEl=document.getElementById('recommendedProductsData');
   const card=document.getElementById('recommendedCard');
@@ -612,7 +693,7 @@ function hydrateRecommendedProducts(){
   container.innerHTML = `<div class="row">${
     items.map(p=>`
       <div class="col-md-6 mb-3">
-        <div class="card product-recommendation">
+        <div class="card product-recommendation" data-bank-name="${escapeHtml(p.bank_name||'')}">
           <div class="card-body">
             <h6 class="card-title">${escapeHtml(p.bank_name||'')}</h6>
             <p class="card-text small">${escapeHtml(p.product_name||'')}</p>
@@ -629,7 +710,26 @@ function hydrateRecommendedProducts(){
     `).join('')
   }</div>`;
   card.style.display='block';
+
+  // ✅ เพิ่ม event ให้การ์ด
+  container.querySelectorAll('.product-recommendation').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const bankName = el.getAttribute('data-bank-name');
+      if(!bankName) return;
+
+      // หา label ของ bank ที่มีชื่อเดียวกัน
+      const label = document.querySelector(`.bank-label[data-bank-name="${bankName}"]`);
+      if(label){
+        const checkbox = label.closest('.form-check').querySelector('input[type="checkbox"]');
+        if(checkbox){
+          checkbox.checked = !checkbox.checked; // toggle เหมือนกด
+          checkbox.dispatchEvent(new Event('change', { bubbles:true })); // ส่ง event ให้ form รู้
+        }
+      }
+    });
+  });
 }
+
 
 function acceptTerms(){ const t=byId('agreeTerms'); if(t) t.checked=true; const m=bootstrap.Modal.getInstance(byId('termsModal')); if(m) m.hide(); }
 

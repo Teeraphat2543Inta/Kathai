@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load refinance_tags %}
+{% load humanize %}
+
+{% block title %}รายละเอียด {{ bank.name }}{% endblock %}
+
+{% block content %}
+<div class="card card-ghost p-4">
+
+  <!-- Header: Bank title -->
+  <div class="d-flex justify-content-center mb-3">
+    <h2 class="title mb-0">{{ bank.name }} ({{ bank.code }})</h2>
+  </div>
+
+    <!-- Edit & Promotion buttons -->
+    <div class="d-flex justify-content-end mb-4" style="margin-right: 110px;">
+        <!-- Loan Product Button (เปิด modal) -->
+        <button type="button" 
+                class="btn btn-dark d-inline-flex align-items-center px-3 py-2 me-2" 
+                style="min-width: 100px; min-height: 50px; border-radius: 10px;"
+                data-bs-toggle="modal" data-bs-target="#loanproductModal">
+        <i class="bi bi-cash-stack me-1"></i> ผลิตภัณฑ์สินเชื่อ
+        </button>
+
+        <!-- Promotion Button (เปิด modal) -->
+        <button type="button" class="btn btn-warning d-inline-flex align-items-center px-3 py-2 me-2" 
+                style="min-width: 80px; min-height: 50px; border-radius: 10px;"
+                data-bs-toggle="modal" data-bs-target="#promotionModal">
+        <i class="bi bi-gift me-1"></i> โปรโมชั่น
+        </button>
+
+        <!-- Edit Button -->
+        <a href="{% url 'refinance:bank_object_detail' bank.id %}"
+        class="btn btn-outline-danger d-inline-flex align-items-center px-3 py-2" 
+        style="min-width: 80px; min-height: 50px; border-radius: 10px;">
+        <i class="bi bi-pencil me-1"></i> แก้ไข
+        </a>
+    </div>
+
+  <!-- Bank details table -->
+  <div class="table-responsive" style="overflow-x:auto;">
+    <table class="table table-striped table-bordered align-middle text-sm mx-auto"
+           style="width: 1200px; max-width: 100%;">
+      <tbody>
+        <tr><th width="500px">ชื่อธนาคาร</th><td>{{ bank.name }}</td></tr>
+        <tr><th>รหัสธนาคาร</th><td>{{ bank.code }}</td></tr>
+        <tr><th>ประเภทธนาคาร</th><td>{{ bank.get_bank_type_display }}</td></tr>
+        <tr>
+          <th>โลโก้</th>
+          <td>
+            {% if bank.logo %}
+              <img src="{{ bank.logo.url }}" alt="{{ bank.name }}" width="200px">
+            {% else %}
+              ไม่มีโลโก้
+            {% endif %}
+          </td>
+        </tr>
+        <tr><th>เว็บไซต์</th><td>{{ bank.website }}</td></tr>
+        <tr><th>เบอร์ติดต่อ</th><td>{{ bank.contact_phone }}</td></tr>
+        <tr><th>อีเมลติดต่อ</th><td>{{ bank.contact_email }}</td></tr>
+        <tr><th>รายละเอียด</th><td>{{ bank.description }}</td></tr>
+        <tr><th>ใช้งาน</th><td>{{ bank.is_active }}</td></tr>
+        <tr><th>ลำดับการแสดง</th><td>{{ bank.display_order }}</td></tr>
+        <tr><th>สีแบรนด์</th><td><span style="background-color: {{ bank.brand_color }}; padding:2px 6px;">{{ bank.brand_color }}</span></td></tr>
+        <tr><th>แนะนำพิเศษ</th><td>{{ bank.is_featured }}</td></tr>
+        <tr><th>ข้อความการตลาด</th><td>{{ bank.marketing_message }}</td></tr>
+        <tr><th>วันที่สร้าง</th><td>{{ bank.created_at }}</td></tr>
+        <tr><th>วันที่แก้ไข</th><td>{{ bank.updated_at }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Loan Product Modal -->
+<div class="modal fade" id="loanproductModal" tabindex="-1" aria-labelledby="loanproductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content" style="max-width: 1200px; width: 100%;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="loanproductModalLabel">ผลิตภัณฑ์สินเชื่อของ {{ bank.name }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- ปุ่มเพิ่ม Loan Product -->
+        <div class="d-flex justify-content-end mb-3">
+          <a href="{% url 'refinance:bank_loanproduct_add' bank.id %}" 
+             class="btn btn-success d-inline-flex align-items-center px-3 py-2"
+             style="min-width: 80px; min-height: 50px; border-radius: 10px;">
+            <i class="bi bi-plus-circle me-1"></i> เพิ่มสินเชื่อ
+          </a>
+        </div>
+
+        <!-- รายการ Loan Product -->
+        {% if loanproducts %}
+            <ul class="list-group">
+            {% for loan in loanproducts %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">
+                            {{ loan.name }}
+                            {% if loan.is_active %}
+                                <span class="badge bg-success text-white ms-2">
+                                    <i class="bi bi-lightbulb-fill"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary text-white ms-2">
+                                    <i class="bi bi-x-circle"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </div>
+                        <small>วงเงินกู้: {{ loan.min_loan_amount|floatformat:0|intcomma }} - {{ loan.max_loan_amount|floatformat:0|intcomma }} บาท</small><br>
+                        <small>อัตราดอกเบี้ยพิเศษ: {{ loan.interest_rate }}%</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <!-- ปุ่มแก้ไข -->
+                        <a href="{% url 'refinance:bank_loanproduct_update' loan.id %}" 
+                           class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center" 
+                           style="min-width: 100px; min-height: 50px; border-radius: 10px;">
+                          <i class="bi bi-pencil me-1"></i> แก้ไข
+                        </a>
+                        <!-- ปุ่มลบ -->
+                        <form method="post" action="{% url 'refinance:bank_loanproduct_delete' loan.id %}" 
+                              onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบผลิตภัณฑ์สินเชื่อนี้?');">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-outline-dark btn-sm d-inline-flex align-items-center justify-content-center" 
+                                  style="min-width: 100px; min-height: 50px; border-radius: 10px;">
+                            <i class="bi bi-trash me-1"></i> ลบ
+                          </button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>ยังไม่มีผลิตภัณฑ์สินเชื่อ</p>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Promotion Modal -->
+<div class="modal fade" id="promotionModal" tabindex="-1" aria-labelledby="promotionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl"> <!-- เปลี่ยนจาก modal-lg เป็น modal-xl -->
+    <div class="modal-content" style="max-width: 1200px; width: 100%;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="promotionModalLabel">โปรโมชั่นของ {{ bank.name }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body">
+
+        <!-- ปุ่มเพิ่มโปรโมชั่น -->
+        <div class="d-flex justify-content-end mb-3">
+          <a href="{% url 'refinance:bank_promotion_add' bank.id %}" 
+             class="btn btn-success d-inline-flex align-items-center px-3 py-2"
+             style="min-width: 80px; min-height: 50px; border-radius: 10px;">
+            <i class="bi bi-plus-circle me-1"></i> เพิ่มโปรโมชั่น
+          </a>
+        </div>
+
+        <!-- รายการโปรโมชั่น -->
+        {% if promotions %}
+            <ul class="list-group">
+            {% for promo in promotions %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">
+                            {{ promo.title }}
+                            {% if promo.is_active %}
+                                <span class="badge bg-success text-white ms-2">
+                                    <i class="bi bi-lightbulb-fill"></i> Active
+                                </span>
+                            {% endif %}
+                        </div>
+                        {{ promo.description }}
+                    </div>
+                    <div class="d-flex gap-2">
+                    <!-- ปุ่มแก้ไขโปรโมชั่น -->
+                    <a href="{% url 'refinance:bank_promotion_update' promo.id %}" 
+                        class="btn btn-outline-danger  btn-sm d-inline-flex align-items-center justify-content-center" style="min-width: 100px; min-height: 50px; border-radius: 10px;"">
+                        <i class="bi bi-pencil me-1"></i> แก้ไข
+                    </a>
+                    <!-- ปุ่มลบโปรโมชั่น -->
+                    <form method="post" action="{% url 'refinance:bank_promotion_delete' promo.id %}" 
+                            onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบโปรโมชั่นนี้?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-dark btn-sm d-inline-flex align-items-center justify-content-center" style="min-width: 100px; min-height: 50px; border-radius: 10px;">
+                        <i class="bi bi-trash me-1"></i> ลบ
+                        </button>
+                    </form>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>ไม่มีโปรโมชั่นในขณะนี้</p>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

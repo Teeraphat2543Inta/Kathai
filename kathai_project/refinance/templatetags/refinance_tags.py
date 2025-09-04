@@ -59,3 +59,8 @@ def currency(value):
 def default_if_none(value, default):
     """Return default if value is None"""
     return default if value is None else value
+
+@register.filter
+def get_attr(obj, attr_name):
+    """Return the attribute of an object dynamically"""
+    return getattr(obj, attr_name, '')

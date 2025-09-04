@@ -97,22 +97,31 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="bank-info">
                                 {% if product.bank.logo %}
-                                <img src="{{ product.bank.logo.url }}" alt="{{ product.bank.name }}" class="bank-logo">
+                                    <img src="{{ product.bank.logo.url }}" alt="{{ product.bank.name }}" class="bank-logo">
                                 {% else %}
-                                <div class="bank-logo-placeholder" style="background-color: {{ product.bank.brand_color|default:'#007bff' }};">
-                                    {{ product.bank.name|first }}
-                                </div>
+                                    <div class="bank-logo-placeholder" style="background-color: {{ product.bank.brand_color|default:'#007bff' }};">
+                                        {{ product.bank.name|first }}
+                                    </div>
                                 {% endif %}
                                 <div class="ms-2">
                                     <h6 class="bank-name mb-0">{{ product.bank.name }}</h6>
                                     <small class="text-muted">{{ product.get_product_type_display }}</small>
                                 </div>
                             </div>
-                            {% if product.is_popular %}
-                            <span class="badge bg-warning text-dark">
-                                <i class="bi bi-fire"></i> ยอดนิยม
-                            </span>
-                            {% endif %}
+                            
+                            <!-- Badges container - stacked vertically -->
+                            <div class="d-flex flex-column align-items-end gap-1">
+                                {% if product.is_popular %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-fire"></i> ยอดนิยม
+                                    </span>
+                                {% endif %}
+                                {% if product.description %}
+                                    <span class="badge bg-success text-white">
+                                        <i class="bi bi-gift"></i> โปรโมชั่น
+                                    </span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
@@ -191,14 +200,14 @@
                             <div class="row g-2">
                                 <div class="col">
                                     <a href="{% url 'refinance:bank_detail' product.bank.pk %}" 
-                                       class="btn btn-outline-secondary btn-sm w-100">
-                                        <i class="bi bi-bank"></i> ธนาคาร
+                                    class="btn btn-outline-secondary btn-sm w-100 h-100 d-flex align-items-center justify-content-center rounded-3">
+                                    <i class="bi bi-bank me-1"></i> ธนาคาร
                                     </a>
                                 </div>
                                 <div class="col">
                                     <a href="{% url 'refinance:loan_comparison_wizard' %}" 
-                                       class="btn btn-outline-success btn-sm w-100">
-                                        <i class="bi bi-calculator"></i> เปรียบเทียบ
+                                    class="btn btn-outline-success btn-sm w-100 h-100 d-flex align-items-center justify-content-center rounded-3">
+                                    <i class="bi bi-calculator me-1"></i> เปรียบเทียบ
                                     </a>
                                 </div>
                             </div>

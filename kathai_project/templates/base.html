@@ -1398,32 +1398,75 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'refinance:loan_comparison_wizard' %}">เปรียบเทียบดอกเบี้ย</a>
+                    </li>
+
                     {% if not user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'refinance:loan_comparison_wizard' %}">เปรียบเทียบดอกเบี้ย</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'refinance:contact_us' %}">ติดต่อเรา</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">เกี่ยวกับเรา</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'refinance:faq' %}">คำถามที่พบบ่อย</a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'refinance:contact_us' %}">ติดต่อเรา</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">เกี่ยวกับเรา</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'refinance:faq' %}">คำถามที่พบบ่อย</a>
+                        </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'refinance:loan_comparison_wizard' %}">เปรียบเทียบดอกเบี้ย</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'refinance:dashboard' %}">แดชบอร์ด</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'refinance:bank_list' %}">ธนาคาร</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'refinance:loan_product_list' %}">ผลิตภัณฑ์สินเชื่อ</a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'refinance:dashboard' %}">แดชบอร์ด</a>
+                        </li>
+
+                        <!-- Dropdown ธนาคาร -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" id="bankDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                ธนาคาร <i class="bi bi-chevron-down"></i>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="bankDropdown">
+                                <li>
+                                    <form method="get" action="{% url 'refinance:bank_list' %}">
+                                        <input type="hidden" name="bank_type" value="">
+                                        <button type="submit" class="dropdown-item">ประเภทธนาคารทั้งหมด</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="get" action="{% url 'refinance:bank_list' %}">
+                                        <input type="hidden" name="bank_type" value="government">
+                                        <button type="submit" class="dropdown-item">ธนาคารรัฐ</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="get" action="{% url 'refinance:bank_list' %}">
+                                        <input type="hidden" name="bank_type" value="private">
+                                        <button type="submit" class="dropdown-item">ธนาคารเอกชน</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="get" action="{% url 'refinance:bank_list' %}">
+                                        <input type="hidden" name="bank_type" value="foreign">
+                                        <button type="submit" class="dropdown-item">ธนาคารต่างประเทศ</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link ms-0" href="{% url 'refinance:loan_product_list' %}">ผลิตภัณฑ์สินเชื่อ</a>
+                        </li>
+
+                        {% if user.userprofile.role|slice:":4" == "bank" %}
+                            <li class="nav-item">
+                                <a class="nav-link ms-0" href="{% url 'refinance:bank_dashboard' %}">จัดการธนาคาร</a>
+                            </li>
+                        {% endif %}
+
+                        {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link ms-0" href="{% url 'refinance:admin_dashboard' %}">จัดการข้อมูล</a>
+                            </li>
+                        {% endif %}
+
+                        
                     {% endif %}
                 </ul>
 
@@ -1472,7 +1515,7 @@
                                 <hr class="dropdown-divider">
                             </li>
 
-                            <li><a class="dropdown-item" href="#">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile_edit' %}">
                                     <i class="bi bi-gear"></i> ตั้งค่า
                                 </a></li>
                             <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
